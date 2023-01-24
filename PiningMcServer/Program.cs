@@ -1,38 +1,42 @@
-﻿// See https://aka.ms/new-console-template for more information
-using System.Data;
-using System.Net.NetworkInformation;
+﻿using System;
 using System.Net.Sockets;
 using System.Text;
-using System.Threading.Tasks.Dataflow;
 
-int SEGMENT_BITS = 0x7F;
-int CONTINUE_BIT = 0x80;
-int delay = 1000;
+const int SEGMENT_BITS = 0x7F;
+const int CONTINUE_BIT = 0x80;
+const byte STRING_BREAK = 0xdd;
+int delay = 10000;
 int workingProcesses = 100;
 
 List<byte> writeVarInt(int value)
 {
     List<byte> buffer = new();
 
-    while (true)
+    while ((value & CONTINUE_BIT) != 0)
     {
-        if ((value & ~SEGMENT_BITS) == 0)
-        {
-            buffer.Add((byte)value);
-            return buffer;
-        }
-
-        buffer.Add((byte)((value & SEGMENT_BITS) | CONTINUE_BIT));
-
-        // Note: >>> means that the sign bit is shifted with the rest of the number rather than being left alone
-        value >>= 7;
+        buffer.Add((byte)(value & SEGMENT_BITS | CONTINUE_BIT));
+        value = (int)((uint)value) >> 7;
     }
+
+    buffer.Add((byte)value);
+    return buffer;
+}
+
+List<byte> writeString(string value)
+{
+    byte[] valAsBytes = Encoding.UTF8.GetBytes(value);
+    List<byte> buffer = new();
+
+    buffer.AddRange(writeVarInt(valAsBytes.Length));
+    buffer.AddRange(valAsBytes);
+
+    return buffer;
 }
 
 async Task<string> GetServerData(string ip)
 {
     ushort port = 25565;
-    int protocolVersion = 335;
+    int protocolVersion = 761;
     StringBuilder response = new StringBuilder();
 
     using (TcpClient client = new(ip, port))
@@ -40,19 +44,26 @@ async Task<string> GetServerData(string ip)
         client.SendTimeout = delay / 2;
         client.SendTimeout = delay / 2;
 
-        //Creating packet
-        Byte nextState = 1;
-        List<byte> data = new List<byte>();
-        data.AddRange(new byte[] { 0x15, 0x00 });
+        //Creating handshake data
+        int nextState = 1;
+        List<byte> data = new List<byte>
+        {
+            0x0//handshake packet id
+        };
         data.AddRange(writeVarInt(protocolVersion));//Version
-        data.Add(0x0e);
-        data.AddRange(Encoding.UTF8.GetBytes(ip).SkipLast(1));//Ip
+        data.AddRange(writeString(ip));//Ip
         data.AddRange(BitConverter.GetBytes(port));//Port
-        data.Add(0xdd);
-        data.Add(nextState);//Next state
+        data.AddRange(writeVarInt(nextState));//Next state
 
-        await client.GetStream().WriteAsync(data.ToArray(), 0, data.Count);
+        //Handshake packet
+        List<byte> packet= new List<byte>();
+        packet.AddRange(writeVarInt(data.Count));
+        packet.AddRange(data);
 
+        //Send handshake
+        await client.GetStream().WriteAsync(packet.ToArray(), 0, packet.Count);
+
+        //Send ping req
         byte[] pingData = { 1, 0 };
         await client.GetStream().WriteAsync(pingData, 0, 2);
 
@@ -102,13 +113,10 @@ foreach (string ip in ips)
         .ContinueWith((task) => maxThread.Release());
 }
 
+Thread.Sleep(10000);
+
 using (StreamWriter writer = new StreamWriter("serversOnline.txt"))
 {
     foreach (var server in servers)
         writer.WriteLine(server);
 }
-    
-
-
-
-

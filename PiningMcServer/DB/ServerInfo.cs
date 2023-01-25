@@ -9,11 +9,11 @@ using System.Threading.Tasks;
 
 namespace McServersScanner.DB
 {
-    [Index(nameof(ServerInfo.IP), IsUnique = true)]
+    //[Index(nameof(ServerInfo.IP), IsUnique = true)]
     public class ServerInfo
     {
         public int ID { get; set; }
-        public string IP { get; set; }
+        public string IP { get; private set; }
         public string JsonInfo { get; set; }
 
         public ServerInfo() { }

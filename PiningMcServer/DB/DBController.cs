@@ -1,8 +1,10 @@
 ﻿using McServersScanner.IO;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.VisualBasic;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -18,15 +20,28 @@ public class DBController : DbContext
     public async Task Initialize()
     {
         await Database.EnsureCreatedAsync();
+        await Database.OpenConnectionAsync();
+        await ServerInfos.LoadAsync();
     }
 
-    public async Task Add(ServerInfo serverInfo)
+    public async Task AddOrUpdate(ServerInfo serverInfo)
     {
-        if (await ServerInfos.Where(x => x.IP == serverInfo.IP).CountAsync() == 0)
-            await ServerInfos.AddAsync(serverInfo);
-        else
-            (await ServerInfos.Where(x => x.IP == serverInfo.IP).FirstAsync()).JsonInfo = serverInfo.JsonInfo;
-        await SaveChangesAsync();
+        if (serverInfo is not null)
+        {
+            if (ServerInfos.AsEnumerable().Where(x => x.IP == serverInfo.IP).Count() == 0)
+                await ServerInfos.AddAsync(serverInfo);
+            else
+            {
+                Update(serverInfo);
+            }
+        }            
+    }
+
+    public void Update(ServerInfo updatedInfo)
+    {
+        Attach(updatedInfo);
+        Entry(updatedInfo).Property(x => x.JsonInfo).IsModified = true;
+        SaveChanges();
     }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

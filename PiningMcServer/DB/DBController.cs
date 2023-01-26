@@ -28,19 +28,21 @@ public class DBController : DbContext
     {
         if (serverInfo is not null)
         {
-            if (ServerInfos.AsEnumerable().Where(x => x.IP == serverInfo.IP).Count() == 0)
-                await ServerInfos.AddAsync(serverInfo);
+
+            if (ServerInfos.Any(x => x.IP == serverInfo.IP))
+                Update(serverInfo);
             else
             {
-                Update(serverInfo);
+                 await ServerInfos.AddAsync(serverInfo);
             }
         }            
     }
 
     public void Update(ServerInfo updatedInfo)
     {
-        Attach(updatedInfo);
-        Entry(updatedInfo).Property(x => x.JsonInfo).IsModified = true;
+        Set<ServerInfo>().Attach(updatedInfo);
+        ServerInfos.Update(updatedInfo);
+        Entry(updatedInfo).State = EntityState.Modified;
         SaveChanges();
     }
 

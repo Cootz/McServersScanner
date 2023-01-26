@@ -28,13 +28,7 @@ public class DBController : DbContext
     {
         if (serverInfo is not null)
         {
-
-            if (ServerInfos.Any(x => x.IP == serverInfo.IP))
-                Update(serverInfo);
-            else
-            {
-                 await ServerInfos.AddAsync(serverInfo);
-            }
+            await ServerInfos.AddAsync(serverInfo);
         }            
     }
 

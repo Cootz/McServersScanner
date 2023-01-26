@@ -9,9 +9,10 @@ using System.Text;
 const int SEGMENT_BITS = 0x7F;
 const int CONTINUE_BIT = 0x80;
 const byte STRING_BREAK = 0xdd;
+bool endThread = false;
 Queue<string> ips = new ();
 Queue<ServerInfo> serverInfos = new ();
-int timeout = 1000;
+int timeout = 500;
 int workingProcesses = 1000;
 
 List<byte> writeVarInt(int value)
@@ -163,14 +164,21 @@ double currentRatio;
 
 Thread updateDb = new(() =>
 {
-    while (true)
+    int collectedInfosCount = 0;
+
+    while (!endThread)
     {
-        bool isExecuted = serverInfos.Count > 0;
+        collectedInfosCount = serverInfos.Count;
+        bool isExecuted = collectedInfosCount > 0;
 
         try
         {
-            while (serverInfos.Count > 0)
+            while (collectedInfosCount > 0)
+            {
                 DB.AddOrUpdate(serverInfos.Dequeue()).Wait();
+                collectedInfosCount--;
+            }
+                
             if (isExecuted)
                 DB.SaveChanges();
         }
@@ -200,5 +208,13 @@ while (ips.Count > 0)
     await Task.Delay(100);
 }
 
-foreach (var task in tasks)
-    await task;
+currentCount = ips.Count;
+currentRatio = calculateRatio(currentCount, totalIps);
+Console.Write("\r{0}% - {1}/{2}", currentRatio, (totalIps - currentCount), totalIps);
+
+await Task.Delay(10000);
+endThread = true;
+updateDb.Join();
+
+DB.SaveChanges();
+DB.Dispose();

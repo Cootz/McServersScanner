@@ -8,6 +8,6 @@ namespace McServersScanner.Network
 {
     public interface IPacket
     {
-        public abstract byte[] GetData();
+        public byte[] GetData();
     }
 }

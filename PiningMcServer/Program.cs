@@ -1,124 +1,18 @@
-﻿using McServersScanner.DB;
+﻿using McServersScanner.IO.DB;
 using McServersScanner.Network;
 using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading.Tasks.Dataflow;
 
-const int SEGMENT_BITS = 0x7F;
-const int CONTINUE_BIT = 0x80;
-const byte STRING_BREAK = 0xdd;
+
 bool endThread = false;
-Queue<string> ips = new ();
-Queue<ServerInfo> serverInfos = new ();
+BufferBlock<IPAddress> ips = new();
+BufferBlock<ServerInfo> serverInfos = new();
 int timeout = 500;
 int workingProcesses = 1000;
-
-List<byte> writeVarInt(int value)
-{
-    List<byte> buffer = new();
-
-    while ((value & CONTINUE_BIT) != 0)
-    {
-        buffer.Add((byte)(value & SEGMENT_BITS | CONTINUE_BIT));
-        value = (int)((uint)value) >> 7;
-    }
-
-    buffer.Add((byte)value);
-    return buffer;
-}
-
-List<byte> writeString(string value)
-{
-    byte[] valAsBytes = Encoding.UTF8.GetBytes(value);
-    List<byte> buffer = new();
-
-    buffer.AddRange(writeVarInt(valAsBytes.Length));
-    buffer.AddRange(valAsBytes);
-
-    return buffer;
-}
-
-async Task<string> GetServerData(string ip)
-{
-    ushort port = 25565;
-    int protocolVersion = 761;
-    StringBuilder response = new StringBuilder();
-
-    try 
-    {
-        using (TcpClient client = new())
-        {
-            try
-            {
-                var result = client.BeginConnect(ip, port, null, null);
-                var success = result.AsyncWaitHandle.WaitOne(timeout, true); //Waiting connection for a timeout
-
-                if (!success)//Stop exec if not connected
-                {
-                    client.Close();
-                    return String.Empty;
-                }
-
-                client.ReceiveTimeout = timeout / 2;
-                client.SendTimeout = timeout / 2;
-
-                //Creating handshake data
-                int nextState = 1;
-                List<byte> data = new List<byte>
-            {
-                0x0//handshake packet id
-            };
-                data.AddRange(writeVarInt(protocolVersion));//Version
-                data.AddRange(writeString(ip));//Ip
-                data.AddRange(BitConverter.GetBytes(port));//Port
-                data.AddRange(writeVarInt(nextState));//Next state
-
-                //Handshake packet
-                List<byte> packet = new List<byte>();
-                packet.AddRange(writeVarInt(data.Count));
-                packet.AddRange(data);
-
-                //Send handshake
-                await client.GetStream().WriteAsync(packet.ToArray(), 0, packet.Count);
-
-                //Send ping req
-                byte[] pingData = { 1, 0 };
-                await client.GetStream().WriteAsync(pingData, 0, 2);
-
-                byte[] buffer = new byte[1024];
-
-                using (NetworkStream ns = client.GetStream())
-                {
-                    do
-                    {
-                        await ns.ReadAsync(buffer, 0, buffer.Length);
-                        response.Append(Encoding.UTF8.GetString(buffer));
-                    } while (client.Available > 0);
-                }
-            }
-            catch (Exception ex)
-            {
-                client.Close();
-                return String.Empty;
-            }
-        }
-    }
-    catch(Exception ex)
-    {
-        return String.Empty;
-    }
-
-    //Preventing "System.Private.CoreLib:Index and count must refer to a location within the string. (Parameter 'count')" exception
-    string ret = response.ToString();
-
-    if (ret.Length > 5)
-        return ret.Remove(0, 5);
-    else
-        return String.Empty;
-
-}
 
 double calculateRatio(double currentInQueue, double length) => Math.Round(((length - currentInQueue)/ length) * 100.0, 2);
 
@@ -128,23 +22,24 @@ async Task WorkingThread()
 {
     while (ips.Count > 0)
     {
-        string ip = ips.Dequeue();
+        IPAddress ip = await ips.ReceiveAsync();
 
         try
         {
             string data = String.Empty;
 
-            data = await GetServerData(ip);
+            using (McClient mcClient = new McClient(ip, 25565))
+                data = await mcClient.GetServerInfo(timeout);
 
             if (data.FirstOrDefault() == '{')
             {
                 //Console.WriteLine(ip);
-                serverInfos.Enqueue(new ServerInfo(data, ip));
+                serverInfos.Post(new ServerInfo(data, ip.ToString()));
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine("{0}: {1}; {2}", ex.Source, ex.Message, ex.InnerException.Message);
+            Console.WriteLine("Exception {0}: {1}; {2} occured at ip {3}", ex.Source, ex.Message, ex.InnerException?.Message ?? "", ip);
         }
     }
 };
@@ -153,8 +48,10 @@ await DB.Initialize();
 
 string[] readedIps = File.ReadAllLinesAsync("ips.txt").Result;
 int totalIps = readedIps.Length;
+
 foreach (var ip in readedIps)
-    ips.Enqueue(ip);
+    if (!String.IsNullOrEmpty(ip))
+        ips.Post(IPAddress.Parse(ip));
 
 
 ServicePointManager.DefaultConnectionLimit = workingProcesses;
@@ -175,7 +72,7 @@ Thread updateDb = new(() =>
         {
             while (collectedInfosCount > 0)
             {
-                DB.AddOrUpdate(serverInfos.Dequeue()).Wait();
+                DB.AddOrUpdate(serverInfos.ReceiveAsync().Result).Wait();
                 collectedInfosCount--;
             }
                 
@@ -184,10 +81,10 @@ Thread updateDb = new(() =>
         }
         catch (Exception ex)
         {
-            Console.WriteLine("{0}: {1}; {2}", ex.Source, ex.Message, ex.InnerException.Message);
+            Console.WriteLine("{0}: {1}; {2}", ex.Source, ex.Message, ex.InnerException?.Message ?? "");
         }
 
-        Thread.Sleep(timeout);
+        Thread.Sleep(100);
     }
 });
 updateDb.Start();

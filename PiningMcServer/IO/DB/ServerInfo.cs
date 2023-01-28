@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace McServersScanner.DB
+namespace McServersScanner.IO.DB
 {
     //[Index(nameof(ServerInfo.IP), IsUnique = true)]
     public class ServerInfo

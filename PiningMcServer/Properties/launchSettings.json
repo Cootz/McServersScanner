@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "McServersScanner": {
+      "commandName": "Project",
+      "commandLineArgs": "--help"
+    }
+  }
+}

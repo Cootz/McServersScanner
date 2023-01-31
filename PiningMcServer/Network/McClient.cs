@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
+﻿using System.Net;
 using System.Net.Sockets;
 using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Serialization;
 
 namespace McServersScanner.Network
 {
@@ -59,7 +54,7 @@ namespace McServersScanner.Network
                     response.Append(Encoding.UTF8.GetString(buffer));
                 } while (bytesReceived > 0);
             }
-            catch (Exception ex)
+            catch
             {
                 Client.Close();
                 return String.Empty;

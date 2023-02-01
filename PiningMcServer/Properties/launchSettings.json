@@ -2,7 +2,7 @@
   "profiles": {
     "McServersScanner": {
       "commandName": "Project",
-      "commandLineArgs": "--help"
+      "commandLineArgs": "-I ips.txt"
     }
   }
 }

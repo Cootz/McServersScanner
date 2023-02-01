@@ -11,9 +11,12 @@ internal class Program
     private static bool endDBThread = false;
     private static BufferBlock<IPAddress> ips = new();
     private static BufferBlock<ServerInfo> serverInfos = new();
-    private static int timeout = 500;
-    private static int workingProcesses = 1000;
+    /// <summary>
+    /// Connection timeout in seconds
+    /// </summary>
+    private static double timeout = 10;
     private static DBController DB = new();
+    private static List<McClient> clients = new();
 
     private static async Task Main(string[] args)
     {
@@ -39,7 +42,7 @@ internal class Program
                     }
                     else if (ip.Where(x => char.IsLetter(x)).Count() > 0) //ips from file
                     {
-                        string[] readedIps = File.ReadAllLinesAsync(ip).Result;
+                        string[] readedIps = File.ReadAllLines(ip);
 
                         foreach (string ipAddr in readedIps)
                             if (!string.IsNullOrEmpty(ipAddr))
@@ -52,25 +55,20 @@ internal class Program
                 }
             });
 
-        //HelpText.AutoBuild<Options>(result);
-
         int totalIps = ips.Count;
-
-        ServicePointManager.DefaultConnectionLimit = workingProcesses;
+        ServicePointManager.DefaultConnectionLimit = 10000;
         List<Task> tasks = new();
         double currentRatio;
 
         //Awaiting db initialization
         await DBinit;
-        
+
         //Starting update db thread
         updateDb.Start();
 
         //Running workers
-        for (int i = 0; i < workingProcesses; i++)
-        {
-            tasks.Add(Task.Run(WorkingThread));
-        }
+        Task writer = Task.Run(WriterAsync);
+        Task reader = Task.Run(ReaderAsync);
 
         //Showing progress
         int currentCount;
@@ -86,9 +84,10 @@ internal class Program
 
         currentCount = ips.Count;
         currentRatio = calculateRatio(currentCount, totalIps);
-        Console.Write("\r{0}% - {1}/{2}", currentRatio, totalIps - currentCount, totalIps);
+        Console.Write("{0}% - {1}/{2}", currentRatio, totalIps - currentCount, totalIps);
+        Console.Write("Waiting 10 sec for the results...");
 
-        await Task.Delay(1000); //awaiting for results
+        await Task.WhenAll(writer, reader); //awaiting for results
         endDBThread = true;//ending db thread
         updateDb.Join();
 
@@ -97,30 +96,66 @@ internal class Program
         DB.Dispose();
     }
 
-    private static async Task WorkingThread()
+    public static async Task ReaderAsync()
+    {
+        TimeSpan timeToConnect = TimeSpan.FromSeconds(timeout);
+
+        do
+        {
+            foreach (var client in clients)
+            {
+                if (DateTime.Now - client.initDateTime > timeToConnect && !client.isConnected)
+                {
+                    client.Dispose();
+                    clients.Remove(client);
+                }
+                else if (client.Disposed)
+                    clients.Remove(client);
+            }
+            await Task.Delay(TimeSpan.FromMilliseconds(100));
+        } while (clients.Count > 0);
+    }
+
+    public static async Task WriterAsync()
     {
         while (ips.Count > 0)
         {
-            IPAddress ip = await ips.ReceiveAsync();
-
+            McClient client = new McClient(await ips.ReceiveAsync(), 25565, OnConnected);
             try
             {
-                string data = string.Empty;
-
-                using (McClient mcClient = new McClient(ip, 25565))
-                    data = await mcClient.GetServerInfo(timeout);
-
-                if (data.FirstOrDefault() == '{')
-                {
-                    //Console.WriteLine(ip);
-                    serverInfos.Post(new ServerInfo(data, ip.ToString()));
-                }
+                client.BeginConnect();
+                clients.Add(client);
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Exception {0}: {1}; {2} occured at ip {3}", ex.Source, ex.Message, ex.InnerException?.Message ?? "", ip);
-            }
+            catch { }
         }
+    }
+
+    public static async void OnConnected(IAsyncResult result)
+    {
+        if (result.AsyncState is null)
+            return;
+
+        McClient client = (McClient)result.AsyncState!;
+
+        if (!client.isConnected)
+        {
+            client.Dispose();
+            return;
+        }
+
+        string data = await client.GetServerInfo();
+
+        if (data.StartsWith('{'))
+        {
+            serverInfos.Post(new ServerInfo(data, client.IpEndPoint.Address.ToString()));
+        }
+        
+        try
+        {
+            await client.DisconnectAsync();
+        }
+        catch { }
+        client.Dispose();
     }
 
     static Thread updateDb = new(() =>

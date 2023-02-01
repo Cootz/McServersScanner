@@ -6,48 +6,58 @@ namespace McServersScanner.Network
 {
     public class McClient : IDisposable
     {
-        private IPEndPoint iPEndPoint { get; set; }
+        public IPEndPoint IpEndPoint { get; private set; }
+        public bool Disposed { get; private set; }
+        
         private Socket Client { get; set; }
+        private DateTime InitTime { get; set; }
+        private readonly AsyncCallback? connectionCallBack;
 
         public McClient(string ip, ushort port) : this(IPAddress.Parse(ip), port) { }
+        public McClient(string ip, ushort port, Action<IAsyncResult> onConnection) : this(IPAddress.Parse(ip), port, onConnection) { }
 
         public McClient(IPAddress ip, ushort port)
         {
-            iPEndPoint = new IPEndPoint(ip, port);
-            Client = new(iPEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+            IpEndPoint = new IPEndPoint(ip, port);
+            Client = new(IpEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+
+            InitTime = DateTime.Now;
         }
 
-        public async Task<string> GetServerInfo(int timeout)
+        public McClient(IPAddress ip, ushort port, Action<IAsyncResult> onConnection) : this(ip, port)
+        {
+            connectionCallBack = new(onConnection);
+        }
+                    
+        public IAsyncResult BeginConnect()
+        {
+            return Client.BeginConnect(IpEndPoint, connectionCallBack, this);
+        }
+
+        public bool isConnected => Client.Connected;
+        public DateTime initDateTime => InitTime;
+
+        public async Task<string> GetServerInfo()
         {
             int protocolVersion = 761;
             StringBuilder response = new StringBuilder();
 
             try
             {
-                var result = Client.BeginConnect(iPEndPoint, null, null);
-                var success = result.AsyncWaitHandle.WaitOne(timeout, true); //Waiting connection for a timeout
-
-                if (!success)//Stop exec if not connected
-                {
-                    Client.Close();
-                    return String.Empty;
-                }
-
-                Client.ReceiveTimeout = timeout / 2;
-                Client.SendTimeout = timeout / 2;
-
-                McPacket<HandshakePacket> packet = new (new HandshakePacket(iPEndPoint.Address, protocolVersion, (ushort)(iPEndPoint.Port)));
+                //preparing packet
+                McPacket<HandshakePacket> packet = new(new HandshakePacket(IpEndPoint.Address, protocolVersion, (ushort)IpEndPoint.Port));
 
                 //Send handshake
-                await Client.SendAsync(packet.ToArray(), SocketFlags.None);
+                var handshake = Client.SendAsync(packet.ToArray(), SocketFlags.None);
 
                 //Send ping req
                 byte[] pingData = { 1, 0 };
-                await Client.SendAsync(pingData, SocketFlags.None);
+                var request = Client.SendAsync(pingData, SocketFlags.None);
 
                 byte[] buffer = new byte[1024];
                 int bytesReceived = 0;
 
+                await Task.WhenAll(handshake, request);//Waiting for the packets to be sent
                 do
                 {
                     bytesReceived = await Client.ReceiveAsync(buffer, SocketFlags.None);
@@ -56,11 +66,8 @@ namespace McServersScanner.Network
             }
             catch
             {
-                Client.Close();
                 return String.Empty;
             }
-
-
 
             //Preventing "System.Private.CoreLib:Index and count must refer to a location within the string. (Parameter 'count')" exception
             string ret = response.ToString();
@@ -71,9 +78,12 @@ namespace McServersScanner.Network
                 return String.Empty;
         }
 
+        public async Task DisconnectAsync() => await Client.DisconnectAsync(false);
+
         public void Dispose()
         {
             Client.Dispose();
+            Disposed = true;
         }
     }
 }

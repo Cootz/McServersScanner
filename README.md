@@ -1,2 +1,2 @@
 # McServersScanner
-Scan a range of ips for a running mc servers
+Scan a range of ips for running mc servers

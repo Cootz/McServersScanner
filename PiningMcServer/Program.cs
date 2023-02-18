@@ -27,11 +27,6 @@ internal class Program
     /// Connection timeout in seconds
     /// </summary>
     private static double timeout = 10;
-
-    /// <summary>
-    /// Provides access to database
-    /// </summary>
-    private static DBController DB = new();
     
     /// <summary>
     /// List of clients
@@ -128,6 +123,7 @@ internal class Program
                 else if (client.Disposed)
                     clients.Remove(client);
             }
+
             await Task.Delay(TimeSpan.FromMilliseconds(100));
         } while (clients.Count > 0);
     }
@@ -189,6 +185,9 @@ internal class Program
     /// </summary>
     static Thread updateDb = new(() =>
     {
+        //Provides access to database
+        DBController DB = new();
+
         int collectedInfosCount = 0;
 
         while (!endDBThread)

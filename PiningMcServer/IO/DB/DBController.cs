@@ -5,7 +5,8 @@ namespace McServersScanner.IO.DB;
 
 public class DBController
 {
-    private static readonly string DBPath = "Psw.db";
+    private static readonly string DBPath = Path.Combine(path_to_folder, "Psw.realm");
+    private const string path_to_folder = @"C:\Users\PC\source\repos\PiningMcServer\PiningMcServer\bin\Debug\net6.0";
 
     /// <summary>
     /// Realm instance

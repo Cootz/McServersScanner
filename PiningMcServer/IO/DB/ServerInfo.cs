@@ -13,11 +13,18 @@ namespace McServersScanner.IO.DB
     /// <summary>
     /// Store info about minecraft server
     /// </summary>
-    //[Index(nameof(ServerInfo.IP), IsUnique = true)]
     public class ServerInfo
     {
         public int ID { get; set; }
+     
+        /// <summary>
+        /// Target server ip
+        /// </summary>
         public string IP { get; private set; } = string.Empty;
+        
+        /// <summary>
+        /// Received answer
+        /// </summary>
         public string JsonInfo { get; set; } = string.Empty;
 
         public ServerInfo() { }

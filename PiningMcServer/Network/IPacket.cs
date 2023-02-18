@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace McServersScanner.Network
+﻿namespace McServersScanner.Network
 {
+    /// <summary>
+    /// Defines minecraft packet data
+    /// </summary>
     public interface IPacket
     {
         public byte[] GetData();

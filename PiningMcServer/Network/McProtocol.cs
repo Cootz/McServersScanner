@@ -1,16 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Text;
 
 namespace McServersScanner.Network
 {
+    /// <summary>
+    /// Provide some types from minecraft protocol
+    /// </summary>
     public static class McProtocol
     {
         const int SEGMENT_BITS = 0x7F;
         const int CONTINUE_BIT = 0x80;
 
+        /// <summary>
+        /// Creates varInt
+        /// </summary>
+        /// <returns>
+        /// <see cref="List{byte}"/> representing varInt in protocol
+        /// </returns>
         public static List<byte> WriteVarInt(int value)
         {
             List<byte> buffer = new();
@@ -25,6 +30,12 @@ namespace McServersScanner.Network
             return buffer;
         }
 
+        /// <summary>
+        /// Creates string
+        /// </summary>
+        /// <returns>
+        /// <see cref="List{byte}"/> representing string in protocol
+        /// </returns>
         public static List<byte> WriteString(string value)
         {
             byte[] valAsBytes = Encoding.UTF8.GetBytes(value);

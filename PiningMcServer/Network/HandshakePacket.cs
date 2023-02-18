@@ -1,20 +1,30 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Net;
 
 namespace McServersScanner.Network
 {
     public class HandshakePacket : IPacket
     {
+        /// <summary>
+        /// Tcp data with packet id
+        /// </summary>
         private List<byte> data = new List<byte>
         {
             0x0//handshake packet id
         };
+
+        /// <summary>
+        /// Ip of the target server
+        /// </summary>
         private IPAddress ip { get; set; }
+
+        /// <summary>
+        /// Version of minecraft <see href="https://wiki.vg/Protocol_version_numbers#Versions_after_the_Netty_rewrite">protocol</see>
+        /// </summary>
         private int protocolVersion { get; set; }
+
+        /// <summary>
+        /// Port of the target server
+        /// </summary>
         private ushort port { get; set; }
 
         public HandshakePacket(IPAddress ip, int protocolVersion, ushort port)
@@ -24,6 +34,10 @@ namespace McServersScanner.Network
             this.port = port;
         }
 
+        /// <summary>
+        /// Generates handshake packet data
+        /// </summary>
+        /// <returns>Handshake packet data</returns>
         public byte[] GetData()
         {
             //Creating handshake data

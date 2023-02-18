@@ -1,5 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Realms;
+﻿using Realms;
 
 namespace McServersScanner.IO.DB;
 

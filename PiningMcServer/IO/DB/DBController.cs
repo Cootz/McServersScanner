@@ -1,39 +1,35 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Realms;
 
 namespace McServersScanner.IO.DB;
 
-public class DBController : DbContext
+public class DBController
 {
     private static readonly string DBPath = "Psw.db";
-    private static readonly string Connection = $"Filename=\"{DBPath}\"";
 
-    public DbSet<ServerInfo> ServerInfos { get; set; }
+    /// <summary>
+    /// Realm instance
+    /// </summary>
+    private Realm realm;
 
-    public async Task Initialize()
+    public DBController()
     {
-        await Database.EnsureCreatedAsync();
-        await Database.OpenConnectionAsync();
-        await ServerInfos.LoadAsync();
+        var config = new RealmConfiguration(DBPath);
+
+        realm = Realm.GetInstance(config);
     }
 
+    /// <summary>
+    /// Adds or updates new <see cref="ServerInfo"/> to database 
+    /// </summary>
     public async Task AddOrUpdate(ServerInfo serverInfo)
     {
         if (serverInfo is not null)
         {
-            await ServerInfos.AddAsync(serverInfo);
+            await realm.WriteAsync(() => 
+            {
+                realm.Add(serverInfo, update: true);
+            });
         }            
-    }
-
-    public void Update(ServerInfo updatedInfo)
-    {
-        Set<ServerInfo>().Attach(updatedInfo);
-        ServerInfos.Update(updatedInfo);
-        Entry(updatedInfo).State = EntityState.Modified;
-        SaveChanges();
-    }
-
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-    {
-        optionsBuilder.UseSqlite(Connection);
     }
 }

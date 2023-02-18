@@ -1,11 +1,14 @@
-﻿namespace McServersScanner.IO.DB
+﻿using Realms;
+
+namespace McServersScanner.IO.DB
 {
 
     /// <summary>
     /// Store info about minecraft server
     /// </summary>
-    public class ServerInfo
+    public class ServerInfo : RealmObject
     {
+        [PrimaryKey]
         public int ID { get; set; }
      
         /// <summary>

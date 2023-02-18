@@ -14,12 +14,12 @@ internal class Program
     private static bool endDBThread = false;
 
     /// <summary>
-    /// List of Ips to scan
+    /// Block of Ips to scan
     /// </summary>
     private static BufferBlock<IPAddress> ips = new();
     
     /// <summary>
-    /// 
+    /// Block of information about scanned servers
     /// </summary>
     private static BufferBlock<ServerInfo> serverInfos = new();
 
@@ -27,7 +27,15 @@ internal class Program
     /// Connection timeout in seconds
     /// </summary>
     private static double timeout = 10;
+
+    /// <summary>
+    /// Provides access to database
+    /// </summary>
     private static DBController DB = new();
+    
+    /// <summary>
+    /// List of clients
+    /// </summary>
     private static List<McClient> clients = new();
 
     private static async Task Main(string[] args)
@@ -100,7 +108,7 @@ internal class Program
         Console.Write("Waiting 10 sec for the results...");
 
         await Task.WhenAll(writer, reader); //awaiting for results
-        endDBThread = true;//ending db thread
+        endDBThread = true;//exiting db thread
         updateDb.Join();
 
         //Saving db
@@ -108,6 +116,12 @@ internal class Program
         DB.Dispose();
     }
 
+    /// <summary>
+    /// Looks <see cref="clients"/> for timeouted <see cref="McClient"/>s and remove them
+    /// </summary>
+    /// <remarks>
+    /// This task runs in different thread
+    /// </remarks>
     public static async Task ReaderAsync()
     {
         TimeSpan timeToConnect = TimeSpan.FromSeconds(timeout);
@@ -128,6 +142,12 @@ internal class Program
         } while (clients.Count > 0);
     }
 
+    /// <summary>
+    /// Creates new <see cref="McClient"/>, starts and add it to <see cref="clients"/>
+    /// </summary>
+    /// <remarks>
+    /// This task runs in different thread
+    /// </remarks>
     public static async Task WriterAsync()
     {
         while (ips.Count > 0)
@@ -142,6 +162,10 @@ internal class Program
         }
     }
 
+    /// <summary>
+    /// Callback for <see cref="McClient.connectionCallBack"/>. Sends server info and receives answer
+    /// </summary>
+    /// <param name="result"></param>
     public static async void OnConnected(IAsyncResult result)
     {
         if (result.AsyncState is null)
@@ -170,6 +194,9 @@ internal class Program
         client.Dispose();
     }
 
+    /// <summary>
+    /// Thread with database. Update database with scanned data
+    /// </summary>
     static Thread updateDb = new(() =>
     {
         int collectedInfosCount = 0;
@@ -199,5 +226,11 @@ internal class Program
         }
     });
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="currentInQueue">Current position in queue</param>
+    /// <param name="length">Length of queue</param>
+    /// <returns>Progress percentage rounded to 2 digits</returns>
     static double calculateRatio(double currentInQueue, double length) => Math.Round((length - currentInQueue) / length * 100.0, 2);
 }

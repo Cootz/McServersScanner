@@ -227,7 +227,7 @@ internal class Program
     });
 
     /// <summary>
-    /// 
+    /// Calculates percantage ratio of servers scanning progress
     /// </summary>
     /// <param name="currentInQueue">Current position in queue</param>
     /// <param name="length">Length of queue</param>

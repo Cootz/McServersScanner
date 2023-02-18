@@ -8,9 +8,21 @@ using System.Threading.Tasks.Dataflow;
 
 internal class Program
 {
+    /// <summary>
+    /// Exit database thread if true
+    /// </summary>
     private static bool endDBThread = false;
+
+    /// <summary>
+    /// List of Ips to scan
+    /// </summary>
     private static BufferBlock<IPAddress> ips = new();
+    
+    /// <summary>
+    /// 
+    /// </summary>
     private static BufferBlock<ServerInfo> serverInfos = new();
+
     /// <summary>
     /// Connection timeout in seconds
     /// </summary>
@@ -28,7 +40,7 @@ internal class Program
             .WithParsed(o =>
             {
                 //Adding ips
-                List<string> ipRange = o.Range.ToList();
+                List<string> ipRange = o.Range?.ToList() ?? new List<string>();
 
                 foreach (string ip in ipRange)
                 {

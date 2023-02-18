@@ -10,6 +10,6 @@ namespace McServersScanner.CLI
     public class Options
     {
         [Option('I', "range", Required = true, HelpText = "Ip adress range to be processed.")]
-        public IEnumerable<string> Range { get; set; }
+        public IEnumerable<string>? Range { get; set; }
     }
 }

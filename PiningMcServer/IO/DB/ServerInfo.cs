@@ -9,12 +9,16 @@ using System.Threading.Tasks;
 
 namespace McServersScanner.IO.DB
 {
+
+    /// <summary>
+    /// Store info about minecraft server
+    /// </summary>
     //[Index(nameof(ServerInfo.IP), IsUnique = true)]
     public class ServerInfo
     {
         public int ID { get; set; }
-        public string IP { get; private set; }
-        public string JsonInfo { get; set; }
+        public string IP { get; private set; } = string.Empty;
+        public string JsonInfo { get; set; } = string.Empty;
 
         public ServerInfo() { }
 

@@ -27,11 +27,6 @@ internal class Program
     /// Connection timeout in seconds
     /// </summary>
     private static double timeout = 10;
-
-    /// <summary>
-    /// Provides access to database
-    /// </summary>
-    private static DBController DB = new();
     
     /// <summary>
     /// List of clients
@@ -40,9 +35,6 @@ internal class Program
 
     private static async Task Main(string[] args)
     {
-        //Init
-        Task DBinit = DB.Initialize();
-
         //Parsing cmd params
         ParserResult<Options> result = Parser.Default.ParseArguments<Options>(args)
             .WithParsed(o =>
@@ -80,9 +72,6 @@ internal class Program
         List<Task> tasks = new();
         double currentRatio;
 
-        //Awaiting db initialization
-        await DBinit;
-
         //Starting update db thread
         updateDb.Start();
 
@@ -110,10 +99,6 @@ internal class Program
         await Task.WhenAll(writer, reader); //awaiting for results
         endDBThread = true;//exiting db thread
         updateDb.Join();
-
-        //Saving db
-        DB.SaveChanges();
-        DB.Dispose();
     }
 
     /// <summary>
@@ -138,6 +123,7 @@ internal class Program
                 else if (client.Disposed)
                     clients.Remove(client);
             }
+
             await Task.Delay(TimeSpan.FromMilliseconds(100));
         } while (clients.Count > 0);
     }
@@ -199,12 +185,14 @@ internal class Program
     /// </summary>
     static Thread updateDb = new(() =>
     {
+        //Provides access to database
+        DBController DB = new();
+
         int collectedInfosCount = 0;
 
         while (!endDBThread)
         {
             collectedInfosCount = serverInfos.Count;
-            bool isExecuted = collectedInfosCount > 0;
 
             try
             {
@@ -213,9 +201,6 @@ internal class Program
                     DB.AddOrUpdate(serverInfos.ReceiveAsync().Result).Wait();
                     collectedInfosCount--;
                 }
-
-                if (isExecuted)
-                    DB.SaveChanges();
             }
             catch (Exception ex)
             {

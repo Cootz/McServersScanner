@@ -21,7 +21,7 @@ internal class Program
     /// <summary>
     /// Array of ports to scan
     /// </summary>
-    private static ushort[] ports;
+    private static ushort[] ports = new ushort[] { 25565 };
 
     /// <summary>
     /// Block of information about scanned servers
@@ -74,9 +74,7 @@ internal class Program
                 //Adding ports
                 List<string>? portList = o.Ports?.ToList();
 
-                if (portList is null)
-                    ports = new ushort[] { 25565 };
-                else
+                if (portList is not null)
                 {
                     List<ushort> portUshot = new ();
 

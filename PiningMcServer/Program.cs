@@ -100,7 +100,6 @@ internal class Program
 
         int totalIps = ips.Count;
         ServicePointManager.DefaultConnectionLimit = 10000;
-        List<Task> tasks = new();
         double currentRatio;
 
         //Starting update db thread

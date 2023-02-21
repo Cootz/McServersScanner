@@ -17,7 +17,12 @@ internal class Program
     /// Block of Ips to scan
     /// </summary>
     private static BufferBlock<IPAddress> ips = new();
-    
+
+    /// <summary>
+    /// Array of ports to scan
+    /// </summary>
+    private static ushort[] ports;
+
     /// <summary>
     /// Block of information about scanned servers
     /// </summary>
@@ -40,7 +45,7 @@ internal class Program
             .WithParsed(o =>
             {
                 //Adding ips
-                List<string> ipRange = o.Range?.ToList() ?? new List<string>();
+                List<string> ipRange = o.Range!.ToList();
 
                 foreach (string ip in ipRange)
                 {
@@ -48,7 +53,7 @@ internal class Program
                     {
                         string[] splittedIps = ip.Split('-');
 
-                        var range = IpAddressGeneratior.FillRange(splittedIps[0], splittedIps[1]);
+                        var range = NetworkHelper.FillIpRange(splittedIps[0], splittedIps[1]);
                         foreach (IPAddress ipAddr in range)
                             ips.Post(ipAddr);
                     }
@@ -63,6 +68,32 @@ internal class Program
                     else //single ip
                     {
                         ips.Post(IPAddress.Parse(ip));
+                    }
+                }
+
+                //Adding ports
+                List<string>? portList = o.Ports?.ToList();
+
+                if (portList is null)
+                    ports = new ushort[] { 25565 };
+                else
+                {
+                    List<ushort> portUshot = new ();
+
+                    foreach (string portString in portList)
+                    {
+                        if (portString.Contains('-')) //ports range
+                        {
+                            string[] splittedPorts = portString.Split('-');
+
+                            var range = NetworkHelper.FillPortRange(splittedPorts[0], splittedPorts[1]);
+                            foreach (ushort port in range)
+                                portUshot.Add(port);
+                        }
+                        else //single port
+                        {
+                            ports = new ushort[] { ushort.Parse(portString) };
+                        }
                     }
                 }
             });
@@ -138,13 +169,17 @@ internal class Program
     {
         while (ips.Count > 0)
         {
-            McClient client = new McClient(await ips.ReceiveAsync(), 25565, OnConnected);
-            try
+            foreach (ushort port in ports)
             {
-                client.BeginConnect();
-                clients.Add(client);
+                McClient client = new McClient(await ips.ReceiveAsync(), port, OnConnected);
+
+                try
+                {
+                    client.BeginConnect();
+                    clients.Add(client);
+                }
+                catch { }
             }
-            catch { }
         }
     }
 

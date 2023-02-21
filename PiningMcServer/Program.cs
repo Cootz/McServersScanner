@@ -169,13 +169,17 @@ internal class Program
     {
         while (ips.Count > 0)
         {
-            McClient client = new McClient(await ips.ReceiveAsync(), 25565, OnConnected);
-            try
+            foreach (ushort port in ports)
             {
-                client.BeginConnect();
-                clients.Add(client);
+                McClient client = new McClient(await ips.ReceiveAsync(), port, OnConnected);
+
+                try
+                {
+                    client.BeginConnect();
+                    clients.Add(client);
+                }
+                catch { }
             }
-            catch { }
         }
     }
 

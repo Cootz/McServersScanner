@@ -84,9 +84,9 @@ internal class Program
                     {
                         if (portString.Contains('-')) //ports range
                         {
-                            string[] splittedIps = portString.Split('-');
+                            string[] splittedPorts = portString.Split('-');
 
-                            var range = NetworkHelper.FillPortRange(splittedIps[0], splittedIps[1]);
+                            var range = NetworkHelper.FillPortRange(splittedPorts[0], splittedPorts[1]);
                             foreach (ushort port in range)
                                 portUshot.Add(port);
                         }

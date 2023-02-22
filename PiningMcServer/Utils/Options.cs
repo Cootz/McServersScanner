@@ -12,5 +12,11 @@ namespace McServersScanner.CLI
 
         [Option('p', "port", Required = false, HelpText = "Range of ports to be scanned.")]
         public IEnumerable<string>? Ports { get; set; }
+
+        [Option("connection-limit", HelpText = "Max amount of connections at the same time")]
+        public int? ConnectionLimit { get; set; }
+
+        [Option('t', "connection-timeout", HelpText = "Timeout option (in seconds)")]
+        public double? ConnectionTimeout { get; set; }
     }
 }

@@ -29,6 +29,11 @@ internal class Program
     private static BufferBlock<ServerInfo> serverInfos = new();
 
     /// <summary>
+    /// Amout of active connections app can handle at the same time
+    /// </summary>
+    private static int connectionLimit = 10000;
+
+    /// <summary>
     /// Connection timeout in seconds
     /// </summary>
     private static double timeout = 10;
@@ -94,10 +99,23 @@ internal class Program
                         }
                     }
                 }
+
+                //Adding connection limit
+                int? conLimit = o.ConnectionLimit;
+
+                if (conLimit is not null)
+                    connectionLimit = conLimit.Value;
+
+                //Adding connection timeout
+                double? connectionTimeout = o.ConnectionTimeout;
+
+                if (connectionTimeout is not null)
+                    timeout = connectionTimeout.Value;
+
             });
 
         int totalIps = ips.Count;
-        ServicePointManager.DefaultConnectionLimit = 10000;
+        ServicePointManager.DefaultConnectionLimit = connectionLimit;
         double currentRatio;
 
         //Starting update db thread

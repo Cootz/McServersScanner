@@ -201,7 +201,12 @@ internal class Program
 
         if (data.StartsWith('{'))
         {
-            serverInfos.Post(new ServerInfo(data, client.IpEndPoint.Address.ToString()));
+            try
+            {
+                ServerInfo serverInfo = new ServerInfo(data, client.IpEndPoint.Address.ToString());
+                serverInfos.Post(serverInfo);
+            }
+            catch { }
         }
         
         try

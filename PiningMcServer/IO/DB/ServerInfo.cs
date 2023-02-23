@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Realms;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography;
 using System.Text.Json.Serialization;
 
 namespace McServersScanner.IO.DB
@@ -14,17 +15,15 @@ namespace McServersScanner.IO.DB
     public class ServerInfo : RealmObject
     {
         [PrimaryKey]
-        public int ID { get; set; }
-     
         /// <summary>
         /// Target server ip
         /// </summary>
-        public string IP { get; private set; } = string.Empty;
+        public string IP { get; private set; } = String.Empty;
 
         /// <summary>
         /// Version info
         /// </summary>
-        public Version Version { get; set; }
+        public Version Version { get; set; } = null!;
 
         /// <summary>
         /// Amount of players online
@@ -39,7 +38,7 @@ namespace McServersScanner.IO.DB
         /// <summary>
         /// Received answer
         /// </summary>
-        public string JsonInfo { get; set; } = string.Empty;
+        public string JsonInfo { get; set; } = String.Empty;
 
         private ServerInfo() { }
 

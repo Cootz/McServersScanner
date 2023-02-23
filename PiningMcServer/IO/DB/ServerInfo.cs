@@ -2,6 +2,7 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Realms;
+using System.Runtime.InteropServices;
 using System.Text.Json.Serialization;
 
 namespace McServersScanner.IO.DB
@@ -31,6 +32,11 @@ namespace McServersScanner.IO.DB
         public int? Online { get; set; } = null;
 
         /// <summary>
+        /// Server description
+        /// </summary>
+        public string Description { get; set; } = String.Empty;
+
+        /// <summary>
         /// Received answer
         /// </summary>
         public string JsonInfo { get; set; } = string.Empty;
@@ -41,13 +47,15 @@ namespace McServersScanner.IO.DB
         {
             IP = ip;
 
-            JObject serverInfo = JObject.Parse(JsonHelper.ConvertToJsonString(jsonInfo));
+            JObject serverInfo = JObject.Parse(jsonInfo);
 
-            Version = JsonConvert.DeserializeObject<Version>((string)serverInfo["version"]!)!;
+            string versionString = serverInfo["version"]!.ToString();
 
-            Online = (int?)serverInfo?["players"]?["online"];
+            Version = JsonConvert.DeserializeObject<Version>(versionString)!;
 
+            Online = serverInfo?["players"]?["online"]?.Value<int?>();
 
+            Description = serverInfo?["description"]?["text"]?.Value<string>() ?? String.Empty;
 
             JsonInfo = jsonInfo;
         }

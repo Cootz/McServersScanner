@@ -2,6 +2,7 @@
 using McServersScanner.CLI;
 using McServersScanner.IO.DB;
 using McServersScanner.Network;
+using McServersScanner.Utils;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks.Dataflow;
@@ -203,7 +204,9 @@ internal class Program
         {
             try
             {
-                ServerInfo serverInfo = new ServerInfo(data, client.IpEndPoint.Address.ToString());
+                string jsonData = JsonHelper.ConvertToJsonString(data);
+
+                ServerInfo serverInfo = new ServerInfo(jsonData, client.IpEndPoint.Address.ToString());
                 serverInfos.Post(serverInfo);
             }
             catch { }

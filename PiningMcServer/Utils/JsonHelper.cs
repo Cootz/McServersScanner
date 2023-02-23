@@ -35,7 +35,7 @@ namespace McServersScanner.Utils
                 i++;
             } while (balance > 0);
 
-            return cleanJson.Slice(0, i - 1).ToString();
+            return cleanJson.Slice(0, i).ToString();
         }
 
     }

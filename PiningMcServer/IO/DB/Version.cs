@@ -15,5 +15,10 @@ namespace McServersScanner.IO.DB
 
         [JsonPropertyName("protocol")]
         public int? Protocol { get; set; } = null;
+
+        public override string ToString()
+        {
+            return $"Name: {Name}, protocol {Protocol}";
+        }
     }
 }

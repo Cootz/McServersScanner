@@ -2,17 +2,13 @@
 using McServersScanner.CLI;
 using McServersScanner.IO.DB;
 using McServersScanner.Network;
+using Remotion.Linq.Parsing.Structure.IntermediateModel;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks.Dataflow;
 
 internal class Program
 {
-    /// <summary>
-    /// Exit database thread if true
-    /// </summary>
-    private static bool endDBThread = false;
-
     /// <summary>
     /// Block of Ips to scan
     /// </summary>
@@ -37,6 +33,26 @@ internal class Program
     /// List of clients
     /// </summary>
     private static List<McClient> clients = new();
+
+    /// <summary>
+    /// Exit database thread if true
+    /// </summary>
+    private static bool endDBThread = false;
+
+    /// <summary>
+    /// Stops all thread as fast as possible
+    /// </summary>
+    private static bool IsForcedToStop = false;
+
+    /// <summary>
+    /// Instance of <see cref="WriterAsync"/>
+    /// </summary>
+    private static Task? writer;
+
+    /// <summary>
+    /// Instance of <see cref="ReaderAsync"/>
+    /// </summary>
+    private static Task? reader;
 
     private static async Task Main(string[] args)
     {
@@ -96,6 +112,8 @@ internal class Program
                 }
             });
 
+        Console.CancelKeyPress += OnExit;
+
         int totalIps = ips.Count;
         ServicePointManager.DefaultConnectionLimit = 10000;
         double currentRatio;
@@ -104,8 +122,8 @@ internal class Program
         updateDb.Start();
 
         //Running workers
-        Task writer = Task.Run(WriterAsync);
-        Task reader = Task.Run(ReaderAsync);
+        writer = Task.Run(WriterAsync);
+        reader = Task.Run(ReaderAsync);
 
         //Showing progress
         int currentCount;
@@ -153,7 +171,7 @@ internal class Program
             }
 
             await Task.Delay(TimeSpan.FromMilliseconds(100));
-        } while (clients.Count > 0);
+        } while (clients.Count > 0 && !IsForcedToStop);
     }
 
     /// <summary>
@@ -164,7 +182,7 @@ internal class Program
     /// </remarks>
     public static async Task WriterAsync()
     {
-        while (ips.Count > 0)
+        while (ips.Count > 0 && !IsForcedToStop)
         {
             foreach (ushort port in ports)
             {
@@ -186,6 +204,9 @@ internal class Program
     /// <param name="result"></param>
     public static async void OnConnected(IAsyncResult result)
     {
+        if (IsForcedToStop)
+            return;
+
         if (result.AsyncState is null)
             return;
 
@@ -242,6 +263,23 @@ internal class Program
             Thread.Sleep(100);
         }
     });
+
+    /// <summary>
+    /// Force all running tasks and threads to stop
+    /// </summary>
+    private static void forceStop()
+    { 
+        IsForcedToStop = true;
+        endDBThread = true;
+
+        Task.WhenAll(reader ?? Task.CompletedTask, writer ?? Task.CompletedTask);
+        updateDb.Join();
+    }
+
+    /// <summary>
+    /// Save progress on programm interruption (Ctrl+C)
+    /// </summary>
+    private static void OnExit(object? sender, ConsoleCancelEventArgs e) => forceStop();
 
     /// <summary>
     /// Calculates percantage ratio of servers scanning progress

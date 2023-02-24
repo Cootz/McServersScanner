@@ -13,14 +13,10 @@ namespace McServersScanner.CLI
         /// <param name="first">Start of range</param>
         /// <param name="last">End of range</param>
         /// <returns>Range of ip addresses</returns>
-        public static IPAddress[] FillIpRange(IPAddress first, IPAddress last)
+        public static IEnumerable<IPAddress> FillIpRange(IPAddress first, IPAddress last)
         { 
-            List<IPAddress> result = new List<IPAddress>();
-
             for (uint i = ConvertIpAddressToInt(first); i <= ConvertIpAddressToInt(last); i++)
-                result.Add(ConvertIntToIpAddress(i));
-
-            return result.ToArray();
+                yield return ConvertIntToIpAddress(i);
         }
 
         /// <summary>
@@ -29,7 +25,7 @@ namespace McServersScanner.CLI
         /// <param name="first">Start of range</param>
         /// <param name="last">End of range</param>
         /// <returns>Range of ip addresses</returns>
-        public static IPAddress[] FillIpRange(string first, string last) => FillIpRange(IPAddress.Parse(first), IPAddress.Parse(last));
+        public static IEnumerable<IPAddress> FillIpRange(string first, string last) => FillIpRange(IPAddress.Parse(first), IPAddress.Parse(last));
 
         /// <summary>
         /// Generates range of ports depending on first and last port
@@ -37,14 +33,10 @@ namespace McServersScanner.CLI
         /// <param name="first">Start of range</param>
         /// <param name="last">End of range</param>
         /// <returns>Range of ports</returns>
-        public static ushort[] FillPortRange(ushort first, ushort last)
+        public static IEnumerable<ushort> FillPortRange(ushort first, ushort last)
         {
-            List<ushort> result = new List<ushort>();
-
             for (ushort i = first; i <= last; i++)
-                result.Add(i);
-
-            return result.ToArray();
+                yield return i;
         }
 
         /// <summary>
@@ -53,7 +45,7 @@ namespace McServersScanner.CLI
         /// <param name="first">Start of range</param>
         /// <param name="last">End of range</param>
         /// <returns>Range of ports</returns>
-        public static ushort[] FillPortRange(string first, string last) => FillPortRange(ushort.Parse(first), ushort.Parse(last));
+        public static IEnumerable<ushort> FillPortRange(string first, string last) => FillPortRange(ushort.Parse(first), ushort.Parse(last));
 
         /// <summary>
         /// Converts IpAddress to int

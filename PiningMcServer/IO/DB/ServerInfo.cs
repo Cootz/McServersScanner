@@ -1,10 +1,6 @@
-﻿using McServersScanner.Utils;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Realms;
-using System.Runtime.InteropServices;
-using System.Security.Cryptography;
-using System.Text.Json.Serialization;
 
 namespace McServersScanner.IO.DB
 {

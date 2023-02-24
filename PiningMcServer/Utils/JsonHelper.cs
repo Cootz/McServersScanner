@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace McServersScanner.Utils
+﻿namespace McServersScanner.Utils
 {
     /// <summary>
     /// Helps with json conversion

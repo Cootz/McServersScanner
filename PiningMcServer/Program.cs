@@ -47,7 +47,7 @@ internal class Program
     /// <summary>
     /// Supplies <see cref="ips" with <see cref="IPAddress"/>es/>
     /// </summary>
-    private static Task addIPAdresses = Task.CompletedTask;
+    private static Task addIpAdresses = Task.CompletedTask;
 
     /// <summary>
     /// Amount of ips to scan
@@ -92,7 +92,7 @@ internal class Program
 
                         var range = NetworkHelper.FillIpRange(firstIp, lastIp);
 
-                        addIPAdresses = Task.Run(() => copyToActionBlockAsync(range, ips));
+                        addIpAdresses = Task.Run(() => copyToActionBlockAsync(range, ips));
                     }
                     else if (ipOption.Where(x => char.IsLetter(x)).Count() > 0) //ips from file
                     {
@@ -100,7 +100,7 @@ internal class Program
 
                         var readedIps = IOHelper.ReadLineByLine(ipOption);
 
-                        addIPAdresses = Task.Run(() => copyToActionBlockAsync(from ip in readedIps select IPAddress.Parse(ip), ips));
+                        addIpAdresses = Task.Run(() => copyToActionBlockAsync(from ip in readedIps select IPAddress.Parse(ip), ips));
                     }
                     else //single ip
                     {
@@ -166,7 +166,7 @@ internal class Program
         Console.Write("{0:0.00}% - {1}/{2}", currentRatio, scannedIps, totalIps);
         Console.Write("Waiting 10 sec for the results...");
 
-        await Task.WhenAll(writer, reader); //awaiting for results
+        await Task.WhenAll(writer, reader, addIpAdresses); //awaiting for results
         endDBThread = true;//exiting db thread
         updateDb.Join();
     }

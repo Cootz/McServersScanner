@@ -17,7 +17,7 @@ internal class Program
     /// <summary>
     /// Block of Ips to scan
     /// </summary>
-    private static BufferBlock<IPAddress> ips = new();
+    private static BufferBlock<IPAddress> ips = null!;
 
     /// <summary>
     /// Array of ports to scan
@@ -44,36 +44,69 @@ internal class Program
     /// </summary>
     private static List<McClient> clients = new();
 
+    /// <summary>
+    /// Supplies <see cref="ips" with <see cref="IPAddress"/>es/>
+    /// </summary>
+    private static Task addIpAdresses = Task.CompletedTask;
+
+    /// <summary>
+    /// Amount of ips to scan
+    /// </summary>
+    private static long totalIps = 0;
+
+    /// <summary>
+    /// Amount of ips being scanned
+    /// </summary>
+    private static long scannedIps = 0;
+
     private static async Task Main(string[] args)
     {
         //Parsing cmd params
         ParserResult<Options> result = Parser.Default.ParseArguments<Options>(args)
             .WithParsed(o =>
             {
-                //Adding ips
-                List<string> ipRange = o.Range!.ToList();
+                //Adding connection limit
+                int? conLimit = o.ConnectionLimit;
 
-                foreach (string ip in ipRange)
+                if (conLimit is not null)
+                    connectionLimit = conLimit.Value;
+
+                ips = new(new DataflowBlockOptions()
                 {
-                    if (ip.Contains('-')) //ip range
-                    {
-                        string[] splittedIps = ip.Split('-');
+                    BoundedCapacity = connectionLimit
+                });
 
-                        var range = NetworkHelper.FillIpRange(splittedIps[0], splittedIps[1]);
-                        foreach (IPAddress ipAddr in range)
-                            ips.Post(ipAddr);
+                //Adding ips
+                List<string> ipOptionRange = o.Range!.ToList();
+
+                foreach (string ipOption in ipOptionRange)
+                {
+                    if (ipOption.Contains('-')) //ip range
+                    {
+                        string[] splittedIps = ipOption.Split('-');
+
+                        string firstIp = splittedIps[0];
+                        string lastIp = splittedIps[1];
+
+                        totalIps = NetworkHelper.GetIpRangeCount(firstIp, lastIp);
+
+                        var range = NetworkHelper.FillIpRange(firstIp, lastIp);
+
+                        addIpAdresses = Task.Run(() => copyToActionBlockAsync(range, ips));
                     }
-                    else if (ip.Where(x => char.IsLetter(x)).Count() > 0) //ips from file
+                    else if (ipOption.Where(x => char.IsLetter(x)).Count() > 0) //ips from file
                     {
-                        string[] readedIps = File.ReadAllLines(ip);
+                        totalIps = IOHelper.GetLinesCount(ipOption);
 
-                        foreach (string ipAddr in readedIps)
-                            if (!string.IsNullOrEmpty(ipAddr))
-                                ips.Post(IPAddress.Parse(ipAddr));
+                        var readedIps = IOHelper.ReadLineByLine(ipOption);
+
+                        addIpAdresses = Task.Run(() => copyToActionBlockAsync(from ip in readedIps select IPAddress.Parse(ip), ips));
                     }
                     else //single ip
                     {
-                        ips.Post(IPAddress.Parse(ip));
+                        totalIps = 1;
+
+                        ips.Post(IPAddress.Parse(ipOption));
                     }
                 }
 
@@ -101,12 +134,6 @@ internal class Program
                     }
                 }
 
-                //Adding connection limit
-                int? conLimit = o.ConnectionLimit;
-
-                if (conLimit is not null)
-                    connectionLimit = conLimit.Value;
-
                 //Adding connection timeout
                 double? connectionTimeout = o.ConnectionTimeout;
 
@@ -115,7 +142,6 @@ internal class Program
 
             });
 
-        int totalIps = ips.Count;
         ServicePointManager.DefaultConnectionLimit = connectionLimit;
         double currentRatio;
 
@@ -127,23 +153,20 @@ internal class Program
         Task reader = Task.Run(ReaderAsync);
 
         //Showing progress
-        int currentCount;
-        while (ips.Count > 0)
+        while (scannedIps < totalIps)
         {
-            currentCount = ips.Count;
-            currentRatio = calculateRatio(currentCount, totalIps);
+            currentRatio = calculateRatio(scannedIps, totalIps);
 
-            Console.Write("\r{0}% - {1}/{2}", currentRatio, totalIps - currentCount, totalIps);
+            Console.Write("\r{0:0.00}% - {1}/{2}", currentRatio, scannedIps, totalIps);
 
             await Task.Delay(100);
         }
 
-        currentCount = ips.Count;
-        currentRatio = calculateRatio(currentCount, totalIps);
-        Console.Write("{0}% - {1}/{2}", currentRatio, totalIps - currentCount, totalIps);
+        currentRatio = calculateRatio(scannedIps, totalIps);
+        Console.Write("{0:0.00}% - {1}/{2}", currentRatio, scannedIps, totalIps);
         Console.Write("Waiting 10 sec for the results...");
 
-        await Task.WhenAll(writer, reader); //awaiting for results
+        await Task.WhenAll(writer, reader, addIpAdresses); //awaiting for results
         endDBThread = true;//exiting db thread
         updateDb.Join();
     }
@@ -162,13 +185,13 @@ internal class Program
         {
             foreach (var client in clients)
             {
-                if (DateTime.Now - client.initDateTime > timeToConnect && !client.isConnected)
+                if (client.Disposed)
+                    clients.Remove(client);
+                else if (DateTime.Now - client.initDateTime > timeToConnect && !client.isConnected)
                 {
                     client.Dispose();
                     clients.Remove(client);
                 }
-                else if (client.Disposed)
-                    clients.Remove(client);
             }
 
             await Task.Delay(TimeSpan.FromMilliseconds(100));
@@ -193,6 +216,7 @@ internal class Program
                 {
                     client.BeginConnect();
                     clients.Add(client);
+                    scannedIps++;
                 }
                 catch { }
             }
@@ -235,6 +259,7 @@ internal class Program
             await client.DisconnectAsync();
         }
         catch { }
+
         client.Dispose();
     }
 
@@ -270,10 +295,22 @@ internal class Program
     });
 
     /// <summary>
+    /// Asynchronously copy data from enumerable to actionBlock
+    /// </summary>
+    /// <typeparam name="T">Type of class to copy</typeparam>
+    /// <param name="typeEnumerable">Copy from</param>
+    /// <param name="typeActionBlock">Copy to</param>
+    static async Task copyToActionBlockAsync<T>(IEnumerable<T> typeEnumerable, BufferBlock<T> typeActionBlock) where T : class
+    {
+        foreach (T item in typeEnumerable)
+            await typeActionBlock.SendAsync(item);
+    }
+
+    /// <summary>
     /// Calculates percantage ratio of servers scanning progress
     /// </summary>
     /// <param name="currentInQueue">Current position in queue</param>
     /// <param name="length">Length of queue</param>
     /// <returns>Progress percentage rounded to 2 digits</returns>
-    static double calculateRatio(double currentInQueue, double length) => Math.Round((length - currentInQueue) / length * 100.0, 2);
+    static double calculateRatio(double currentInQueue, double length) => currentInQueue / length * 100.0;
 }

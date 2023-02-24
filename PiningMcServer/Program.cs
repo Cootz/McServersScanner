@@ -17,10 +17,7 @@ internal class Program
     /// <summary>
     /// Block of Ips to scan
     /// </summary>
-    private static BufferBlock<IPAddress> ips = new (new DataflowBlockOptions()
-    {
-        BoundedCapacity = connectionLimit
-    });
+    private static BufferBlock<IPAddress> ips = null!;
 
     /// <summary>
     /// Array of ports to scan
@@ -57,8 +54,18 @@ internal class Program
     /// </summary>
     private static long totalIps = 0;
 
+    /// <summary>
+    /// Amount of ips being scanned
+    /// </summary>
+    private static long scannedIps = 0;
+
     private static async Task Main(string[] args)
     {
+        ips = new(new DataflowBlockOptions()
+        {
+            BoundedCapacity = connectionLimit
+        });
+
         //Parsing cmd params
         ParserResult<Options> result = Parser.Default.ParseArguments<Options>(args)
             .WithParsed(o =>
@@ -146,20 +153,17 @@ internal class Program
         Task reader = Task.Run(ReaderAsync);
 
         //Showing progress
-        int currentCount;
-        while (ips.Count > 0)
+        while (scannedIps < totalIps)
         {
-            currentCount = ips.Count;
-            currentRatio = calculateRatio(currentCount, totalIps);
+            currentRatio = calculateRatio(scannedIps, totalIps);
 
-            Console.Write("\r{0}% - {1}/{2}", currentRatio, totalIps - currentCount, totalIps);
+            Console.Write("\r{0:0.00}% - {1}/{2}", currentRatio, scannedIps, totalIps);
 
             await Task.Delay(100);
         }
 
-        currentCount = ips.Count;
-        currentRatio = calculateRatio(currentCount, totalIps);
-        Console.Write("{0}% - {1}/{2}", currentRatio, totalIps - currentCount, totalIps);
+        currentRatio = calculateRatio(scannedIps, totalIps);
+        Console.Write("{0:0.00}% - {1}/{2}", currentRatio, scannedIps, totalIps);
         Console.Write("Waiting 10 sec for the results...");
 
         await Task.WhenAll(writer, reader); //awaiting for results
@@ -181,13 +185,13 @@ internal class Program
         {
             foreach (var client in clients)
             {
-                if (DateTime.Now - client.initDateTime > timeToConnect && !client.isConnected)
+                if (client.Disposed)
+                    clients.Remove(client);
+                else if (DateTime.Now - client.initDateTime > timeToConnect && !client.isConnected)
                 {
                     client.Dispose();
                     clients.Remove(client);
                 }
-                else if (client.Disposed)
-                    clients.Remove(client);
             }
 
             await Task.Delay(TimeSpan.FromMilliseconds(100));
@@ -212,6 +216,7 @@ internal class Program
                 {
                     client.BeginConnect();
                     clients.Add(client);
+                    scannedIps++;
                 }
                 catch { }
             }
@@ -307,5 +312,5 @@ internal class Program
     /// <param name="currentInQueue">Current position in queue</param>
     /// <param name="length">Length of queue</param>
     /// <returns>Progress percentage rounded to 2 digits</returns>
-    static double calculateRatio(double currentInQueue, double length) => Math.Round((length - currentInQueue) / length * 100.0, 2);
+    static double calculateRatio(double currentInQueue, double length) => currentInQueue / length * 100.0;
 }

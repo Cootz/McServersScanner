@@ -17,7 +17,10 @@ internal class Program
     /// <summary>
     /// Block of Ips to scan
     /// </summary>
-    private static BufferBlock<IPAddress> ips = new();
+    private static BufferBlock<IPAddress> ips = new (new DataflowBlockOptions()
+    {
+        BoundedCapacity = connectionLimit
+    });
 
     /// <summary>
     /// Array of ports to scan
@@ -44,6 +47,16 @@ internal class Program
     /// </summary>
     private static List<McClient> clients = new();
 
+    /// <summary>
+    /// Supplies <see cref="ips" with <see cref="IPAddress"/>es/>
+    /// </summary>
+    private static Task addIPAdresses = Task.CompletedTask;
+
+    /// <summary>
+    /// Amount of ips to scan
+    /// </summary>
+    private static long totalIps = 0;
+
     private static async Task Main(string[] args)
     {
         //Parsing cmd params
@@ -51,29 +64,36 @@ internal class Program
             .WithParsed(o =>
             {
                 //Adding ips
-                List<string> ipRange = o.Range!.ToList();
+                List<string> ipOptionRange = o.Range!.ToList();
 
-                foreach (string ip in ipRange)
+                foreach (string ipOption in ipOptionRange)
                 {
-                    if (ip.Contains('-')) //ip range
+                    if (ipOption.Contains('-')) //ip range
                     {
-                        string[] splittedIps = ip.Split('-');
+                        string[] splittedIps = ipOption.Split('-');
 
-                        var range = NetworkHelper.FillIpRange(splittedIps[0], splittedIps[1]);
-                        foreach (IPAddress ipAddr in range)
-                            ips.Post(ipAddr);
+                        string firstIp = splittedIps[0];
+                        string lastIp = splittedIps[1];
+
+                        totalIps = NetworkHelper.GetIpRangeCount(firstIp, lastIp);
+
+                        var range = NetworkHelper.FillIpRange(firstIp, lastIp);
+
+                        addIPAdresses = Task.Run(() => copyToActionBlockAsync(range, ips));
                     }
-                    else if (ip.Where(x => char.IsLetter(x)).Count() > 0) //ips from file
+                    else if (ipOption.Where(x => char.IsLetter(x)).Count() > 0) //ips from file
                     {
-                        string[] readedIps = File.ReadAllLines(ip);
+                        totalIps = IOHelper.GetLinesCount(ipOption);
 
-                        foreach (string ipAddr in readedIps)
-                            if (!string.IsNullOrEmpty(ipAddr))
-                                ips.Post(IPAddress.Parse(ipAddr));
+                        var readedIps = IOHelper.ReadLineByLine(ipOption);
+
+                        addIPAdresses = Task.Run(() => copyToActionBlockAsync(from ip in readedIps select IPAddress.Parse(ip), ips));
                     }
                     else //single ip
                     {
-                        ips.Post(IPAddress.Parse(ip));
+                        totalIps = 1;
+
+                        ips.Post(IPAddress.Parse(ipOption));
                     }
                 }
 
@@ -115,7 +135,6 @@ internal class Program
 
             });
 
-        int totalIps = ips.Count;
         ServicePointManager.DefaultConnectionLimit = connectionLimit;
         double currentRatio;
 
@@ -235,6 +254,7 @@ internal class Program
             await client.DisconnectAsync();
         }
         catch { }
+
         client.Dispose();
     }
 
@@ -268,6 +288,18 @@ internal class Program
             Thread.Sleep(100);
         }
     });
+
+    /// <summary>
+    /// Asynchronously copy data from enumerable to actionBlock
+    /// </summary>
+    /// <typeparam name="T">Type of class to copy</typeparam>
+    /// <param name="typeEnumerable">Copy from</param>
+    /// <param name="typeActionBlock">Copy to</param>
+    static async Task copyToActionBlockAsync<T>(IEnumerable<T> typeEnumerable, BufferBlock<T> typeActionBlock) where T : class
+    {
+        foreach (T item in typeEnumerable)
+            await typeActionBlock.SendAsync(item);
+    }
 
     /// <summary>
     /// Calculates percantage ratio of servers scanning progress

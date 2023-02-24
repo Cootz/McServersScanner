@@ -61,15 +61,21 @@ internal class Program
 
     private static async Task Main(string[] args)
     {
-        ips = new(new DataflowBlockOptions()
-        {
-            BoundedCapacity = connectionLimit
-        });
-
         //Parsing cmd params
         ParserResult<Options> result = Parser.Default.ParseArguments<Options>(args)
             .WithParsed(o =>
             {
+                //Adding connection limit
+                int? conLimit = o.ConnectionLimit;
+
+                if (conLimit is not null)
+                    connectionLimit = conLimit.Value;
+
+                ips = new(new DataflowBlockOptions()
+                {
+                    BoundedCapacity = connectionLimit
+                });
+
                 //Adding ips
                 List<string> ipOptionRange = o.Range!.ToList();
 
@@ -127,12 +133,6 @@ internal class Program
                         }
                     }
                 }
-
-                //Adding connection limit
-                int? conLimit = o.ConnectionLimit;
-
-                if (conLimit is not null)
-                    connectionLimit = conLimit.Value;
 
                 //Adding connection timeout
                 double? connectionTimeout = o.ConnectionTimeout;

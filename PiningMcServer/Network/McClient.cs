@@ -97,7 +97,7 @@ namespace McServersScanner.Network
                 do
                 {
                     bytesReceived = await Client.ReceiveAsync(buffer, SocketFlags.None);
-                    response.Append(Encoding.UTF8.GetString(buffer));
+                    response.Append(StringPool.Shared.GetOrAdd(Encoding.UTF8.GetString(buffer)));
                 } while (bytesReceived > 0);
             }
             catch

@@ -12,7 +12,7 @@ namespace McServersScanner.Utils
         /// </summary>
         /// <param name="dirtyJson">String with json data in it</param>
         /// <returns>Clean json string ready to convert</returns>
-        public static string ConvertToJsonString(string dirtyJson) => ConvertToJsonString(dirtyJson);
+        public static string ConvertToJsonString(string dirtyJson) => ConvertToJsonString(dirtyJson.AsSpan());
 
         public static string ConvertToJsonString(ReadOnlySpan<char> dirtyJson)
         {

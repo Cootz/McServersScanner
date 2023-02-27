@@ -7,7 +7,7 @@ namespace McServersScanner.Network
     /// </summary>
     public static class McProtocol
     {
-        const int SEGMENT_BITS = 0x7F;
+        const int SEGMENT_BIT = 0x7F;
         const int CONTINUE_BIT = 0x80;
 
         /// <summary>
@@ -22,7 +22,7 @@ namespace McServersScanner.Network
 
             while ((value & CONTINUE_BIT) != 0)
             {
-                buffer.Add((byte)(value & SEGMENT_BITS | CONTINUE_BIT));
+                buffer.Add((byte)(value & SEGMENT_BIT | CONTINUE_BIT));
                 value = (int)((uint)value) >> 7;
             }
 

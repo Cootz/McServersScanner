@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CommunityToolkit.HighPerformance.Buffers;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -28,7 +29,7 @@ namespace McServersScanner.Utils
                 while ((line = reader.ReadLine()) != null)
                 { 
                     if (!String.IsNullOrEmpty(line))
-                        yield return line;
+                        yield return StringPool.Shared.GetOrAdd(line);
                 }
             }
         }

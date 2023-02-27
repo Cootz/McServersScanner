@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using CommunityToolkit.HighPerformance.Buffers;
+using System.Net;
 using System.Net.Sockets;
 using System.Text;
 
@@ -101,16 +102,13 @@ namespace McServersScanner.Network
             }
             catch
             {
-                return String.Empty;
+                return string.Empty;
             }
 
-            //Preventing "System.Private.CoreLib:Index and count must refer to a location within the string. (Parameter 'count')" exception
-            string ret = response.ToString();
-
-            if (ret.Length > 5)
-                return ret.Remove(0, 5);
+            if (response.Length > 5)
+                return StringPool.Shared.GetOrAdd(response.Remove(0, 5).ToString());
             else
-                return String.Empty;
+                return string.Empty;
         }
 
         /// <summary>

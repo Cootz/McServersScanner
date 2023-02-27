@@ -1,4 +1,6 @@
-﻿using Newtonsoft.Json;
+﻿using CommunityToolkit.HighPerformance.Buffers;
+using MongoDB.Bson;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Realms;
 
@@ -14,7 +16,7 @@ namespace McServersScanner.IO.DB
         /// <summary>
         /// Target server ip
         /// </summary>
-        public string IP { get; private set; } = String.Empty;
+        public string IP { get; private set; } = string.Empty;
 
         /// <summary>
         /// Version info
@@ -29,12 +31,12 @@ namespace McServersScanner.IO.DB
         /// <summary>
         /// Server description
         /// </summary>
-        public string Description { get; set; } = String.Empty;
+        public string Description { get; set; } = string.Empty;
 
         /// <summary>
         /// Received answer
         /// </summary>
-        public string JsonInfo { get; set; } = String.Empty;
+        public string JsonInfo { get; set; } = string.Empty;
 
         private ServerInfo() { }
 
@@ -44,13 +46,13 @@ namespace McServersScanner.IO.DB
 
             JObject serverInfo = JObject.Parse(jsonInfo);
 
-            string versionString = serverInfo["version"]!.ToString();
+            JObject jVersion = (JObject)serverInfo["version"]!;
 
-            Version = JsonConvert.DeserializeObject<Version>(versionString)!;
+            Version = jVersion.ToObject<Version>()!;
 
             Online = serverInfo?["players"]?["online"]?.Value<int?>();
 
-            Description = serverInfo?["description"]?["text"]?.Value<string>() ?? String.Empty;
+            Description = serverInfo?["description"]?["text"]?.Value<string>() ?? string.Empty;
 
             JsonInfo = jsonInfo;
         }

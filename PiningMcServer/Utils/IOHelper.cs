@@ -1,3 +1,5 @@
+﻿using CommunityToolkit.HighPerformance.Buffers;
+ 
 ﻿namespace McServersScanner.Utils
 {
     /// <summary>
@@ -22,7 +24,7 @@
                 while ((line = reader.ReadLine()) != null)
                 { 
                     if (!String.IsNullOrEmpty(line))
-                        yield return line;
+                        yield return StringPool.Shared.GetOrAdd(line);
                 }
             }
         }

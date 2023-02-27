@@ -1,4 +1,5 @@
 ﻿using CommandLine;
+using CommunityToolkit.HighPerformance.Buffers;
 using McServersScanner.CLI;
 using McServersScanner.IO.DB;
 using McServersScanner.Network;
@@ -71,51 +72,12 @@ internal class Program
                 if (conLimit is not null)
                     connectionLimit = conLimit.Value;
 
-                ips = new(new DataflowBlockOptions()
-                {
-                    BoundedCapacity = connectionLimit
-                });
-
-                //Adding ips
-                List<string> ipOptionRange = o.Range!.ToList();
-
-                foreach (string ipOption in ipOptionRange)
-                {
-                    if (ipOption.Contains('-')) //ip range
-                    {
-                        string[] splittedIps = ipOption.Split('-');
-
-                        string firstIp = splittedIps[0];
-                        string lastIp = splittedIps[1];
-
-                        totalIps = NetworkHelper.GetIpRangeCount(firstIp, lastIp);
-
-                        var range = NetworkHelper.FillIpRange(firstIp, lastIp);
-
-                        addIpAdresses = Task.Run(() => copyToActionBlockAsync(range, ips));
-                    }
-                    else if (ipOption.Where(x => char.IsLetter(x)).Count() > 0) //ips from file
-                    {
-                        totalIps = IOHelper.GetLinesCount(ipOption);
-
-                        var readedIps = IOHelper.ReadLineByLine(ipOption);
-
-                        addIpAdresses = Task.Run(() => copyToActionBlockAsync(from ip in readedIps select IPAddress.Parse(ip), ips));
-                    }
-                    else //single ip
-                    {
-                        totalIps = 1;
-
-                        ips.Post(IPAddress.Parse(ipOption));
-                    }
-                }
-
                 //Adding ports
                 List<string>? portList = o.Ports?.ToList();
 
                 if (portList is not null)
                 {
-                    List<ushort> portUshot = new ();
+                    List<ushort> portUshot = new();
 
                     foreach (string portString in portList)
                     {
@@ -131,6 +93,45 @@ internal class Program
                         {
                             ports = new ushort[] { ushort.Parse(portString) };
                         }
+                    }
+                }
+
+                //Adding ips
+                ips = new(new DataflowBlockOptions()
+                {
+                    BoundedCapacity = connectionLimit
+                });
+
+                List<string> ipOptionRange = o.Range!.ToList();
+
+                foreach (string ipOption in ipOptionRange)
+                {
+                    if (ipOption.Contains('-')) //ip range
+                    {
+                        string[] splittedIps = ipOption.Split('-');
+
+                        string firstIp = StringPool.Shared.GetOrAdd(splittedIps[0]);
+                        string lastIp = StringPool.Shared.GetOrAdd(splittedIps[1]);
+
+                        totalIps = NetworkHelper.GetIpRangeCount(firstIp, lastIp) * ports.Length;
+
+                        var range = NetworkHelper.FillIpRange(firstIp, lastIp);
+
+                        addIpAdresses = Task.Run(() => copyToActionBlockAsync(range, ips));
+                    }
+                    else if (ipOption.Where(x => char.IsLetter(x)).Count() > 0) //ips from file
+                    {
+                        totalIps = IOHelper.GetLinesCount(ipOption) * ports.Length;
+
+                        var readedIps = IOHelper.ReadLineByLine(ipOption);
+
+                        addIpAdresses = Task.Run(() => copyToActionBlockAsync(from ip in readedIps select IPAddress.Parse(ip), ips));
+                    }
+                    else //single ip
+                    {
+                        totalIps = ports.Length;
+
+                        ips.Post(IPAddress.Parse(ipOption));
                     }
                 }
 
@@ -183,19 +184,22 @@ internal class Program
 
         do
         {
-            foreach (var client in clients)
+            if (clients.Count > 0)
             {
-                if (client.Disposed)
-                    clients.Remove(client);
-                else if (DateTime.Now - client.initDateTime > timeToConnect && !client.isConnected)
+                foreach (var client in clients)
                 {
-                    client.Dispose();
-                    clients.Remove(client);
+                    if (client.Disposed)
+                        clients.Remove(client);
+                    else if (DateTime.Now - client.initDateTime > timeToConnect && !client.isConnected)
+                    {
+                        client.Dispose();
+                        clients.Remove(client);
+                    }
                 }
             }
 
             await Task.Delay(TimeSpan.FromMilliseconds(100));
-        } while (clients.Count > 0);
+        } while ((totalIps - scannedIps) > 0);
     }
 
     /// <summary>
@@ -206,7 +210,7 @@ internal class Program
     /// </remarks>
     public static async Task WriterAsync()
     {
-        while (ips.Count > 0)
+        while ((totalIps - scannedIps) > 0)
         {
             foreach (ushort port in ports)
             {
@@ -246,9 +250,9 @@ internal class Program
         {
             try
             {
-                string jsonData = JsonHelper.ConvertToJsonString(data);
+                string jsonData = StringPool.Shared.GetOrAdd(JsonHelper.ConvertToJsonString(data));
 
-                ServerInfo serverInfo = new ServerInfo(jsonData, client.IpEndPoint.Address.ToString());
+                ServerInfo serverInfo = new ServerInfo(jsonData, StringPool.Shared.GetOrAdd(client.IpEndPoint.Address.ToString()));
                 serverInfos.Post(serverInfo);
             }
             catch { }

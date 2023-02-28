@@ -2,7 +2,6 @@
 using McServersScanner.IO.DB;
 using McServersScanner.Network;
 using McServersScanner.Utils;
-using MongoDB.Bson.Serialization.Conventions;
 using System.Net;
 using System.Threading.Tasks.Dataflow;
 

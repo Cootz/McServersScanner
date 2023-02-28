@@ -2,11 +2,8 @@
 using CommunityToolkit.HighPerformance.Buffers;
 using McServersScanner;
 using McServersScanner.CLI;
-using McServersScanner.IO.DB;
-using McServersScanner.Network;
 using McServersScanner.Utils;
 using System.Net;
-using System.Net.Sockets;
 using System.Threading.Tasks.Dataflow;
 
 internal class Program
@@ -104,6 +101,4 @@ internal class Program
 
         
     }
-
-   
 }

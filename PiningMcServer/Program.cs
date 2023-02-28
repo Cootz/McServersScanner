@@ -98,7 +98,5 @@ internal class Program
         Scanner.ApplyConfiguration(config);
 
         await Scanner.Scan();
-
-        
     }
 }

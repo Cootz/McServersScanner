@@ -15,7 +15,14 @@ namespace McServersScanner
     /// </remarks>
     public static class Scanner
     {
+        /// <summary>
+        /// Number of ports to scan
+        /// </summary>
         public static int PortsCount => ports.Length;
+     
+        /// <summary>
+        /// Maximum number of connections available at the same time
+        /// </summary>
         public static int ConnectionLimit => connectionLimit;
 
         /// <summary>
@@ -39,7 +46,7 @@ namespace McServersScanner
         private static BufferBlock<ServerInfo> serverInfos = new();
 
         /// <summary>
-        /// Amout of active connections app can handle at the same time
+        /// Number of active connections that the app can support at the same time
         /// </summary>
         private static int connectionLimit = 10000;
 
@@ -59,7 +66,7 @@ namespace McServersScanner
         private static Task addIpAdresses = Task.CompletedTask;
 
         /// <summary>
-        /// Amount of ips to scan
+        /// The number of ips to scan
         /// </summary>
         private static long totalIps = 0;
 

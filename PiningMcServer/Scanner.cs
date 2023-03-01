@@ -3,6 +3,7 @@ using McServersScanner.IO.DB;
 using McServersScanner.Network;
 using McServersScanner.Utils;
 using System.Net;
+using System.Reflection.PortableExecutable;
 using System.Threading.Tasks.Dataflow;
 
 namespace McServersScanner
@@ -231,17 +232,18 @@ namespace McServersScanner
             {
                 collectedInfosCount = serverInfos.Count;
 
-                try
+                while (collectedInfosCount > 0)
                 {
-                    while (collectedInfosCount > 0)
+                    try
                     {
                         DB.AddOrUpdate(serverInfos.ReceiveAsync().Result).Wait();
-                        collectedInfosCount--;
                     }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine("{0}: {1}; {2}", ex.Source, ex.Message, ex.InnerException?.Message ?? "");
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine("{0}: {1}; {2}", ex.Source, ex.Message, ex.InnerException?.Message ?? "");
+                    }
+
+                    collectedInfosCount--;
                 }
 
                 Thread.Sleep(100);
@@ -258,6 +260,18 @@ namespace McServersScanner
         {
             foreach (T item in typeEnumerable)
                 await typeActionBlock.SendAsync(item);
+        }
+
+        /// <summary>
+        /// Force all running tasks and threads to stop
+        /// </summary>
+        public static void ForceStop()
+        {
+            endDBThread = true;
+
+            Console.WriteLine("\nStopping application...");
+
+            updateDb.Join();
         }
 
         /// <summary>

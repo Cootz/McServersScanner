@@ -1,6 +1,7 @@
 ﻿using CommandLine;
 using CommunityToolkit.HighPerformance.Buffers;
 using McServersScanner;
+using McServersScanner.Utils;
 using McServersScanner.CLI;
 using System.Net;
 using System.Threading.Tasks.Dataflow;
@@ -45,7 +46,7 @@ internal class Program
                     }
                 }
 
-         Console.CancelKeyPress += OnExit;
+                Console.CancelKeyPress += OnExit;
 
                 //Adding ips
                 config.ips = new(new DataflowBlockOptions()
@@ -98,7 +99,11 @@ internal class Program
 
         Scanner.ApplyConfiguration(config);
 
-
         await Scanner.Scan();
     }
+
+    /// <summary>
+    /// Save progress on programm interruption (Ctrl+C)
+    /// </summary>
+    private static void OnExit(object? sender, ConsoleCancelEventArgs e) => Scanner.ForceStop();
 }

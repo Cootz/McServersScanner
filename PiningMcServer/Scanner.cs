@@ -3,7 +3,6 @@ using McServersScanner.IO.DB;
 using McServersScanner.Network;
 using McServersScanner.Utils;
 using System.Net;
-using System.Reflection.PortableExecutable;
 using System.Threading.Tasks.Dataflow;
 
 namespace McServersScanner

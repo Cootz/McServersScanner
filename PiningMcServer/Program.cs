@@ -1,98 +1,32 @@
 ﻿using CommandLine;
+using CommunityToolkit.HighPerformance.Buffers;
+using McServersScanner;
 using McServersScanner.CLI;
-using McServersScanner.IO.DB;
-using McServersScanner.Network;
-using Remotion.Linq.Parsing.Structure.IntermediateModel;
 using System.Net;
-using System.Net.Sockets;
 using System.Threading.Tasks.Dataflow;
 
 internal class Program
 {
-    /// <summary>
-    /// Block of Ips to scan
-    /// </summary>
-    private static BufferBlock<IPAddress> ips = new();
-
-    /// <summary>
-    /// Array of ports to scan
-    /// </summary>
-    private static ushort[] ports = new ushort[] { 25565 };
-
-    /// <summary>
-    /// Block of information about scanned servers
-    /// </summary>
-    private static BufferBlock<ServerInfo> serverInfos = new();
-
-    /// <summary>
-    /// Connection timeout in seconds
-    /// </summary>
-    private static double timeout = 10;
-    
-    /// <summary>
-    /// List of clients
-    /// </summary>
-    private static List<McClient> clients = new();
-
-    /// <summary>
-    /// Exit database thread if true
-    /// </summary>
-    private static bool endDBThread = false;
-
-    /// <summary>
-    /// Stops all thread as fast as possible
-    /// </summary>
-    private static bool IsForcedToStop = false;
-
-    /// <summary>
-    /// Instance of <see cref="WriterAsync"/>
-    /// </summary>
-    private static Task? writer;
-
-    /// <summary>
-    /// Instance of <see cref="ReaderAsync"/>
-    /// </summary>
-    private static Task? reader;
-
     private static async Task Main(string[] args)
     {
+        ScannerConfiguration config = new();
+
         //Parsing cmd params
         ParserResult<Options> result = Parser.Default.ParseArguments<Options>(args)
             .WithParsed(o =>
             {
-                //Adding ips
-                List<string> ipRange = o.Range!.ToList();
+                //Adding connection limit
+                int? conLimit = o.ConnectionLimit;
 
-                foreach (string ip in ipRange)
-                {
-                    if (ip.Contains('-')) //ip range
-                    {
-                        string[] splittedIps = ip.Split('-');
-
-                        var range = NetworkHelper.FillIpRange(splittedIps[0], splittedIps[1]);
-                        foreach (IPAddress ipAddr in range)
-                            ips.Post(ipAddr);
-                    }
-                    else if (ip.Where(x => char.IsLetter(x)).Count() > 0) //ips from file
-                    {
-                        string[] readedIps = File.ReadAllLines(ip);
-
-                        foreach (string ipAddr in readedIps)
-                            if (!string.IsNullOrEmpty(ipAddr))
-                                ips.Post(IPAddress.Parse(ipAddr));
-                    }
-                    else //single ip
-                    {
-                        ips.Post(IPAddress.Parse(ip));
-                    }
-                }
+                if (conLimit is not null)
+                    config.connectionLimit = conLimit.Value;
 
                 //Adding ports
                 List<string>? portList = o.Ports?.ToList();
 
                 if (portList is not null)
                 {
-                    List<ushort> portUshot = new ();
+                    List<ushort> portUshot = new();
 
                     foreach (string portString in portList)
                     {
@@ -106,186 +40,65 @@ internal class Program
                         }
                         else //single port
                         {
-                            ports = new ushort[] { ushort.Parse(portString) };
+                            config.ports = new ushort[] { ushort.Parse(portString) };
                         }
                     }
                 }
+
+         Console.CancelKeyPress += OnExit;
+
+                //Adding ips
+                config.ips = new(new DataflowBlockOptions()
+                {
+                    BoundedCapacity = config.connectionLimit ?? Scanner.ConnectionLimit
+                });
+
+                int portsCount = config.ports?.Length ?? Scanner.PortsCount;
+
+                List<string> ipOptionRange = o.Range!.ToList();
+
+                foreach (string ipOption in ipOptionRange)
+                {
+                    if (ipOption.Contains('-')) //ip range
+                    {
+                        string[] splittedIps = ipOption.Split('-');
+
+                        string firstIp = StringPool.Shared.GetOrAdd(splittedIps[0]);
+                        string lastIp = StringPool.Shared.GetOrAdd(splittedIps[1]);
+
+                        config.totalIps = NetworkHelper.GetIpRangeCount(firstIp, lastIp) * portsCount;
+
+                        var range = NetworkHelper.FillIpRange(firstIp, lastIp);
+
+                        config.addIpAdresses = Task.Run(() => Scanner.copyToActionBlockAsync(range, config.ips));
+                    }
+                    else if (ipOption.Where(x => char.IsLetter(x)).Count() > 0) //ips from file
+                    {
+                        config.totalIps = IOHelper.GetLinesCount(ipOption) * portsCount;
+
+                        var readedIps = IOHelper.ReadLineByLine(ipOption);
+
+                        config.addIpAdresses = Task.Run(() => Scanner.copyToActionBlockAsync(from ip in readedIps select IPAddress.Parse(ip), config.ips));
+                    }
+                    else //single ip
+                    {
+                        config.totalIps = portsCount;
+
+                        config.ips.Post(IPAddress.Parse(ipOption));
+                    }
+                }
+
+                //Adding connection timeout
+                double? connectionTimeout = o.ConnectionTimeout;
+
+                if (connectionTimeout is not null)
+                    config.timeout = connectionTimeout.Value;
+
             });
 
-        Console.CancelKeyPress += OnExit;
+        Scanner.ApplyConfiguration(config);
 
-        int totalIps = ips.Count;
-        ServicePointManager.DefaultConnectionLimit = 10000;
-        double currentRatio;
 
-        //Starting update db thread
-        updateDb.Start();
-
-        //Running workers
-        writer = Task.Run(WriterAsync);
-        reader = Task.Run(ReaderAsync);
-
-        //Showing progress
-        int currentCount;
-        while (ips.Count > 0)
-        {
-            currentCount = ips.Count;
-            currentRatio = calculateRatio(currentCount, totalIps);
-
-            Console.Write("\r{0}% - {1}/{2}", currentRatio, totalIps - currentCount, totalIps);
-
-            await Task.Delay(100);
-        }
-
-        currentCount = ips.Count;
-        currentRatio = calculateRatio(currentCount, totalIps);
-        Console.Write("{0}% - {1}/{2}", currentRatio, totalIps - currentCount, totalIps);
-        Console.Write("Waiting 10 sec for the results...");
-
-        await Task.WhenAll(writer, reader); //awaiting for results
-        endDBThread = true;//exiting db thread
-        updateDb.Join();
+        await Scanner.Scan();
     }
-
-    /// <summary>
-    /// Looks <see cref="clients"/> for timeouted <see cref="McClient"/>s and remove them
-    /// </summary>
-    /// <remarks>
-    /// This task runs in different thread
-    /// </remarks>
-    public static async Task ReaderAsync()
-    {
-        TimeSpan timeToConnect = TimeSpan.FromSeconds(timeout);
-
-        do
-        {
-            foreach (var client in clients)
-            {
-                if (DateTime.Now - client.initDateTime > timeToConnect && !client.isConnected)
-                {
-                    client.Dispose();
-                    clients.Remove(client);
-                }
-                else if (client.Disposed)
-                    clients.Remove(client);
-            }
-
-            await Task.Delay(TimeSpan.FromMilliseconds(100));
-        } while (clients.Count > 0 && !IsForcedToStop);
-    }
-
-    /// <summary>
-    /// Creates new <see cref="McClient"/>, starts and add it to <see cref="clients"/>
-    /// </summary>
-    /// <remarks>
-    /// This task runs in different thread
-    /// </remarks>
-    public static async Task WriterAsync()
-    {
-        while (ips.Count > 0 && !IsForcedToStop)
-        {
-            foreach (ushort port in ports)
-            {
-                McClient client = new McClient(await ips.ReceiveAsync(), port, OnConnected);
-
-                try
-                {
-                    client.BeginConnect();
-                    clients.Add(client);
-                }
-                catch { }
-            }
-        }
-    }
-
-    /// <summary>
-    /// Callback for <see cref="McClient.connectionCallBack"/>. Sends server info and receives answer
-    /// </summary>
-    /// <param name="result"></param>
-    public static async void OnConnected(IAsyncResult result)
-    {
-        if (IsForcedToStop)
-            return;
-
-        if (result.AsyncState is null)
-            return;
-
-        McClient client = (McClient)result.AsyncState!;
-
-        if (!client.isConnected)
-        {
-            client.Dispose();
-            return;
-        }
-
-        string data = await client.GetServerInfo();
-
-        if (data.StartsWith('{'))
-        {
-            serverInfos.Post(new ServerInfo(data, client.IpEndPoint.Address.ToString()));
-        }
-        
-        try
-        {
-            await client.DisconnectAsync();
-        }
-        catch { }
-        client.Dispose();
-    }
-
-    /// <summary>
-    /// Thread with database. Update database with scanned data
-    /// </summary>
-    static Thread updateDb = new(() =>
-    {
-        //Provides access to database
-        DBController DB = new();
-
-        int collectedInfosCount = 0;
-
-        while (!endDBThread)
-        {
-            collectedInfosCount = serverInfos.Count;
-
-            try
-            {
-                while (collectedInfosCount > 0)
-                {
-                    DB.AddOrUpdate(serverInfos.ReceiveAsync().Result).Wait();
-                    collectedInfosCount--;
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("{0}: {1}; {2}", ex.Source, ex.Message, ex.InnerException?.Message ?? "");
-            }
-
-            Thread.Sleep(100);
-        }
-    });
-
-    /// <summary>
-    /// Force all running tasks and threads to stop
-    /// </summary>
-    private static void forceStop()
-    { 
-        IsForcedToStop = true;
-        endDBThread = true;
-
-        Task.WhenAll(reader ?? Task.CompletedTask, writer ?? Task.CompletedTask);
-        updateDb.Join();
-    }
-
-    /// <summary>
-    /// Save progress on programm interruption (Ctrl+C)
-    /// </summary>
-    private static void OnExit(object? sender, ConsoleCancelEventArgs e) => forceStop();
-
-    /// <summary>
-    /// Calculates percantage ratio of servers scanning progress
-    /// </summary>
-    /// <param name="currentInQueue">Current position in queue</param>
-    /// <param name="length">Length of queue</param>
-    /// <returns>Progress percentage rounded to 2 digits</returns>
-    static double calculateRatio(double currentInQueue, double length) => Math.Round((length - currentInQueue) / length * 100.0, 2);
 }

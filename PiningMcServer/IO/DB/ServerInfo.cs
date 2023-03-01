@@ -1,4 +1,5 @@
-﻿using Realms;
+﻿using Newtonsoft.Json.Linq;
+using Realms;
 
 namespace McServersScanner.IO.DB
 {
@@ -9,24 +10,48 @@ namespace McServersScanner.IO.DB
     public class ServerInfo : RealmObject
     {
         [PrimaryKey]
-        public int ID { get; set; }
-     
         /// <summary>
         /// Target server ip
         /// </summary>
         public string IP { get; private set; } = string.Empty;
-        
+
+        /// <summary>
+        /// Version info
+        /// </summary>
+        public Version Version { get; set; } = null!;
+
+        /// <summary>
+        /// Amount of players online
+        /// </summary>
+        public int? Online { get; set; } = null;
+
+        /// <summary>
+        /// Server description
+        /// </summary>
+        public string Description { get; set; } = string.Empty;
+
         /// <summary>
         /// Received answer
         /// </summary>
         public string JsonInfo { get; set; } = string.Empty;
 
-        public ServerInfo() { }
+        private ServerInfo() { }
 
-        public ServerInfo(string jsonInfo, string ip) 
+        public ServerInfo(string jsonInfo, string ip)
         {
             IP = ip;
-            JsonInfo= jsonInfo;
+
+            JObject serverInfo = JObject.Parse(jsonInfo);
+
+            JObject jVersion = (JObject)serverInfo["version"]!;
+
+            Version = jVersion.ToObject<Version>()!;
+
+            Online = serverInfo?["players"]?["online"]?.Value<int?>();
+
+            Description = serverInfo?["description"]?["text"]?.Value<string>() ?? string.Empty;
+
+            JsonInfo = jsonInfo;
         }
     }
 }

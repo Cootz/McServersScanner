@@ -9,6 +9,8 @@
 
   <ItemGroup>
     <PackageReference Include="CommandLineParser" Version="2.9.1" />
+    <PackageReference Include="CommunityToolkit.HighPerformance" Version="8.1.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
     <PackageReference Include="Realm" Version="10.20.0" />
     <PackageReference Include="Realm.Fody" Version="10.20.0">
       <PrivateAssets>all</PrivateAssets>

@@ -1,11 +1,10 @@
 ﻿using Realms;
-using System.Reflection;
 
 namespace McServersScanner.IO.DB;
 
 public class DBController
 {
-    private static readonly string DBPath = Path.Combine(Path_to_folder!, "Psw.realm");
+    private static readonly string DBPath = Path.Combine(Path_to_folder!, "servers.realm");
 
     public static string Path_to_folder => AppDomain.CurrentDomain.BaseDirectory;
 

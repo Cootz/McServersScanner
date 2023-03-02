@@ -95,6 +95,16 @@ internal class Program
 
             });
 
+        if (result.Errors.Any())
+        {
+            foreach (Error error in result.Errors)
+            {
+                Console.WriteLine($"An error: {error}");
+            }
+
+            return;
+        }
+
         Console.CancelKeyPress += new ConsoleCancelEventHandler(OnExit);
 
         Scanner.ApplyConfiguration(config);

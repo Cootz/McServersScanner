@@ -31,6 +31,11 @@ namespace McServersScanner
         private static bool endDBThread = false;
 
         /// <summary>
+        /// Force running scanner to stop
+        /// </summary>
+        private static bool forceStop = false;
+
+        /// <summary>
         /// Block of Ips to scan
         /// </summary>
         private static BufferBlock<IPAddress> ips = null!;
@@ -106,6 +111,9 @@ namespace McServersScanner
             //Showing progress
             while (scannedIps < totalIps)
             {
+                if (forceStop)
+                    return;
+
                 currentRatio = calculateRatio(scannedIps, totalIps);
 
                 Console.Write("\r{0:0.00}% - {1}/{2}", currentRatio, scannedIps, totalIps);
@@ -138,6 +146,9 @@ namespace McServersScanner
                 {
                     foreach (var client in clients)
                     {
+                        if (forceStop)
+                            return;
+
                         if (client.Disposed)
                             clients.Remove(client);
                         else if (DateTime.Now - client.initDateTime > timeToConnect && !client.isConnected)
@@ -164,6 +175,9 @@ namespace McServersScanner
             {
                 foreach (ushort port in ports)
                 {
+                    if (forceStop)
+                        return;
+
                     McClient client = new McClient(await ips.ReceiveAsync(), port, OnConnected);
 
                     try
@@ -184,6 +198,9 @@ namespace McServersScanner
         public static async void OnConnected(IAsyncResult result)
         {
             if (result.AsyncState is null)
+                return;
+
+            if (forceStop)
                 return;
 
             McClient client = (McClient)result.AsyncState!;
@@ -231,17 +248,18 @@ namespace McServersScanner
             {
                 collectedInfosCount = serverInfos.Count;
 
-                try
+                while (collectedInfosCount > 0)
                 {
-                    while (collectedInfosCount > 0)
+                    try
                     {
                         DB.AddOrUpdate(serverInfos.ReceiveAsync().Result).Wait();
-                        collectedInfosCount--;
                     }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine("{0}: {1}; {2}", ex.Source, ex.Message, ex.InnerException?.Message ?? "");
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine("{0}: {1}; {2}", ex.Source, ex.Message, ex.InnerException?.Message ?? "");
+                    }
+
+                    collectedInfosCount--;
                 }
 
                 Thread.Sleep(100);
@@ -258,6 +276,19 @@ namespace McServersScanner
         {
             foreach (T item in typeEnumerable)
                 await typeActionBlock.SendAsync(item);
+        }
+
+        /// <summary>
+        /// Force all running tasks and threads to stop
+        /// </summary>
+        public static void ForceStop()
+        {
+            endDBThread = true;
+            forceStop = true;
+
+            Console.WriteLine("\nStopping application...");
+
+            updateDb.Join();
         }
 
         /// <summary>

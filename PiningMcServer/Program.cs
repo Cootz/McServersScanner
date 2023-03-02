@@ -1,8 +1,8 @@
 ﻿using CommandLine;
 using CommunityToolkit.HighPerformance.Buffers;
 using McServersScanner;
-using McServersScanner.CLI;
 using McServersScanner.Utils;
+using McServersScanner.CLI;
 using System.Net;
 using System.Threading.Tasks.Dataflow;
 
@@ -95,8 +95,19 @@ internal class Program
 
             });
 
+        Console.CancelKeyPress += new ConsoleCancelEventHandler(OnExit);
+
         Scanner.ApplyConfiguration(config);
 
         await Scanner.Scan();
+    }
+
+    /// <summary>
+    /// Save progress on programm interruption (Ctrl+C)
+    /// </summary>
+    private static void OnExit(object? sender, ConsoleCancelEventArgs e)
+    {
+        Scanner.ForceStop();
+        Environment.Exit(0);
     }
 }

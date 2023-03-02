@@ -2,7 +2,7 @@
   "profiles": {
     "McServersScanner": {
       "commandName": "Project",
-      "commandLineArgs": "-I Ips.txt -p 25565 --connection-limit 10000"
+      "commandLineArgs": "-I ips.txt"
     }
   }
 }

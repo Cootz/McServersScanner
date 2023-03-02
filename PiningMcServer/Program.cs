@@ -6,6 +6,7 @@ using McServersScanner.CLI;
 using System.Net;
 using System.Threading.Tasks.Dataflow;
 using CommandLine.Text;
+using System.Security.Cryptography.X509Certificates;
 
 internal class Program
 {
@@ -15,6 +16,29 @@ internal class Program
 
         //Parsing cmd params
         ParserResult<Options> result = Parser.Default.ParseArguments<Options>(args);
+
+        try
+        {
+            parseResult(config, result);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            return;
+        }
+
+        if (result.Errors.Any())
+            return;
+
+        Console.CancelKeyPress += new ConsoleCancelEventHandler(OnExit);
+
+        Scanner.ApplyConfiguration(config);
+
+        await Scanner.Scan();
+    }
+
+    private static void parseResult(ScannerConfiguration config, ParserResult<Options> result)
+    {
         result.WithParsed(o =>
         {
             //Adding connection limit
@@ -42,6 +66,9 @@ internal class Program
                     }
                     else //single port
                     {
+                        if (portString.Any(c => char.IsLetter(c)))
+                            throw new FormatException("Option \'p\' have wrong format");
+
                         config.ports = new ushort[] { ushort.Parse(portString) };
                     }
                 }
@@ -95,15 +122,6 @@ internal class Program
                 config.timeout = connectionTimeout.Value;
 
         });
-
-        if (result.Errors.Any())
-            return;
-
-        Console.CancelKeyPress += new ConsoleCancelEventHandler(OnExit);
-
-        Scanner.ApplyConfiguration(config);
-
-        await Scanner.Scan();
     }
 
     /// <summary>

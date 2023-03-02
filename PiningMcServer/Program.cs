@@ -5,8 +5,6 @@ using McServersScanner.Utils;
 using McServersScanner.CLI;
 using System.Net;
 using System.Threading.Tasks.Dataflow;
-using CommandLine.Text;
-using System.Security.Cryptography.X509Certificates;
 
 internal class Program
 {

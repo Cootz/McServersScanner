@@ -46,8 +46,6 @@ internal class Program
                     }
                 }
 
-                Console.CancelKeyPress += OnExit;
-
                 //Adding ips
                 config.ips = new(new DataflowBlockOptions()
                 {
@@ -97,6 +95,8 @@ internal class Program
 
             });
 
+        Console.CancelKeyPress += new ConsoleCancelEventHandler(OnExit);
+
         Scanner.ApplyConfiguration(config);
 
         await Scanner.Scan();
@@ -105,5 +105,9 @@ internal class Program
     /// <summary>
     /// Save progress on programm interruption (Ctrl+C)
     /// </summary>
-    private static void OnExit(object? sender, ConsoleCancelEventArgs e) => Scanner.ForceStop();
+    private static void OnExit(object? sender, ConsoleCancelEventArgs e)
+    {
+        Scanner.ForceStop();
+        Environment.Exit(0);
+    }
 }

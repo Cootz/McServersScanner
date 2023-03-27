@@ -3,11 +3,17 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.4.33110.190
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "McServersScanner", "PiningMcServer\McServersScanner.csproj", "{E53511E9-A6AB-49DA-86DB-5C5BA30A1331}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "McServersScanner.Benchmark", "McServersScanner.Benchmark\McServersScanner.Benchmark.csproj", "{8E347E6F-F813-42E2-B12A-7F9839F2E702}"
+	ProjectSection(ProjectDependencies) = postProject
+		{219AEB1C-2816-49EC-BDAE-9592F8952007} = {219AEB1C-2816-49EC-BDAE-9592F8952007}
+	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "McServersScanner.Benchmark", "McServersScanner.Benchmark\McServersScanner.Benchmark.csproj", "{8E347E6F-F813-42E2-B12A-7F9839F2E702}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "McServersScanner.Tests", "McServersScanner.Tests\McServersScanner.Tests.csproj", "{EAEB724C-A3EA-4D03-B1B0-A0B563DFE9DD}"
+	ProjectSection(ProjectDependencies) = postProject
+		{219AEB1C-2816-49EC-BDAE-9592F8952007} = {219AEB1C-2816-49EC-BDAE-9592F8952007}
+	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "McServersScanner.Tests", "McServersScanner.Tests\McServersScanner.Tests.csproj", "{EAEB724C-A3EA-4D03-B1B0-A0B563DFE9DD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "McServersScanner", "McServersScanner\McServersScanner.csproj", "{219AEB1C-2816-49EC-BDAE-9592F8952007}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,10 +21,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{E53511E9-A6AB-49DA-86DB-5C5BA30A1331}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E53511E9-A6AB-49DA-86DB-5C5BA30A1331}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E53511E9-A6AB-49DA-86DB-5C5BA30A1331}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E53511E9-A6AB-49DA-86DB-5C5BA30A1331}.Release|Any CPU.Build.0 = Release|Any CPU
 		{8E347E6F-F813-42E2-B12A-7F9839F2E702}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{8E347E6F-F813-42E2-B12A-7F9839F2E702}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8E347E6F-F813-42E2-B12A-7F9839F2E702}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -27,6 +29,10 @@ Global
 		{EAEB724C-A3EA-4D03-B1B0-A0B563DFE9DD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EAEB724C-A3EA-4D03-B1B0-A0B563DFE9DD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EAEB724C-A3EA-4D03-B1B0-A0B563DFE9DD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{219AEB1C-2816-49EC-BDAE-9592F8952007}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{219AEB1C-2816-49EC-BDAE-9592F8952007}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{219AEB1C-2816-49EC-BDAE-9592F8952007}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{219AEB1C-2816-49EC-BDAE-9592F8952007}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

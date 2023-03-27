@@ -12,6 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\McServersScanner\McServersScanner.csproj" />
     <ProjectReference Include="..\PiningMcServer\McServersScanner.csproj" />
   </ItemGroup>
 

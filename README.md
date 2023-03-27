@@ -19,7 +19,7 @@ cd McServersScanner
 
 ### Building
 
-To build McServersScanner from the command line run the following command:
+To build McServersScanner from the command line, run the following command:
 
 ```shell
 dotnet build McServersScanner.sln
@@ -29,7 +29,7 @@ If you are not interested in debugging McServerScanner, you can add `-c Release`
 
 ### Running
 
-To run McServerScanner go to the build directory and run the executable or run following commands:
+To run McServerScanner go to the build directory and run the executable or run the following commands:
 
 ```shell
 cd McServersScanner\bin\Debug\net6.0 

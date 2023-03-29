@@ -2,6 +2,7 @@
 using McServersScanner.IO.DB;
 using McServersScanner.Network;
 using McServersScanner.Utils;
+using System.Collections.Concurrent;
 using System.Net;
 using System.Threading.Tasks.Dataflow;
 
@@ -63,7 +64,7 @@ namespace McServersScanner
         /// <summary>
         /// List of clients
         /// </summary>
-        private static List<McClient> clients = new();
+        private static ConcurrentDictionary<DateTime, McClient> clients = new();
 
         /// <summary>
         /// Supplies <see cref="ips" with <see cref="IPAddress"/>es/>
@@ -144,18 +145,20 @@ namespace McServersScanner
             {
                 if (clients.Count > 0)
                 {
-                    foreach (var client in clients)
+                    var timeoutClients = from c in clients where DateTime.Now - c.Key > timeToConnect select c;
+
+                    foreach (var (startTime, client) in clients)
                     {
                         if (forceStop)
                             return;
 
-                        if (client.Disposed)
-                            clients.Remove(client);
-                        else if (DateTime.Now - client.initDateTime > timeToConnect && !client.isConnected)
+                        if (!client.Disposed)
                         {
                             client.Dispose();
-                            clients.Remove(client);
                         }
+
+                        clients.TryRemove(startTime, out _);
+                        scannedIps++;
                     }
                 }
 
@@ -183,8 +186,7 @@ namespace McServersScanner
                     try
                     {
                         client.BeginConnect();
-                        clients.Add(client);
-                        scannedIps++;
+                        clients.TryAdd(DateTime.Now, client);
                     }
                     catch { }
                 }

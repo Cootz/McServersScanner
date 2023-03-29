@@ -162,7 +162,7 @@ namespace McServersScanner
                     }
                 }
 
-                Thread.Sleep(TimeSpan.FromMilliseconds(100));
+                await Task.Delay(TimeSpan.FromMilliseconds(100));
             } while ((totalIps - scannedIps) > 0);
         }
 

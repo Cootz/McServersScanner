@@ -11,11 +11,19 @@ jobs:
     runs-on: "windows-latest"
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+    
+      - name: Install dotnet
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '6.0.x'
+
       - name: "publish application"
-        run: publish.cmd
+        run: ${{github.workspace}}/publish.cmd
 
       - uses: "marvinpinto/action-automatic-releases@latest"
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           prerelease: false
-          files: McServersScanner\bin\Release\net6.0\publish-files\*
+          files: ${{github.workspace}}/McServersScanner/bin/Release/net6.0/publish-files/*

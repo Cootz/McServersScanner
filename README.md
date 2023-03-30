@@ -33,7 +33,7 @@ To run McServerScanner go to the build directory and run the executable or run t
 
 ```shell
 cd McServersScanner\bin\Debug\net6.0 
-McServersScanner.exe --help
+McServersScanner --help
 ```
 
 *Note: Change 'Debug' to 'Release' if you built with `-c Release` option*

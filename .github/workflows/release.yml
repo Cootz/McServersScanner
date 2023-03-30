@@ -1,0 +1,21 @@
+name: "New version release"
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  tagged-release:
+    name: "New version release"
+    runs-on: "windows-latest"
+
+    steps:
+      - name: "publish application"
+        run: publish.cmd
+
+      - uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          prerelease: false
+          files: McServersScanner\bin\Release\net6.0\publish-files\*

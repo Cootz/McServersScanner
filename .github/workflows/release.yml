@@ -26,4 +26,5 @@ jobs:
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           prerelease: false
-          files: ${{github.workspace}}\McServersScanner\bin\Release\net6.0\publish-files\*
+          files: |
+            ${{github.workspace}}\McServersScanner\bin\Release\net6.0\publish-files\*.zip

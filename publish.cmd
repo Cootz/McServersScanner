@@ -10,8 +10,8 @@ mkdir publish-files
 cd linux-x64\publish
 tar -c -a -f ..\..\publish-files\linux-x64.zip *
 
-cd ..\..osx-x64\publish
+cd ..\..\osx-x64\publish
 tar -c -a -f ..\..\publish-files\osx-x64.zip *
 
-cd ..\..win-x64\publish
+cd ..\..\win-x64\publish
 tar -c -a -f ..\..\publish-files\win-x64.zip *

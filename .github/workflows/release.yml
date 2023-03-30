@@ -20,7 +20,7 @@ jobs:
           dotnet-version: '6.0.x'
 
       - name: "publish application"
-        run: ${{github.workspace}}/publish.cmd
+        run: ${{github.workspace}}/publish.cmd ${{github.workspace}}
 
       - uses: "marvinpinto/action-automatic-releases@latest"
         with:

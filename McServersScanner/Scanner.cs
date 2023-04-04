@@ -54,7 +54,7 @@ namespace McServersScanner
         /// <summary>
         /// Number of active connections that the app can support at the same time
         /// </summary>
-        private static int connectionLimit = 10000;
+        private static int connectionLimit = 1000;
 
         /// <summary>
         /// Connection timeout in seconds

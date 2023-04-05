@@ -1,6 +1,6 @@
 # McServersScanner
 
-Scan a range of ips for running mc servers
+Scan a range of ips for running minecraft servers
 
 # Building & Running
 

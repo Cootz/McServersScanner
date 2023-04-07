@@ -21,9 +21,9 @@ jobs:
       matrix:
         language: [ 'csharp' ]
         os:
-            - { prettyname: Windows, fullname: windows-latest, buildname: net7.0 }
-            - { prettyname: macOS, fullname: macos-latest, buildname: net7.0 }
-            - { prettyname: Linux, fullname: ubuntu-latest, buildname: net7.0 }
+            - { prettyname: Windows, fullname: windows-latest }
+            - { prettyname: macOS, fullname: macos-latest }
+            - { prettyname: Linux, fullname: ubuntu-latest }
 
     timeout-minutes: 60
 

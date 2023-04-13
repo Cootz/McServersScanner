@@ -1,6 +1,6 @@
 ﻿using CommunityToolkit.HighPerformance.Buffers;
- 
-﻿namespace McServersScanner.Utils
+
+namespace McServersScanner.Utils
 {
     /// <summary>
     /// Helps with IO stuff
@@ -15,14 +15,14 @@
         /// <remarks>
         /// Ignores empty lines
         /// </remarks>
-        public static IEnumerable<string> ReadLineByLine(string path) 
+        public static IEnumerable<string> ReadLineByLine(string path)
         {
             using (StreamReader reader = new StreamReader(path))
             {
                 string? line;
 
                 while ((line = reader.ReadLine()) != null)
-                { 
+                {
                     if (!String.IsNullOrEmpty(line))
                         yield return StringPool.Shared.GetOrAdd(line);
                 }

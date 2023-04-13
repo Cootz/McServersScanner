@@ -4,7 +4,7 @@ namespace McServersScanner.IO.DB;
 
 public class DBController
 {
-    private static readonly string DBPath = Path.Combine(Path_to_folder!, "servers.realm");
+    public static readonly string DBPath = Path.Combine(Path_to_folder!, "servers.realm");
 
     public static string Path_to_folder => AppDomain.CurrentDomain.BaseDirectory;
 
@@ -27,10 +27,12 @@ public class DBController
     {
         if (serverInfo is not null)
         {
-            await realm.WriteAsync(() => 
+            await realm.WriteAsync(() =>
             {
                 realm.Add(serverInfo, update: true);
             });
-        }            
+        }
     }
+
+    public void RealmQuerry(Action<Realm> action) => action(realm);
 }

@@ -1,6 +1,6 @@
 ﻿using CommandLine;
 
-namespace McServersScanner.CLI
+namespace McServersScanner.Utils
 {
     /// <summary>
     /// Stores all possible options for command line

@@ -1,6 +1,6 @@
 ﻿using System.Net;
 
-namespace McServersScanner.CLI
+namespace McServersScanner.Utils
 {
     /// <summary>
     /// Help with generating ranges of network stuff
@@ -14,7 +14,7 @@ namespace McServersScanner.CLI
         /// <param name="last">End of range</param>
         /// <returns>Range of ip addresses</returns>
         public static IEnumerable<IPAddress> FillIpRange(IPAddress first, IPAddress last)
-        { 
+        {
             for (uint i = ConvertIpAddressToInt(first); i <= ConvertIpAddressToInt(last); i++)
                 yield return ConvertIntToIpAddress(i);
         }
@@ -69,7 +69,7 @@ namespace McServersScanner.CLI
         /// <param name="address"></param>
         /// <returns></returns>
         private static uint ConvertIpAddressToInt(IPAddress address)
-        { 
+        {
             return BitConverter.ToUInt32(address.GetAddressBytes().Reverse().ToArray());
         }
 

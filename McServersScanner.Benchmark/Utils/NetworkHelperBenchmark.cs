@@ -1,6 +1,5 @@
 ﻿using BenchmarkDotNet.Attributes;
-using BenchmarkDotNet.Engines;
-using McServersScanner.CLI;
+using McServersScanner.Utils;
 using System.Net;
 using System.Threading.Tasks.Dataflow;
 
@@ -24,11 +23,10 @@ namespace McServersScanner.Benchmark.Utils
             BufferBlock<IPAddress> buffer = new BufferBlock<IPAddress>();
 
             foreach (var ip in NetworkHelper.FillIpRange(startIp, endIP))
-            { 
+            {
                 buffer.Post(ip);
                 buffer.Receive();
             }
         }
-
     }
 }

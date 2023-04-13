@@ -1,6 +1,4 @@
-﻿using CommunityToolkit.HighPerformance.Buffers;
-
-namespace McServersScanner.Utils
+﻿namespace McServersScanner.Utils
 {
     /// <summary>
     /// Helps with json conversion

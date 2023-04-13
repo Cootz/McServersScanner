@@ -28,7 +28,7 @@ namespace McServersScanner.Network
         private ushort port { get; set; }
 
         public HandshakePacket(IPAddress ip, int protocolVersion, ushort port)
-        { 
+        {
             this.ip = ip;
             this.protocolVersion = protocolVersion;
             this.port = port;
@@ -42,7 +42,7 @@ namespace McServersScanner.Network
         {
             //Creating handshake data
             int nextState = 1;
-            
+
             data.AddRange(McProtocol.WriteVarInt(protocolVersion));//Version
             data.AddRange(McProtocol.WriteString(ip.ToString()));//Ip
             data.AddRange(BitConverter.GetBytes(port));//Port

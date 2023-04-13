@@ -2,7 +2,6 @@
 using CommunityToolkit.HighPerformance.Buffers;
 using McServersScanner;
 using McServersScanner.Utils;
-using McServersScanner.CLI;
 using System.Net;
 using System.Threading.Tasks.Dataflow;
 

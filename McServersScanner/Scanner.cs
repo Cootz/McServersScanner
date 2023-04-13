@@ -20,7 +20,7 @@ namespace McServersScanner
         /// Number of ports to scan
         /// </summary>
         public static int PortsCount => ports.Length;
-     
+
         /// <summary>
         /// Maximum number of connections available at the same time
         /// </summary>
@@ -88,7 +88,7 @@ namespace McServersScanner
         {
             ips = configuration.ips;
             ports = configuration.ports ?? ports;
-            connectionLimit= configuration.connectionLimit ?? connectionLimit;
+            connectionLimit = configuration.connectionLimit ?? connectionLimit;
             timeout = configuration.timeout ?? timeout;
             addIpAdresses = configuration.addIpAdresses ?? addIpAdresses;
             totalIps = configuration.totalIps ?? totalIps;
@@ -123,10 +123,11 @@ namespace McServersScanner
             }
 
             currentRatio = calculateRatio(scannedIps, totalIps);
-            Console.Write("{0:0.00}% - {1}/{2}", currentRatio, scannedIps, totalIps);
-            Console.Write("Waiting 10 sec for the results...");
+            Console.WriteLine("{0:0.00}% - {1}/{2}", currentRatio, scannedIps, totalIps);
+            Console.WriteLine("Waiting for the results...");
 
             await Task.WhenAll(writer, reader, addIpAdresses); //awaiting for results
+
             endDBThread = true;//exiting db thread
             updateDb.Join();
         }
@@ -174,7 +175,9 @@ namespace McServersScanner
         /// </remarks>
         public static async Task WriterAsync()
         {
-            while ((totalIps - scannedIps) > 0)
+            long addedIps = 0;
+
+            while ((totalIps - addedIps) > 0)
             {
                 foreach (ushort port in ports)
                 {
@@ -187,6 +190,7 @@ namespace McServersScanner
                     {
                         client.BeginConnect();
                         clients.TryAdd(DateTime.Now, client);
+                        addedIps++;
                     }
                     catch { }
                 }

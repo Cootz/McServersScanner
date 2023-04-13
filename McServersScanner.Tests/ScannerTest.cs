@@ -1,13 +1,6 @@
-﻿using McServersScanner.CLI;
-using McServersScanner.IO.DB;
-using NUnit.Framework;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using McServersScanner.IO.DB;
+using McServersScanner.Utils;
 using System.Net;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 
 namespace McServersScanner.Tests
@@ -74,7 +67,7 @@ namespace McServersScanner.Tests
 
         [TearDown]
         public void CleanUp()
-        { 
+        {
             DBController controller = new DBController();
 
             controller.RealmQuerry((realm) =>

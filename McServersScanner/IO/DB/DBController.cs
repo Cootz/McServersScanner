@@ -27,11 +27,11 @@ public class DBController
     {
         if (serverInfo is not null)
         {
-            await realm.WriteAsync(() => 
+            await realm.WriteAsync(() =>
             {
                 realm.Add(serverInfo, update: true);
             });
-        }            
+        }
     }
 
     public void RealmQuerry(Action<Realm> action) => action(realm);

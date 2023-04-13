@@ -2,7 +2,7 @@
 
 namespace McServersScanner.Network
 {
-    public class McPacket<T> : IEnumerable<byte> where T : IPacket 
+    public class McPacket<T> : IEnumerable<byte> where T : IPacket
     {
         private List<byte> Packet = new List<byte>();
 

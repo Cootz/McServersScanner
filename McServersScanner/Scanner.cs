@@ -20,7 +20,7 @@ namespace McServersScanner
         /// Number of ports to scan
         /// </summary>
         public static int PortsCount => ports.Length;
-     
+
         /// <summary>
         /// Maximum number of connections available at the same time
         /// </summary>
@@ -88,7 +88,7 @@ namespace McServersScanner
         {
             ips = configuration.ips;
             ports = configuration.ports ?? ports;
-            connectionLimit= configuration.connectionLimit ?? connectionLimit;
+            connectionLimit = configuration.connectionLimit ?? connectionLimit;
             timeout = configuration.timeout ?? timeout;
             addIpAdresses = configuration.addIpAdresses ?? addIpAdresses;
             totalIps = configuration.totalIps ?? totalIps;
@@ -131,7 +131,7 @@ namespace McServersScanner
             await reader;
 
             await Task.WhenAll(writer, reader, addIpAdresses); //awaiting for results
-            
+
             endDBThread = true;//exiting db thread
             updateDb.Join();
         }

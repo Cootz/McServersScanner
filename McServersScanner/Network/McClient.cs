@@ -16,12 +16,12 @@ namespace McServersScanner.Network
         /// Checks if instance disposed
         /// </summary>
         public bool Disposed { get; private set; }
-        
+
         /// <summary>
         /// Client logic
         /// </summary>
         private Socket Client { get; set; }
-        
+
         /// <summary>
         /// Time when connection started
         /// </summary>

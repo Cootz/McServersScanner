@@ -126,10 +126,6 @@ namespace McServersScanner
             Console.WriteLine("{0:0.00}% - {1}/{2}", currentRatio, scannedIps, totalIps);
             Console.WriteLine("Waiting for the results...");
 
-            await addIpAdresses;
-            await writer;
-            await reader;
-
             await Task.WhenAll(writer, reader, addIpAdresses); //awaiting for results
 
             endDBThread = true;//exiting db thread

@@ -58,7 +58,7 @@ namespace McServersScanner.Tests
 
             var scan = Scanner.Scan();
 
-            await Task.Delay(50);
+            await Task.Delay(90);
 
             Assert.DoesNotThrow(() => Scanner.ForceStop());
 

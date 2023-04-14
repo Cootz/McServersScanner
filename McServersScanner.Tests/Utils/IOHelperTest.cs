@@ -10,7 +10,7 @@ namespace McServersScanner.Tests.Utils
         [Test]
         public void TestGetLinesCount()
         {
-            string filePath = generateTestFile();
+            string filePath = GenerateTestFile();
 
             long linesCount = IOHelper.GetLinesCount(filePath);
 
@@ -20,7 +20,7 @@ namespace McServersScanner.Tests.Utils
         [Test]
         public void TestReadFileLineByLine()
         {
-            string filePath = generateTestFile();
+            string filePath = GenerateTestFile();
 
             IEnumerable<string> lines = IOHelper.ReadLineByLine(filePath);
             IEnumerator<string> linesEnumerator = lines.GetEnumerator();
@@ -32,7 +32,7 @@ namespace McServersScanner.Tests.Utils
             }
         }
 
-        private string generateTestFile()
+        private static string GenerateTestFile()
         {
             string filePath = Path.GetTempFileName();
 

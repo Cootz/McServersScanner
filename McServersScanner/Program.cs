@@ -94,7 +94,7 @@ internal class Program
 
                     var range = NetworkHelper.FillIpRange(firstIp, lastIp);
 
-                    config.addIpAdresses = Task.Run(() => Scanner.copyToActionBlockAsync(range, config.ips));
+                    config.addIpAdresses = Task.Run(() => Scanner.CopyToActionBlockAsync(range, config.ips));
                 }
                 else if (ipOption.Where(x => char.IsLetter(x)).Count() > 0) //ips from file
                 {
@@ -102,7 +102,7 @@ internal class Program
 
                     var readedIps = IOHelper.ReadLineByLine(ipOption);
 
-                    config.addIpAdresses = Task.Run(() => Scanner.copyToActionBlockAsync(from ip in readedIps select IPAddress.Parse(ip), config.ips));
+                    config.addIpAdresses = Task.Run(() => Scanner.CopyToActionBlockAsync(from ip in readedIps select IPAddress.Parse(ip), config.ips));
                 }
                 else //single ip
                 {

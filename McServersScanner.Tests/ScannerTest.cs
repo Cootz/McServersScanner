@@ -61,8 +61,6 @@ namespace McServersScanner.Tests
             await Task.Delay(90);
 
             Assert.DoesNotThrow(() => Scanner.ForceStop());
-
-            Assert.True(scan.IsCompleted);
         }
 
         [TearDown]

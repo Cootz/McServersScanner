@@ -243,7 +243,9 @@ namespace McServersScanner
         /// <summary>
         /// Thread with database. Update database with scanned data
         /// </summary>
-        static Thread updateDb = new(() =>
+        static Thread updateDb = new(() => updateDatabase());
+
+        private static void updateDatabase()
         {
             //Provides access to database
             DBController DB = new();
@@ -270,7 +272,7 @@ namespace McServersScanner
 
                 Thread.Sleep(100);
             }
-        });
+        }
 
         /// <summary>
         /// Asynchronously copy data from enumerable to actionBlock
@@ -304,5 +306,26 @@ namespace McServersScanner
         /// <param name="length">Length of queue</param>
         /// <returns>Progress percentage rounded to 2 digits</returns>
         static double calculateRatio(double currentInQueue, double length) => currentInQueue / length * 100.0;
+
+        /// <summary>
+        /// Resets scanner to default state.
+        /// <para><b>FOR TESTING PURPOSE ONLY</b></para>
+        /// </summary>
+        public static void Reset()
+        {
+            endDBThread = false;
+            forceStop = false;
+            ips = null!;
+            ports = new ushort[] { 25565 };
+            serverInfos = new();
+            connectionLimit = 1000;
+            timeout = 10;
+            clients = new();
+            addIpAdresses = Task.CompletedTask;
+            totalIps = 0;
+            scannedIps = 0;
+
+            updateDb = new(() => updateDatabase());
+        }
     }
 }

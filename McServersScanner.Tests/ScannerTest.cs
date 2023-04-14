@@ -60,7 +60,7 @@ namespace McServersScanner.Tests
 
             await Task.Delay(50);
 
-            Scanner.ForceStop();
+            Assert.DoesNotThrow(() => Scanner.ForceStop());
 
             Assert.True(scan.IsCompleted);
         }
@@ -74,6 +74,8 @@ namespace McServersScanner.Tests
             {
                 realm.WriteAsync(() => realm.RemoveAll<ServerInfo>());
             });
+
+            Scanner.Reset();
         }
     }
 }

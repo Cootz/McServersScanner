@@ -2,6 +2,9 @@
 
 namespace McServersScanner.IO.DB;
 
+/// <summary>
+/// Provides access to database
+/// </summary>
 public class DBController
 {
     public static readonly string DBPath = Path.Combine(Path_to_folder!, "servers.realm");
@@ -11,7 +14,7 @@ public class DBController
     /// <summary>
     /// Realm instance
     /// </summary>
-    private Realm realm;
+    private readonly Realm realm;
 
     public DBController()
     {
@@ -34,5 +37,8 @@ public class DBController
         }
     }
 
+    /// <summary>
+    /// A direct query to existing realm
+    /// </summary>
     public void RealmQuerry(Action<Realm> action) => action(realm);
 }

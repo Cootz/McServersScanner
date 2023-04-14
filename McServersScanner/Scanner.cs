@@ -115,14 +115,14 @@ namespace McServersScanner
                 if (forceStop)
                     return;
 
-                currentRatio = calculateRatio(scannedIps, totalIps);
+                currentRatio = CalculateRatio(scannedIps, totalIps);
 
                 Console.Write("\r{0:0.00}% - {1}/{2}", currentRatio, scannedIps, totalIps);
 
                 await Task.Delay(100);
             }
 
-            currentRatio = calculateRatio(scannedIps, totalIps);
+            currentRatio = CalculateRatio(scannedIps, totalIps);
             Console.WriteLine("{0:0.00}% - {1}/{2}", currentRatio, scannedIps, totalIps);
             Console.WriteLine("Waiting for the results...");
 
@@ -144,7 +144,7 @@ namespace McServersScanner
 
             do
             {
-                if (clients.Count > 0)
+                if (!clients.IsEmpty)
                 {
                     var timeoutClients = from c in clients where DateTime.Now - c.Key > timeToConnect select c;
 
@@ -184,7 +184,7 @@ namespace McServersScanner
                     if (forceStop)
                         return;
 
-                    McClient client = new McClient(await ips.ReceiveAsync(), port, OnConnected);
+                    McClient client = new(await ips.ReceiveAsync(), port, OnConnected);
 
                     try
                     {
@@ -225,7 +225,7 @@ namespace McServersScanner
                 {
                     string jsonData = StringPool.Shared.GetOrAdd(JsonHelper.ConvertToJsonString(data));
 
-                    ServerInfo serverInfo = new ServerInfo(jsonData, StringPool.Shared.GetOrAdd(client.IpEndPoint.Address.ToString()));
+                    ServerInfo serverInfo = new(jsonData, StringPool.Shared.GetOrAdd(client.IpEndPoint.Address.ToString()));
                     serverInfos.Post(serverInfo);
                 }
                 catch { }
@@ -243,16 +243,15 @@ namespace McServersScanner
         /// <summary>
         /// Thread with database. Update database with scanned data
         /// </summary>
-        static Thread updateDb = new(() =>
-        {
-            //Provides access to database
-            DBController DB = new();
+        static Thread updateDb = new(() => UpdateDatabase());
 
-            int collectedInfosCount = 0;
+        private static void UpdateDatabase()
+        {
+            DBController DB = new();
 
             while (!endDBThread)
             {
-                collectedInfosCount = serverInfos.Count;
+                int collectedInfosCount = serverInfos.Count;
 
                 while (collectedInfosCount > 0)
                 {
@@ -270,7 +269,7 @@ namespace McServersScanner
 
                 Thread.Sleep(100);
             }
-        });
+        }
 
         /// <summary>
         /// Asynchronously copy data from enumerable to actionBlock
@@ -278,7 +277,7 @@ namespace McServersScanner
         /// <typeparam name="T">Type of class to copy</typeparam>
         /// <param name="typeEnumerable">Copy from</param>
         /// <param name="typeActionBlock">Copy to</param>
-        public static async Task copyToActionBlockAsync<T>(IEnumerable<T> typeEnumerable, BufferBlock<T> typeActionBlock) where T : class
+        public static async Task CopyToActionBlockAsync<T>(IEnumerable<T> typeEnumerable, BufferBlock<T> typeActionBlock) where T : class
         {
             foreach (T item in typeEnumerable)
                 await typeActionBlock.SendAsync(item);
@@ -303,6 +302,27 @@ namespace McServersScanner
         /// <param name="currentInQueue">Current position in queue</param>
         /// <param name="length">Length of queue</param>
         /// <returns>Progress percentage rounded to 2 digits</returns>
-        static double calculateRatio(double currentInQueue, double length) => currentInQueue / length * 100.0;
+        static double CalculateRatio(double currentInQueue, double length) => currentInQueue / length * 100.0;
+
+        /// <summary>
+        /// Resets scanner to default state.
+        /// <para><b>FOR TESTING PURPOSE ONLY</b></para>
+        /// </summary>
+        public static void Reset()
+        {
+            endDBThread = false;
+            forceStop = false;
+            ips = null!;
+            ports = new ushort[] { 25565 };
+            serverInfos = new();
+            connectionLimit = 1000;
+            timeout = 10;
+            clients = new();
+            addIpAdresses = Task.CompletedTask;
+            totalIps = 0;
+            scannedIps = 0;
+
+            updateDb = new(() => UpdateDatabase());
+        }
     }
 }

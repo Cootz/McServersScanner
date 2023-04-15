@@ -3,6 +3,9 @@
     "McServersScanner": {
       "commandName": "Project",
       "commandLineArgs": "-I ips.txt"
+    },
+    "Docker": {
+      "commandName": "Docker"
     }
   }
 }

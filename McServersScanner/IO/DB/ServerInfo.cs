@@ -1,5 +1,5 @@
-﻿using Newtonsoft.Json.Linq;
-using Realms;
+﻿using Realms;
+using System.Text.Json;
 
 namespace McServersScanner.IO.DB
 {
@@ -41,15 +41,15 @@ namespace McServersScanner.IO.DB
         {
             IP = ip;
 
-            JObject serverInfo = JObject.Parse(jsonInfo);
+            var serverInfo = JsonDocument.Parse(jsonInfo);
 
-            JObject jVersion = (JObject)serverInfo["version"]!;
+            var jVersion = serverInfo.RootElement.GetProperty("version");
 
-            Version = jVersion.ToObject<Version>()!;
+            Version = jVersion.Deserialize<Version>()!;
 
-            Online = serverInfo?["players"]?["online"]?.Value<int?>();
+            Online = serverInfo.RootElement.GetProperty("players").GetProperty("online").GetInt32();
 
-            Description = serverInfo?["description"]?["text"]?.Value<string>() ?? string.Empty;
+            Description = serverInfo.RootElement.GetProperty("description").GetProperty("text").GetString() ?? string.Empty;
 
             JsonInfo = jsonInfo;
         }

@@ -1,11 +1,5 @@
 ﻿using BenchmarkDotNet.Attributes;
 using McServersScanner.IO.DB;
-using Microsoft.Diagnostics.Tracing.Parsers.AspNet;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace McServersScanner.Benchmark.DB
 {

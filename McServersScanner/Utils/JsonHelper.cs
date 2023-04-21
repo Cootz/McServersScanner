@@ -29,7 +29,7 @@
                 i++;
             } while (balance > 0);
 
-            return dirtyJson.Slice(0, i).ToString();
+            return dirtyJson[..i].ToString();
         }
     }
 }

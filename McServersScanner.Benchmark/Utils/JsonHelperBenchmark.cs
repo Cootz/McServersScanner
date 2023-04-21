@@ -1,5 +1,6 @@
 ﻿using BenchmarkDotNet.Attributes;
 using McServersScanner.Utils;
+
 namespace McServersScanner.Benchmark.Utils
 {
     [MemoryDiagnoser]

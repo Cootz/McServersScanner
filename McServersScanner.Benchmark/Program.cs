@@ -1,4 +1,4 @@
 ﻿using BenchmarkDotNet.Running;
-using McServersScanner.Benchmark.Utils;
+using McServersScanner.Benchmark.DB;
 
-BenchmarkRunner.Run<NetworkHelperBenchmark>();
+BenchmarkRunner.Run<JsonServerInfoParseBenchmark>();

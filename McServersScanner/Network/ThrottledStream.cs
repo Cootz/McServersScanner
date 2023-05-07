@@ -1,4 +1,6 @@
-﻿using System.Reactive.Concurrency;
+﻿using System.Net.Sockets;
+using System.Reactive.Concurrency;
+using System.Security.Cryptography;
 
 namespace McServersScanner.Network
 {
@@ -80,6 +82,21 @@ namespace McServersScanner.Network
             return read;
         }
 
+        public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        {
+            var read = await parent.ReadAsync(buffer, offset, count, cancellationToken);
+            Throttle(read);
+            return read;
+        }
+
+        public override async ValueTask<int> ReadAsync(Memory<byte> buffer,
+            CancellationToken cancellationToken = new CancellationToken())
+        {
+            var read = await parent.ReadAsync(buffer, cancellationToken);
+            Throttle(read);
+            return read;
+        }
+
         public override long Seek(long offset, SeekOrigin origin) => parent.Seek(offset, origin);
 
         public override void SetLength(long value) => parent.SetLength(value);
@@ -88,6 +105,19 @@ namespace McServersScanner.Network
         {
             Throttle(count);
             parent.Write(buffer, offset, count);
+        }
+
+        public override async Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        {
+            Throttle(count);
+            await parent.WriteAsync(buffer, offset, count, cancellationToken);
+        }
+
+        public override async ValueTask WriteAsync(ReadOnlyMemory<byte> buffer,
+            CancellationToken cancellationToken = new CancellationToken())
+        {
+            Throttle(buffer.Length);
+            await parent.WriteAsync(buffer, cancellationToken);
         }
     }
 }

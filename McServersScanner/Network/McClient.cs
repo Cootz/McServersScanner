@@ -75,19 +75,21 @@ namespace McServersScanner.Network
         public async Task<string> GetServerInfo()
         {
             int protocolVersion = 761;
-            StringBuilder response = new StringBuilder();
+            StringBuilder response = new();
 
             try
             {
                 //preparing packet
                 McPacket<HandshakePacket> packet = new(new HandshakePacket(IpEndPoint.Address, protocolVersion, (ushort)IpEndPoint.Port));
 
+                ThrottledStream stream = new(new NetworkStream(Client), 1024*1024);
+
                 //Send handshake
-                var handshake = Client.SendAsync(packet.ToArray(), SocketFlags.None);
+                var handshake = stream.WriteAsync(packet.ToArray()).AsTask();
 
                 //Send ping req
                 byte[] pingData = { 1, 0 };
-                var request = Client.SendAsync(pingData, SocketFlags.None);
+                var request = stream.WriteAsync(pingData).AsTask();
 
                 byte[] buffer = new byte[1024];
                 int bytesReceived = 0;
@@ -96,7 +98,7 @@ namespace McServersScanner.Network
 
                 do
                 {
-                    bytesReceived = await Client.ReceiveAsync(buffer, SocketFlags.None);
+                    bytesReceived = await stream.ReadAsync(buffer);
                     response.Append(StringPool.Shared.GetOrAdd(Encoding.UTF8.GetString(buffer)));
                 } while (bytesReceived > 0);
             }
@@ -105,10 +107,7 @@ namespace McServersScanner.Network
                 return string.Empty;
             }
 
-            if (response.Length > 5)
-                return StringPool.Shared.GetOrAdd(response.Remove(0, 5).ToString());
-            else
-                return string.Empty;
+            return response.Length > 5 ? StringPool.Shared.GetOrAdd(response.Remove(0, 5).ToString()) : string.Empty;
         }
 
         /// <summary>

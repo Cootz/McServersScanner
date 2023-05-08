@@ -9,14 +9,14 @@ internal class Program
 {
     private static async Task Main(string[] args)
     {
-        ScannerConfiguration config = new();
+        ScannerConfiguration config;
 
         //Parsing cmd params
         ParserResult<Options> result = Parser.Default.ParseArguments<Options>(args);
 
         try
         {
-            parseResult(config, result);
+            config = parseResult(result);
         }
         catch (Exception ex)
         {
@@ -34,8 +34,10 @@ internal class Program
         await Scanner.Scan();
     }
 
-    private static void parseResult(ScannerConfiguration config, ParserResult<Options> result)
+    private static ScannerConfiguration parseResult(ParserResult<Options> result)
     {
+        ScannerConfiguration config = new();
+
         result.WithParsed(o =>
         {
             //Adding connection limit
@@ -53,7 +55,7 @@ internal class Program
             //Adding ports
             List<string>? portList = o.Ports?.ToList();
 
-            if (portList is not null)
+            if (portList?.Count > 0)
             {
                 List<ushort> portUshort = new();
 
@@ -127,6 +129,8 @@ internal class Program
                 config.Timeout = connectionTimeout.Value;
 
         });
+
+        return config;
     }
 
     /// <summary>

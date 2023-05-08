@@ -1,47 +1,49 @@
-﻿using System.Net.Sockets;
+﻿using System.Diagnostics;
 using System.Reactive.Concurrency;
-using System.Security.Cryptography;
 
 namespace McServersScanner.Network
 {
-    public class ThrottledStream : Stream
+    public class SharedThrottledStream : Stream
     {
         private readonly Stream parent;
-        private readonly int maxBytesPerSecond;
-        private readonly IScheduler scheduler;
-        private readonly IStopwatch stopwatch;
 
-        private long processed;
+        private readonly ThrottleManager throttleManager;
 
-        public ThrottledStream(Stream parent, int maxBytesPerSecond, IScheduler scheduler)
+        public SharedThrottledStream(Stream parent, ThrottleManager throttleManager)
         {
-            this.maxBytesPerSecond = maxBytesPerSecond;
             this.parent = parent;
-            this.scheduler = scheduler;
-            stopwatch = scheduler.StartStopwatch();
-            processed = 0;
+            this.throttleManager = throttleManager;
         }
 
-        public ThrottledStream(Stream parent, int maxBytesPerSecond)
-            : this(parent, maxBytesPerSecond, Scheduler.Immediate)
+        public SharedThrottledStream(Stream parent)
+            : this(parent, ThrottleManager.Current)
         {
         }
 
-        protected void Throttle(int bytes)
+        public void Throttle(int bytes)
         {
-            processed += bytes;
-
-            TimeSpan targetTime = TimeSpan.FromSeconds((double)processed / maxBytesPerSecond);
-            TimeSpan actualTime = stopwatch.Elapsed;
-            TimeSpan sleep = targetTime - actualTime;
+            TimeSpan sleep = throttleManager.GetSleepTime(bytes);
 
             if (sleep <= TimeSpan.Zero) return;
+
+            using AutoResetEvent waitHandle = new(initialState: false);
             
+            throttleManager.Scheduler.Sleep(sleep).GetAwaiter().OnCompleted(() => waitHandle.Set());
+
+            waitHandle.WaitOne();
+        }
+
+        public async Task ThrottleAsync(int bytes)
+        {
+            TimeSpan sleep = throttleManager.GetSleepTime(bytes);
+
+            if (sleep <= TimeSpan.Zero) return;
+
             using AutoResetEvent waitHandle = new(initialState: false);
 
-            scheduler.Sleep(sleep).GetAwaiter().OnCompleted(() => waitHandle.Set());
-            
-            waitHandle.WaitOne();
+            throttleManager.Scheduler.Sleep(sleep).GetAwaiter().OnCompleted(() => waitHandle.Set());
+
+            await waitHandle.WaitOneAsync();
         }
 
         public override bool CanRead
@@ -85,15 +87,15 @@ namespace McServersScanner.Network
         public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
             var read = await parent.ReadAsync(buffer, offset, count, cancellationToken);
-            Throttle(read);
+            await ThrottleAsync(read);
             return read;
         }
 
         public override async ValueTask<int> ReadAsync(Memory<byte> buffer,
-            CancellationToken cancellationToken = new CancellationToken())
+            CancellationToken cancellationToken = new())
         {
             var read = await parent.ReadAsync(buffer, cancellationToken);
-            Throttle(read);
+            await ThrottleAsync(read);
             return read;
         }
 
@@ -109,14 +111,14 @@ namespace McServersScanner.Network
 
         public override async Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
-            Throttle(count);
+            await ThrottleAsync(count);
             await parent.WriteAsync(buffer, offset, count, cancellationToken);
         }
 
         public override async ValueTask WriteAsync(ReadOnlyMemory<byte> buffer,
-            CancellationToken cancellationToken = new CancellationToken())
+            CancellationToken cancellationToken = new())
         {
-            Throttle(buffer.Length);
+            await ThrottleAsync(buffer.Length);
             await parent.WriteAsync(buffer, cancellationToken);
         }
     }

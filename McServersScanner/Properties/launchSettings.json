@@ -2,7 +2,7 @@
   "profiles": {
     "McServersScanner": {
       "commandName": "Project",
-      "commandLineArgs": "-I ips.txt"
+      "commandLineArgs": "-I ips.txt -b 1G --connection-limit 10000"
     },
     "Docker": {
       "commandName": "Docker"

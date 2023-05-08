@@ -110,6 +110,8 @@ namespace McServersScanner
         /// </summary>
         public static async Task Scan()
         {
+            _ = new ThrottleManager(BandwidthLimit);
+
             ServicePointManager.DefaultConnectionLimit = connectionLimit;
             double currentRatio;
 
@@ -195,6 +197,11 @@ namespace McServersScanner
                     if (forceStop)
                         return;
 
+                    while (clients.Count >= ConnectionLimit)
+                    {
+                        await Task.Delay(50);
+                    }
+
                     McClient client = new(await ips.ReceiveAsync(), port, OnConnected, bandwidthLimit / connectionLimit);
 
                     try
@@ -222,7 +229,7 @@ namespace McServersScanner
 
             McClient client = (McClient)result.AsyncState!;
 
-            if (!client.isConnected)
+            if (!client.IsConnected)
             {
                 client.Dispose();
                 return;

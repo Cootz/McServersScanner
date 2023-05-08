@@ -59,12 +59,12 @@ namespace McServersScanner.Network
         /// <summary>
         /// Gets a value that indicates whether a Socket is connected to a remote host
         /// </summary>
-        public bool isConnected => Client.Connected;
+        public bool IsConnected => Client.Connected;
 
         /// <summary>
         /// Time when connection started
         /// </summary>
-        public DateTime initDateTime => InitTime;
+        public DateTime InitDateTime => InitTime;
 
         /// <summary>
         /// Tries to get information from server
@@ -82,7 +82,7 @@ namespace McServersScanner.Network
                 //preparing packet
                 McPacket<HandshakePacket> packet = new(new HandshakePacket(IpEndPoint.Address, protocolVersion, (ushort)IpEndPoint.Port));
 
-                ThrottledStream stream = new(new NetworkStream(Client), BandwidthLimit);
+                SharedThrottledStream stream = new(new NetworkStream(Client, true));
 
                 //Send handshake
                 var handshake = stream.WriteAsync(packet.ToArray()).AsTask();

@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.HighPerformance.Buffers;
+using static System.String;
 
 namespace McServersScanner.Utils
 {
@@ -17,15 +18,12 @@ namespace McServersScanner.Utils
         /// </remarks>
         public static IEnumerable<string> ReadLineByLine(string path)
         {
-            using (StreamReader reader = new StreamReader(path))
+            using StreamReader reader = new(path);
+            
+            while (reader.ReadLine() is { } line)
             {
-                string? line;
-
-                while ((line = reader.ReadLine()) != null)
-                {
-                    if (!String.IsNullOrEmpty(line))
-                        yield return StringPool.Shared.GetOrAdd(line);
-                }
+                if (!IsNullOrEmpty(line))
+                    yield return StringPool.Shared.GetOrAdd(line);
             }
         }
 
@@ -41,15 +39,12 @@ namespace McServersScanner.Utils
         {
             long count = 0;
 
-            using (StreamReader reader = new StreamReader(path))
-            {
-                string? line;
+            using StreamReader reader = new(path);
 
-                while ((line = reader.ReadLine()) != null)
-                {
-                    if (!String.IsNullOrEmpty(line))
-                        count++;
-                }
+            while (reader.ReadLine() is { } line)
+            {
+                if (!IsNullOrEmpty(line))
+                    count++;
             }
 
             return count;

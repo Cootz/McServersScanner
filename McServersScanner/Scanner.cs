@@ -27,6 +27,11 @@ namespace McServersScanner
         public static int ConnectionLimit => connectionLimit;
 
         /// <summary>
+        /// Maximum number of bytes scanner can sent/receive by network per second
+        /// </summary>
+        public static int BandwidthLimit => bandwidthLimit;
+
+        /// <summary>
         /// Exit database thread if true
         /// </summary>
         private static bool endDBThread = false;
@@ -44,7 +49,7 @@ namespace McServersScanner
         /// <summary>
         /// Array of ports to scan
         /// </summary>
-        private static ushort[] ports = new ushort[] { 25565 };
+        private static ushort[] ports = { 25565 };
 
         /// <summary>
         /// Block of information about scanned servers
@@ -57,6 +62,11 @@ namespace McServersScanner
         private static int connectionLimit = 1000;
 
         /// <summary>
+        /// Number of bytes scanner can sent/receive by network per second
+        /// </summary>
+        private static int bandwidthLimit = 1024 * 1024;
+
+        /// <summary>
         /// Connection timeout in seconds
         /// </summary>
         private static double timeout = 10;
@@ -67,9 +77,9 @@ namespace McServersScanner
         private static ConcurrentDictionary<DateTime, McClient> clients = new();
 
         /// <summary>
-        /// Supplies <see cref="ips" with <see cref="IPAddress"/>es/>
+        /// Supplies <see cref="ips"/> with <see cref="IPAddress"/>
         /// </summary>
-        private static Task addIpAdresses = Task.CompletedTask;
+        private static Task addIpAddresses = Task.CompletedTask;
 
         /// <summary>
         /// The number of ips to scan
@@ -86,12 +96,13 @@ namespace McServersScanner
         /// </summary>
         public static void ApplyConfiguration(ScannerConfiguration configuration)
         {
-            ips = configuration.ips;
-            ports = configuration.ports ?? ports;
-            connectionLimit = configuration.connectionLimit ?? connectionLimit;
-            timeout = configuration.timeout ?? timeout;
-            addIpAdresses = configuration.addIpAdresses ?? addIpAdresses;
-            totalIps = configuration.totalIps ?? totalIps;
+            ips = configuration.Ips;
+            ports = configuration.Ports ?? ports;
+            connectionLimit = configuration.ConnectionLimit ?? connectionLimit;
+            bandwidthLimit = configuration.BandwidthLimit ?? bandwidthLimit;
+            timeout = configuration.Timeout ?? timeout;
+            addIpAddresses = configuration.AddIpAddresses ?? addIpAddresses;
+            totalIps = configuration.TotalIps ?? totalIps;
         }
 
         /// <summary>
@@ -126,7 +137,7 @@ namespace McServersScanner
             Console.WriteLine("{0:0.00}% - {1}/{2}", currentRatio, scannedIps, totalIps);
             Console.WriteLine("Waiting for the results...");
 
-            await Task.WhenAll(writer, reader, addIpAdresses); //awaiting for results
+            await Task.WhenAll(writer, reader, addIpAddresses); //awaiting for results
 
             endDBThread = true;//exiting db thread
             updateDb.Join();
@@ -184,7 +195,7 @@ namespace McServersScanner
                     if (forceStop)
                         return;
 
-                    McClient client = new(await ips.ReceiveAsync(), port, OnConnected);
+                    McClient client = new(await ips.ReceiveAsync(), port, OnConnected, bandwidthLimit / connectionLimit);
 
                     try
                     {
@@ -297,7 +308,7 @@ namespace McServersScanner
         }
 
         /// <summary>
-        /// Calculates percantage ratio of servers scanning progress
+        /// Calculates percentage ratio of servers scanning progress
         /// </summary>
         /// <param name="currentInQueue">Current position in queue</param>
         /// <param name="length">Length of queue</param>
@@ -316,13 +327,14 @@ namespace McServersScanner
             ports = new ushort[] { 25565 };
             serverInfos = new();
             connectionLimit = 1000;
+            bandwidthLimit = 1024 * 1024;
             timeout = 10;
             clients = new();
-            addIpAdresses = Task.CompletedTask;
+            addIpAddresses = Task.CompletedTask;
             totalIps = 0;
             scannedIps = 0;
 
-            updateDb = new(() => UpdateDatabase());
+            updateDb = new(UpdateDatabase);
         }
     }
 }

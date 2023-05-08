@@ -32,29 +32,29 @@ namespace McServersScanner.Network
         /// </summary>
         private readonly AsyncCallback? connectionCallBack;
 
-        public McClient(string ip, ushort port) : this(IPAddress.Parse(ip), port) { }
-        public McClient(string ip, ushort port, Action<IAsyncResult> onConnection) : this(IPAddress.Parse(ip), port, onConnection) { }
+        /// <summary>
+        /// Max number of bytes sent/received by network per second
+        /// </summary>
+        public int BandwidthLimit { get; set; }
 
-        public McClient(IPAddress ip, ushort port)
+        public McClient(string ip, ushort port, int bandwidthLimit) : this(IPAddress.Parse(ip), port, bandwidthLimit) { }
+        public McClient(string ip, ushort port, Action<IAsyncResult> onConnection , int bandwidthLimit) : this(IPAddress.Parse(ip), port, onConnection, bandwidthLimit) { }
+
+        public McClient(IPAddress ip, ushort port, int bandwidthLimit)
         {
             IpEndPoint = new IPEndPoint(ip, port);
             Client = new(IpEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+            BandwidthLimit = bandwidthLimit;
 
             InitTime = DateTime.Now;
         }
 
-        public McClient(IPAddress ip, ushort port, Action<IAsyncResult> onConnection) : this(ip, port)
-        {
-            connectionCallBack = new(onConnection);
-        }
+        public McClient(IPAddress ip, ushort port, Action<IAsyncResult> onConnection, int bandwidthLimit) : this(ip, port, bandwidthLimit) => connectionCallBack = new(onConnection);
 
         /// <summary>
         /// Begins an asynchronous request for a remote host connection.
         /// </summary>
-        public IAsyncResult BeginConnect()
-        {
-            return Client.BeginConnect(IpEndPoint, connectionCallBack, this);
-        }
+        public IAsyncResult BeginConnect() => Client.BeginConnect(IpEndPoint, connectionCallBack, this);
 
         /// <summary>
         /// Gets a value that indicates whether a Socket is connected to a remote host
@@ -82,7 +82,7 @@ namespace McServersScanner.Network
                 //preparing packet
                 McPacket<HandshakePacket> packet = new(new HandshakePacket(IpEndPoint.Address, protocolVersion, (ushort)IpEndPoint.Port));
 
-                ThrottledStream stream = new(new NetworkStream(Client), 1024*1024);
+                ThrottledStream stream = new(new NetworkStream(Client), BandwidthLimit);
 
                 //Send handshake
                 var handshake = stream.WriteAsync(packet.ToArray()).AsTask();
@@ -92,7 +92,7 @@ namespace McServersScanner.Network
                 var request = stream.WriteAsync(pingData).AsTask();
 
                 byte[] buffer = new byte[1024];
-                int bytesReceived = 0;
+                int bytesReceived;
 
                 await Task.WhenAll(handshake, request);//Waiting for the packets to be sent
 
@@ -118,6 +118,7 @@ namespace McServersScanner.Network
 
         public void Dispose()
         {
+            GC.SuppressFinalize(this);
             Client.Dispose();
             Disposed = true;
         }

@@ -55,6 +55,7 @@ class Build : NukeBuild
                 .SetProjectFile(Solution)
                 .SetConfiguration(Configuration)
                 .SetVerbosity(DotNetVerbosity.Normal)
+                .EnableNoRestore()
                 .EnableNoBuild());
         });
 }

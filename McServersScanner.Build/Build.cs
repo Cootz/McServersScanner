@@ -23,14 +23,6 @@ class Build : NukeBuild
     AbsolutePath SourceDirectory => RootDirectory / "McServersScanner";
     AbsolutePath TestsDirectory => RootDirectory / "McServersScanner.Tests";
 
-    Target Clean => _ => _
-        .Before(Restore)
-        .Executes(() =>
-        {
-            SourceDirectory.GlobDirectories("**/bin", "**/obj").ForEach(d => d.DeleteDirectory());
-            TestsDirectory.GlobDirectories("**/bin", "**/obj").ForEach(d => d.DeleteDirectory());
-        });
-
     Target Restore => _ => _
         .Executes(() =>
         {

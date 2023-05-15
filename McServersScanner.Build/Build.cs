@@ -53,6 +53,7 @@ class Build : NukeBuild
         {
             DotNetTest(s => s
                 .SetProjectFile(Solution)
+                .SetConfiguration(Configuration)
                 .SetVerbosity(DotNetVerbosity.Normal)
                 .EnableNoBuild());
         });

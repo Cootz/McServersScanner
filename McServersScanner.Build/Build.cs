@@ -9,10 +9,11 @@ using static Nuke.Common.Tools.DotNet.DotNetTasks;
 [GitHubActions("testRunners", 
     GitHubActionsImage.WindowsLatest, GitHubActionsImage.MacOsLatest, GitHubActionsImage.UbuntuLatest, 
     OnPushBranches = new[] { "main" },
-    OnPullRequestBranches = new [] { "main" })]
+    OnPullRequestBranches = new [] { "main" },
+    InvokedTargets = new [] { nameof(Test) })]
 class Build : NukeBuild
 {
-    public static int Main () => Execute<Build>(x => x.Test);
+    public static int Main () => Execute<Build>(x => x.Compile);
 
     [Parameter("Configuration to build - Default is 'Debug' (local) or 'Release' (server)")]
     readonly Configuration Configuration = IsLocalBuild ? Configuration.Debug : Configuration.Release;

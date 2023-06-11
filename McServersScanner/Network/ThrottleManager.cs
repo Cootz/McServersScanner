@@ -5,7 +5,7 @@ namespace McServersScanner.Network
 {
     public class ThrottleManager
     {
-        public static ThrottleManager Current { get; private set; }
+        public static ThrottleManager Current { get; private set; } = null!;
 
         public readonly IScheduler Scheduler;
 

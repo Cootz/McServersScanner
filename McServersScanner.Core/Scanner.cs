@@ -14,12 +14,12 @@ namespace McServersScanner.Core;
 /// <remarks>
 /// Only one instance of this class can exist in application
 /// </remarks>
-public static class Scanner
+public sealed class Scanner
 {
     /// <summary>
     /// Number of ports to scan
     /// </summary>
-    public static int PortsCount
+    public int PortsCount
     {
         get => ports.Length;
     }
@@ -27,67 +27,73 @@ public static class Scanner
     /// <summary>
     /// Maximum number of connections available at the same time
     /// </summary>
-    public static int ConnectionLimit { get; private set; } = 1000;
+    public int ConnectionLimit { get; private set; } = 1000;
 
     /// <summary>
     /// Maximum number of bytes scanner can sent/receive by network per second
     /// </summary>
-    public static int BandwidthLimit { get; private set; } = 1024 * 1024;
+    public int BandwidthLimit { get; private set; } = 1024 * 1024;
 
     /// <summary>
     /// Exit database thread if true
     /// </summary>
-    private static bool endDBThread;
+    private bool endDBThread;
 
     /// <summary>
     /// Force running scanner to stop
     /// </summary>
-    private static bool forceStop;
+    private bool forceStop;
 
     /// <summary>
     /// Block of Ips to scan
     /// </summary>
-    private static BufferBlock<IPAddress> ips = null!;
+    private BufferBlock<IPAddress> ips = null!;
 
     /// <summary>
     /// Array of ports to scan
     /// </summary>
-    private static ushort[] ports = { 25565 };
+    private ushort[] ports = { 25565 };
 
     /// <summary>
     /// Block of information about scanned servers
     /// </summary>
-    private static BufferBlock<ServerInfo> serverInfos = new();
+    private BufferBlock<ServerInfo> serverInfos = new();
 
     /// <summary>
     /// Connection timeout in seconds
     /// </summary>
-    private static double timeout = 10;
+    private double timeout = 10;
 
     /// <summary>
     /// List of clients
     /// </summary>
-    private static ConcurrentDictionary<DateTime, McClient> clients = new();
+    private ConcurrentDictionary<DateTime, McClient> clients = new();
 
     /// <summary>
     /// Supplies <see cref="ips"/> with <see cref="IPAddress"/>
     /// </summary>
-    private static Task addIpAddresses = Task.CompletedTask;
+    private Task addIpAddresses = Task.CompletedTask;
 
     /// <summary>
     /// The number of ips to scan
     /// </summary>
-    private static long totalIps;
+    private long totalIps;
 
     /// <summary>
     /// Amount of ips being scanned
     /// </summary>
-    private static long scannedIps;
+    private long scannedIps;
+
+    internal Scanner(BufferBlock<IPAddress> ips)
+    {
+        this.ips = ips;
+        updateDB = new Lazy<Thread>(() => new Thread(updateDatabase));
+    }
 
     /// <summary>
     /// Applies scanner configuration
     /// </summary>
-    public static void ApplyConfiguration(ScannerConfiguration configuration)
+    public void ApplyConfiguration(ScannerConfiguration configuration)
     {
         ips = configuration.Ips;
         ports = configuration.Ports ?? ports;
@@ -101,7 +107,7 @@ public static class Scanner
     /// <summary>
     /// Start scanning
     /// </summary>
-    public static async Task Scan()
+    public async Task Scan()
     {
         _ = new ThrottleManager(BandwidthLimit);
 
@@ -109,7 +115,7 @@ public static class Scanner
         double currentRatio;
 
         //Starting update db thread
-        updateDb.Start();
+        updateDB.Value.Start();
 
         //Running workers
         Task writer = Task.Run(WriterAsync);
@@ -135,7 +141,7 @@ public static class Scanner
         await Task.WhenAll(writer, reader, addIpAddresses); //awaiting for results
 
         endDBThread = true; //exiting db thread
-        updateDb.Join();
+        updateDB.Value.Join();
     }
 
     /// <summary>
@@ -144,7 +150,7 @@ public static class Scanner
     /// <remarks>
     /// This task runs in different thread
     /// </remarks>
-    public static async Task ReaderAsync()
+    public async Task ReaderAsync()
     {
         TimeSpan timeToConnect = TimeSpan.FromSeconds(timeout);
 
@@ -177,7 +183,7 @@ public static class Scanner
     /// <remarks>
     /// This task runs in different thread
     /// </remarks>
-    public static async Task WriterAsync()
+    public async Task WriterAsync()
     {
         long addedIps = 0;
 
@@ -208,7 +214,7 @@ public static class Scanner
     /// Callback for <see cref="McClient.connectionCallBack"/>. Sends server info and receives answer
     /// </summary>
     /// <param name="result"></param>
-    public static async void OnConnected(IAsyncResult result)
+    public async void OnConnected(IAsyncResult result)
     {
         if (result.AsyncState is null)
             return;
@@ -254,9 +260,9 @@ public static class Scanner
     /// <summary>
     /// Thread with database. Update database with scanned data
     /// </summary>
-    private static Thread updateDb = new(updateDatabase);
+    private Lazy<Thread> updateDB;
 
-    private static void updateDatabase()
+    private void updateDatabase()
     {
         DBController db = new();
 
@@ -288,7 +294,7 @@ public static class Scanner
     /// <typeparam name="T">Type of class to copy</typeparam>
     /// <param name="typeEnumerable">Copy from</param>
     /// <param name="typeActionBlock">Copy to</param>
-    public static async Task CopyToActionBlockAsync<T>(IEnumerable<T> typeEnumerable, BufferBlock<T> typeActionBlock)
+    public async Task CopyToActionBlockAsync<T>(IEnumerable<T> typeEnumerable, BufferBlock<T> typeActionBlock)
         where T : class
     {
         foreach (T item in typeEnumerable)
@@ -298,14 +304,14 @@ public static class Scanner
     /// <summary>
     /// Force all running tasks and threads to stop
     /// </summary>
-    public static void ForceStop()
+    public void ForceStop()
     {
         endDBThread = true;
         forceStop = true;
 
         Console.WriteLine("\nStopping application...");
 
-        updateDb.Join();
+        updateDB.Value.Join();
     }
 
     /// <summary>
@@ -314,27 +320,5 @@ public static class Scanner
     /// <param name="currentInQueue">Current position in queue</param>
     /// <param name="length">Length of queue</param>
     /// <returns>Progress percentage rounded to 2 digits</returns>
-    private static double calculateRatio(double currentInQueue, double length) => currentInQueue / length * 100.0;
-
-    /// <summary>
-    /// Resets scanner to default state.
-    /// <para><b>FOR TESTING PURPOSE ONLY</b></para>
-    /// </summary>
-    public static void Reset()
-    {
-        endDBThread = false;
-        forceStop = false;
-        ips = null!;
-        ports = new ushort[] { 25565 };
-        serverInfos = new BufferBlock<ServerInfo>();
-        ConnectionLimit = 1000;
-        BandwidthLimit = 1024 * 1024;
-        timeout = 10;
-        clients = new ConcurrentDictionary<DateTime, McClient>();
-        addIpAddresses = Task.CompletedTask;
-        totalIps = 0;
-        scannedIps = 0;
-
-        updateDb = new Thread(updateDatabase);
-    }
+    private double calculateRatio(double currentInQueue, double length) => currentInQueue / length * 100.0;
 }

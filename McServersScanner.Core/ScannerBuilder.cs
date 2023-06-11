@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using System.Threading;
 using System.Threading.Tasks.Dataflow;
 
 namespace McServersScanner.Core;
@@ -14,7 +15,7 @@ public sealed class ScannerBuilder
     public BufferBlock<IPAddress> Ips = null!;
 
     /// <summary>
-    /// Array of ports to scan
+    /// Array of Ports to scan
     /// </summary>
     public ushort[]? Ports = null;
 
@@ -51,6 +52,12 @@ public sealed class ScannerBuilder
     {
         Scanner builtScanner = new(Ips);
 
+        builtScanner.Ports = Ports ?? builtScanner.Ports;
+        builtScanner.ConnectionLimit = ConnectionLimit ?? builtScanner.ConnectionLimit;
+        builtScanner.BandwidthLimit = BandwidthLimit ?? builtScanner.BandwidthLimit;
+        builtScanner.Timeout = Timeout ?? builtScanner.Timeout;
+        builtScanner.AddIpAddresses = AddIpAddresses ?? builtScanner.AddIpAddresses;
+        builtScanner.TotalIps = TotalIps ?? builtScanner.TotalIps;
 
         return builtScanner;
     }

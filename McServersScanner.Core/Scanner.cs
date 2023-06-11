@@ -21,18 +21,18 @@ public sealed class Scanner
     /// </summary>
     public int PortsCount
     {
-        get => ports.Length;
+        get => Ports.Length;
     }
 
     /// <summary>
     /// Maximum number of connections available at the same time
     /// </summary>
-    public int ConnectionLimit { get; private set; } = 1000;
+    public int ConnectionLimit { get; internal set; } = 1000;
 
     /// <summary>
     /// Maximum number of bytes scanner can sent/receive by network per second
     /// </summary>
-    public int BandwidthLimit { get; private set; } = 1024 * 1024;
+    public int BandwidthLimit { get; internal set; } = 1024 * 1024;
 
     /// <summary>
     /// Exit database thread if true
@@ -52,7 +52,7 @@ public sealed class Scanner
     /// <summary>
     /// Array of ports to scan
     /// </summary>
-    private ushort[] ports = { 25565 };
+    internal ushort[] Ports = { 25565 };
 
     /// <summary>
     /// Block of information about scanned servers
@@ -62,7 +62,7 @@ public sealed class Scanner
     /// <summary>
     /// Connection timeout in seconds
     /// </summary>
-    private double timeout = 10;
+    internal double Timeout = 10;
 
     /// <summary>
     /// List of clients
@@ -72,12 +72,12 @@ public sealed class Scanner
     /// <summary>
     /// Supplies <see cref="ips"/> with <see cref="IPAddress"/>
     /// </summary>
-    private Task addIpAddresses = Task.CompletedTask;
+    internal Task AddIpAddresses = Task.CompletedTask;
 
     /// <summary>
     /// The number of ips to scan
     /// </summary>
-    private long totalIps;
+    internal long TotalIps;
 
     /// <summary>
     /// Amount of ips being scanned
@@ -88,20 +88,6 @@ public sealed class Scanner
     {
         this.ips = ips;
         updateDB = new Lazy<Thread>(() => new Thread(updateDatabase));
-    }
-
-    /// <summary>
-    /// Applies scanner configuration
-    /// </summary>
-    public void ApplyConfiguration(ScannerConfiguration configuration)
-    {
-        ips = configuration.Ips;
-        ports = configuration.Ports ?? ports;
-        ConnectionLimit = configuration.ConnectionLimit ?? ConnectionLimit;
-        BandwidthLimit = configuration.BandwidthLimit ?? BandwidthLimit;
-        timeout = configuration.Timeout ?? timeout;
-        addIpAddresses = configuration.AddIpAddresses ?? addIpAddresses;
-        totalIps = configuration.TotalIps ?? totalIps;
     }
 
     /// <summary>
@@ -122,23 +108,23 @@ public sealed class Scanner
         Task reader = Task.Run(ReaderAsync);
 
         //Showing progress
-        while (scannedIps < totalIps)
+        while (scannedIps < TotalIps)
         {
             if (forceStop)
                 return;
 
-            currentRatio = calculateRatio(scannedIps, totalIps);
+            currentRatio = calculateRatio(scannedIps, TotalIps);
 
-            Console.Write("\r{0:0.00}% - {1}/{2}", currentRatio, scannedIps, totalIps);
+            Console.Write("\r{0:0.00}% - {1}/{2}", currentRatio, scannedIps, TotalIps);
 
             await Task.Delay(100);
         }
 
-        currentRatio = calculateRatio(scannedIps, totalIps);
-        Console.WriteLine("{0:0.00}% - {1}/{2}", currentRatio, scannedIps, totalIps);
+        currentRatio = calculateRatio(scannedIps, TotalIps);
+        Console.WriteLine("{0:0.00}% - {1}/{2}", currentRatio, scannedIps, TotalIps);
         Console.WriteLine("Waiting for the results...");
 
-        await Task.WhenAll(writer, reader, addIpAddresses); //awaiting for results
+        await Task.WhenAll(writer, reader, AddIpAddresses); //awaiting for results
 
         endDBThread = true; //exiting db thread
         updateDB.Value.Join();
@@ -152,7 +138,7 @@ public sealed class Scanner
     /// </remarks>
     public async Task ReaderAsync()
     {
-        TimeSpan timeToConnect = TimeSpan.FromSeconds(timeout);
+        TimeSpan timeToConnect = TimeSpan.FromSeconds(Timeout);
 
         do
         {
@@ -174,7 +160,7 @@ public sealed class Scanner
             }
 
             await Task.Delay(TimeSpan.FromMilliseconds(100));
-        } while (totalIps - scannedIps > 0);
+        } while (TotalIps - scannedIps > 0);
     }
 
     /// <summary>
@@ -187,8 +173,8 @@ public sealed class Scanner
     {
         long addedIps = 0;
 
-        while (totalIps - addedIps > 0)
-            foreach (ushort port in ports)
+        while (TotalIps - addedIps > 0)
+            foreach (ushort port in Ports)
             {
                 if (forceStop)
                     return;

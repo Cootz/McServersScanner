@@ -10,7 +10,7 @@ public class Options
     [Option('I', "range", Required = true, HelpText = "Ip address range to be processed.")]
     public IEnumerable<string>? Range { get; set; }
 
-    [Option('p', "port", Required = false, HelpText = "Range of ports to be scanned.")]
+    [Option('p', "port", Required = false, HelpText = "Range of Ports to be scanned.")]
     public IEnumerable<string>? Ports { get; set; }
 
     [Option("connection-limit", HelpText = "Max amount of connections at the same time")]

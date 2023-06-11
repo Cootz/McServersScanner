@@ -14,7 +14,7 @@ public class ScannerConfiguration
     public BufferBlock<IPAddress> Ips = null!;
 
     /// <summary>
-    /// Array of ports to scan
+    /// Array of Ports to scan
     /// </summary>
     public ushort[]? Ports = null;
 

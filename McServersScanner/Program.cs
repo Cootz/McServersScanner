@@ -54,7 +54,7 @@ internal class Program
             if (!string.IsNullOrEmpty(bandwidthLimit))
                 config.BandwidthLimit = ParsingHelper.ConvertToNumberOfBytes(bandwidthLimit);
 
-            //Adding ports
+            //Adding Ports
             List<string>? portList = o.Ports?.ToList();
 
             if (portList?.Count > 0)
@@ -62,7 +62,7 @@ internal class Program
                 List<ushort> portUshort = new();
 
                 foreach (string portString in portList)
-                    if (portString.Contains('-')) //ports range
+                    if (portString.Contains('-')) //Ports range
                     {
                         string[] splitPorts = portString.Split('-');
 

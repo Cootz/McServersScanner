@@ -1,54 +1,49 @@
 ﻿using CommunityToolkit.HighPerformance.Buffers;
 using static System.String;
 
-namespace McServersScanner.Core.Utils
+namespace McServersScanner.Core.Utils;
+
+/// <summary>
+/// Helps with IO stuff
+/// </summary>
+// ReSharper disable once InconsistentNaming
+public static class IOHelper
 {
     /// <summary>
-    /// Helps with IO stuff
+    /// Reads file line by line
     /// </summary>
-    // ReSharper disable once InconsistentNaming
-    public static class IOHelper
+    /// <param name="path">Path to file</param>
+    /// <returns><see cref="IEnumerable{string}"/></returns>
+    /// <remarks>
+    /// Ignores empty lines
+    /// </remarks>
+    public static IEnumerable<string> ReadLineByLine(string path)
     {
-        /// <summary>
-        /// Reads file line by line
-        /// </summary>
-        /// <param name="path">Path to file</param>
-        /// <returns><see cref="IEnumerable{string}"/></returns>
-        /// <remarks>
-        /// Ignores empty lines
-        /// </remarks>
-        public static IEnumerable<string> ReadLineByLine(string path)
-        {
-            using StreamReader reader = new(path);
-            
-            while (reader.ReadLine() is { } line)
-            {
-                if (!IsNullOrEmpty(line))
-                    yield return StringPool.Shared.GetOrAdd(line);
-            }
-        }
+        using StreamReader reader = new(path);
 
-        /// <summary>
-        /// Simulates <see cref="ReadLineByLine(string)"/> behavior to calculate it length
-        /// </summary>
-        /// <param name="path">Path to file</param>
-        /// <returns>Amount of non empty lines</returns>
-        /// <remarks>
-        /// Ignores empty lines
-        /// </remarks>
-        public static long GetLinesCount(string path)
-        {
-            long count = 0;
+        while (reader.ReadLine() is { } line)
+            if (!IsNullOrEmpty(line))
+                yield return StringPool.Shared.GetOrAdd(line);
+    }
 
-            using StreamReader reader = new(path);
+    /// <summary>
+    /// Simulates <see cref="ReadLineByLine(string)"/> behavior to calculate it length
+    /// </summary>
+    /// <param name="path">Path to file</param>
+    /// <returns>Amount of non empty lines</returns>
+    /// <remarks>
+    /// Ignores empty lines
+    /// </remarks>
+    public static long GetLinesCount(string path)
+    {
+        long count = 0;
 
-            while (reader.ReadLine() is { } line)
-            {
-                if (!IsNullOrEmpty(line))
-                    count++;
-            }
+        using StreamReader reader = new(path);
 
-            return count;
-        }
+        while (reader.ReadLine() is { } line)
+            if (!IsNullOrEmpty(line))
+                count++;
+
+        return count;
     }
 }

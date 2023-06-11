@@ -62,12 +62,11 @@ internal class Program
                 List<ushort> portUshort = new();
 
                 foreach (string portString in portList)
-                {
                     if (portString.Contains('-')) //ports range
                     {
                         string[] splitPorts = portString.Split('-');
 
-                        var range = NetworkHelper.FillPortRange(splitPorts[0], splitPorts[1]);
+                        IEnumerable<ushort>? range = NetworkHelper.FillPortRange(splitPorts[0], splitPorts[1]);
                         foreach (ushort port in range)
                             portUshort.Add(port);
                     }
@@ -78,13 +77,12 @@ internal class Program
 
                         portUshort.Add(ushort.Parse(portString));
                     }
-                }
 
                 config.Ports = portUshort.ToArray();
             }
 
             //Adding ips
-            config.Ips = new(new DataflowBlockOptions()
+            config.Ips = new BufferBlock<IPAddress>(new DataflowBlockOptions()
             {
                 BoundedCapacity = config.ConnectionLimit ?? Scanner.ConnectionLimit
             });
@@ -94,7 +92,6 @@ internal class Program
             List<string> ipOptionRange = o.Range!.ToList();
 
             foreach (string ipOption in ipOptionRange)
-            {
                 if (ipOption.Contains('-')) //ip range
                 {
                     string[] splitIps = ipOption.Split('-');
@@ -104,7 +101,7 @@ internal class Program
 
                     config.TotalIps = NetworkHelper.GetIpRangeCount(firstIp, lastIp) * portsCount;
 
-                    var range = NetworkHelper.FillIpRange(firstIp, lastIp);
+                    IEnumerable<IPAddress>? range = NetworkHelper.FillIpRange(firstIp, lastIp);
 
                     config.AddIpAddresses = Task.Run(() => Scanner.CopyToActionBlockAsync(range, config.Ips));
                 }
@@ -112,7 +109,7 @@ internal class Program
                 {
                     config.TotalIps = IOHelper.GetLinesCount(ipOption) * portsCount;
 
-                    var readIps = IOHelper.ReadLineByLine(ipOption);
+                    IEnumerable<string>? readIps = IOHelper.ReadLineByLine(ipOption);
 
                     config.AddIpAddresses = Task.Run(() =>
                         Scanner.CopyToActionBlockAsync(from ip in readIps select IPAddress.Parse(ip), config.Ips));
@@ -123,7 +120,6 @@ internal class Program
 
                     config.Ips.Post(IPAddress.Parse(ipOption));
                 }
-            }
 
             //Adding connection timeout
             double? connectionTimeout = o.ConnectionTimeout;

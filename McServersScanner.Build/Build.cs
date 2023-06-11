@@ -6,20 +6,19 @@ using Nuke.Common.Tools.DotNet;
 using Nuke.Common.Utilities.Collections;
 using static Nuke.Common.Tools.DotNet.DotNetTasks;
 
-[GitHubActions("testRunners", 
-    GitHubActionsImage.WindowsLatest, GitHubActionsImage.MacOsLatest, GitHubActionsImage.UbuntuLatest, 
+[GitHubActions("testRunners",
+    GitHubActionsImage.WindowsLatest, GitHubActionsImage.MacOsLatest, GitHubActionsImage.UbuntuLatest,
     OnPushBranches = new[] { "main" },
-    OnPullRequestBranches = new [] { "main" },
-    InvokedTargets = new [] { nameof(Test) })]
+    OnPullRequestBranches = new[] { "main" },
+    InvokedTargets = new[] { nameof(Test) })]
 class Build : NukeBuild
 {
-    public static int Main () => Execute<Build>(x => x.Compile);
+    public static int Main() => Execute<Build>(x => x.Compile);
 
     [Parameter("Configuration to build - Default is 'Debug' (local) or 'Release' (server)")]
     readonly Configuration Configuration = IsLocalBuild ? Configuration.Debug : Configuration.Release;
 
-    [Solution]
-    readonly Solution Solution;
+    [Solution] readonly Solution Solution;
 
     AbsolutePath SourceDirectory => RootDirectory / "McServersScanner";
     AbsolutePath TestsDirectory => RootDirectory / "McServersScanner.Tests";

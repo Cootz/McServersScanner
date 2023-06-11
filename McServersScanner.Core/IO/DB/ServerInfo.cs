@@ -1,57 +1,57 @@
 ﻿using System.Text.Json;
 using Realms;
 
-namespace McServersScanner.Core.IO.DB
+namespace McServersScanner.Core.IO.DB;
+
+/// <summary>
+/// Store info about minecraft server
+/// </summary>
+public class ServerInfo : RealmObject
 {
+    /// <summary>
+    /// Target server ip
+    /// </summary>
+    [PrimaryKey]
+    public string IP { get; private set; } = string.Empty;
 
     /// <summary>
-    /// Store info about minecraft server
+    /// Version info
     /// </summary>
-    public class ServerInfo : RealmObject
+    public Version Version { get; set; } = null!;
+
+    /// <summary>
+    /// Amount of players online
+    /// </summary>
+    public int? Online { get; set; } = null;
+
+    /// <summary>
+    /// Server description
+    /// </summary>
+    public string Description { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Received answer
+    /// </summary>
+    public string JsonInfo { get; set; } = string.Empty;
+
+    private ServerInfo()
     {
-        /// <summary>
-        /// Target server ip
-        /// </summary>
-        [PrimaryKey]
-        public string IP { get; private set; } = string.Empty;
+    }
 
-        /// <summary>
-        /// Version info
-        /// </summary>
-        public Version Version { get; set; } = null!;
+    public ServerInfo(string jsonInfo, string ip)
+    {
+        IP = ip;
 
-        /// <summary>
-        /// Amount of players online
-        /// </summary>
-        public int? Online { get; set; } = null;
+        JsonDocument serverInfo = JsonDocument.Parse(jsonInfo);
 
-        /// <summary>
-        /// Server description
-        /// </summary>
-        public string Description { get; set; } = string.Empty;
+        JsonElement jVersion = serverInfo.RootElement.GetProperty("version");
 
-        /// <summary>
-        /// Received answer
-        /// </summary>
-        public string JsonInfo { get; set; } = string.Empty;
+        Version = jVersion.Deserialize<Version>()!;
 
-        private ServerInfo() { }
+        Online = serverInfo.RootElement.GetProperty("players").GetProperty("online").GetInt32();
 
-        public ServerInfo(string jsonInfo, string ip)
-        {
-            IP = ip;
+        Description = serverInfo.RootElement.GetProperty("description").GetProperty("text").GetString() ?? string.Empty;
 
-            var serverInfo = JsonDocument.Parse(jsonInfo);
-
-            var jVersion = serverInfo.RootElement.GetProperty("version");
-
-            Version = jVersion.Deserialize<Version>()!;
-
-            Online = serverInfo.RootElement.GetProperty("players").GetProperty("online").GetInt32();
-
-            Description = serverInfo.RootElement.GetProperty("description").GetProperty("text").GetString() ?? string.Empty;
-
-            JsonInfo = jsonInfo;
-        }
+        JsonInfo = jsonInfo;
     }
 }

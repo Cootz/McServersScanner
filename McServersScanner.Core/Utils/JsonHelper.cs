@@ -1,35 +1,34 @@
-﻿namespace McServersScanner.Core.Utils
+﻿namespace McServersScanner.Core.Utils;
+
+/// <summary>
+/// Helps with json conversion
+/// </summary>
+public static class JsonHelper
 {
     /// <summary>
-    /// Helps with json conversion
+    /// Remove everything exept json data from string
     /// </summary>
-    public static class JsonHelper
+    /// <param name="dirtyJson">String with json data in it</param>
+    /// <returns>Clean json string ready to convert</returns>
+    public static string ConvertToJsonString(string dirtyJson) => ConvertToJsonString(dirtyJson.AsSpan());
+
+    public static string ConvertToJsonString(ReadOnlySpan<char> dirtyJson)
     {
-        /// <summary>
-        /// Remove everything exept json data from string
-        /// </summary>
-        /// <param name="dirtyJson">String with json data in it</param>
-        /// <returns>Clean json string ready to convert</returns>
-        public static string ConvertToJsonString(string dirtyJson) => ConvertToJsonString(dirtyJson.AsSpan());
+        int balance = 0;
+        int i = 0;
 
-        public static string ConvertToJsonString(ReadOnlySpan<char> dirtyJson)
+        do
         {
-            int balance = 0;
-            int i = 0;
+            char currentChar = dirtyJson[i];
 
-            do
-            {
-                char currentChar = dirtyJson[i];
+            if (currentChar == '{')
+                balance++;
+            else if (currentChar == '}')
+                balance--;
 
-                if (currentChar == '{')
-                    balance++;
-                else if (currentChar == '}')
-                    balance--;
+            i++;
+        } while (balance > 0);
 
-                i++;
-            } while (balance > 0);
-
-            return dirtyJson[..i].ToString();
-        }
+        return dirtyJson[..i].ToString();
     }
 }

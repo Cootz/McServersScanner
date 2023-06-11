@@ -4,77 +4,76 @@ using McServersScanner.Core;
 using McServersScanner.Core.IO.DB;
 using McServersScanner.Core.Utils;
 
-namespace McServersScanner.Tests
+namespace McServersScanner.Tests;
+
+[TestFixture]
+public class ScannerTest
 {
-    [TestFixture]
-    public class ScannerTest
+    [Test]
+    public void NormalScannerRun()
     {
-        [Test]
-        public void NormalScannerRun()
+        ScannerConfiguration scannerConfiguration = new()
         {
-            ScannerConfiguration scannerConfiguration = new()
+            Ips = new BufferBlock<IPAddress>(new DataflowBlockOptions
             {
-                Ips = new(new DataflowBlockOptions
-                {
-                    BoundedCapacity = Scanner.ConnectionLimit
-                })
-            };
+                BoundedCapacity = Scanner.ConnectionLimit
+            })
+        };
 
-            string ipStartAddress = "127.0.0.1";
-            string ipEndAddress = "127.0.1.254";
+        string ipStartAddress = "127.0.0.1";
+        string ipEndAddress = "127.0.1.254";
 
-            IEnumerable<IPAddress> iPs = NetworkHelper.FillIpRange(ipStartAddress, ipEndAddress);
-            long ipCount = NetworkHelper.GetIpRangeCount(ipStartAddress, ipEndAddress);
+        IEnumerable<IPAddress> iPs = NetworkHelper.FillIpRange(ipStartAddress, ipEndAddress);
+        long ipCount = NetworkHelper.GetIpRangeCount(ipStartAddress, ipEndAddress);
 
-            scannerConfiguration.TotalIps = ipCount;
-            scannerConfiguration.AddIpAddresses =
-                Task.Run(() => Scanner.CopyToActionBlockAsync(iPs, scannerConfiguration.Ips));
+        scannerConfiguration.TotalIps = ipCount;
+        scannerConfiguration.AddIpAddresses =
+            Task.Run(() => Scanner.CopyToActionBlockAsync(iPs, scannerConfiguration.Ips));
 
-            Scanner.ApplyConfiguration(scannerConfiguration);
+        Scanner.ApplyConfiguration(scannerConfiguration);
 
-            Assert.DoesNotThrowAsync(async () => await Scanner.Scan());
+        Assert.DoesNotThrowAsync(async () => await Scanner.Scan());
 
-            Assert.That(File.Exists(DBController.DBPath));
-        }
+        Assert.That(File.Exists(DBController.DBPath));
+    }
 
-        [Test]
-        public async Task ScannerRunWithForceStop()
+    [Test]
+    public async Task ScannerRunWithForceStop()
+    {
+        ScannerConfiguration scannerConfiguration = new()
         {
-            ScannerConfiguration scannerConfiguration = new()
+            Ips = new BufferBlock<IPAddress>(new DataflowBlockOptions
             {
-                Ips = new(new DataflowBlockOptions
-                {
-                    BoundedCapacity = Scanner.ConnectionLimit
-                })
-            };
+                BoundedCapacity = Scanner.ConnectionLimit
+            })
+        };
 
-            const string ipStartAddress = "127.0.0.1";
-            const string ipEndAddress = "127.0.1.254";
+        const string ipStartAddress = "127.0.0.1";
+        const string ipEndAddress = "127.0.1.254";
 
-            IEnumerable<IPAddress> iPs = NetworkHelper.FillIpRange(ipStartAddress, ipEndAddress);
-            long ipCount = NetworkHelper.GetIpRangeCount(ipStartAddress, ipEndAddress);
+        IEnumerable<IPAddress> iPs = NetworkHelper.FillIpRange(ipStartAddress, ipEndAddress);
+        long ipCount = NetworkHelper.GetIpRangeCount(ipStartAddress, ipEndAddress);
 
-            scannerConfiguration.TotalIps = ipCount;
-            scannerConfiguration.AddIpAddresses =
-                Task.Run(() => Scanner.CopyToActionBlockAsync(iPs, scannerConfiguration.Ips));
+        scannerConfiguration.TotalIps = ipCount;
+        scannerConfiguration.AddIpAddresses =
+            Task.Run(() => Scanner.CopyToActionBlockAsync(iPs, scannerConfiguration.Ips));
 
-            Scanner.ApplyConfiguration(scannerConfiguration);
+        Scanner.ApplyConfiguration(scannerConfiguration);
 
-            Task scan = Scanner.Scan();
+        Task scan = Scanner.Scan();
 
-            await Task.Delay(90);
+        await Task.Delay(90);
 
-            Assert.DoesNotThrow(Scanner.ForceStop);
-        }
+        Assert.DoesNotThrow(Scanner.ForceStop);
+    }
 
-        [TearDown]
-        public void CleanUp()
-        {
-            DBController controller = new();
+    [TearDown]
+    public void CleanUp()
+    {
+        DBController controller = new();
 
-            controller.RealmQuerry((realm) => { realm.WriteAsync(realm.RemoveAll<ServerInfo>); });
+        controller.RealmQuerry((realm) => { realm.WriteAsync(realm.RemoveAll<ServerInfo>); });
 
-            Scanner.Reset();
-        }
+        Scanner.Reset();
     }
 }

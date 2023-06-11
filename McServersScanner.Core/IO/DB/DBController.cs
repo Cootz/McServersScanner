@@ -9,7 +9,10 @@ public class DBController
 {
     public static readonly string DBPath = Path.Combine(Path_to_folder!, "servers.realm");
 
-    public static string Path_to_folder => AppDomain.CurrentDomain.BaseDirectory;
+    public static string Path_to_folder
+    {
+        get => AppDomain.CurrentDomain.BaseDirectory;
+    }
 
     /// <summary>
     /// Realm instance
@@ -18,7 +21,7 @@ public class DBController
 
     public DBController()
     {
-        var config = new RealmConfiguration(DBPath);
+        RealmConfiguration? config = new RealmConfiguration(DBPath);
 
         realm = Realm.GetInstance(config);
     }
@@ -29,12 +32,7 @@ public class DBController
     public async Task AddOrUpdate(ServerInfo serverInfo)
     {
         if (serverInfo is not null)
-        {
-            await realm.WriteAsync(() =>
-            {
-                realm.Add(serverInfo, update: true);
-            });
-        }
+            await realm.WriteAsync(() => { realm.Add(serverInfo, true); });
     }
 
     /// <summary>

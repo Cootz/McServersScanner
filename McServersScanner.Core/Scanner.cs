@@ -49,7 +49,7 @@ public sealed class Scanner
     /// <summary>
     /// Block of Ips to scan
     /// </summary>
-    private BufferBlock<IPAddress> ips = null!;
+    private readonly BufferBlock<IPAddress> ips;
 
     /// <summary>
     /// Array of ports to scan
@@ -59,7 +59,7 @@ public sealed class Scanner
     /// <summary>
     /// Block of information about scanned servers
     /// </summary>
-    private BufferBlock<ServerInfo> serverInfos = new();
+    private readonly BufferBlock<ServerInfo> serverInfos = new();
 
     /// <summary>
     /// Connection timeout in seconds
@@ -69,7 +69,7 @@ public sealed class Scanner
     /// <summary>
     /// List of clients
     /// </summary>
-    private ConcurrentDictionary<DateTime, McClient> clients = new();
+    private readonly ConcurrentDictionary<DateTime, McClient> clients = new();
 
     /// <summary>
     /// Supplies <see cref="ips"/> with <see cref="IPAddress"/>
@@ -149,7 +149,7 @@ public sealed class Scanner
                 IEnumerable<KeyValuePair<DateTime, McClient>> timeoutClients =
                     from c in clients where DateTime.Now - c.Key > timeToConnect select c;
 
-                foreach ((DateTime startTime, McClient? client) in clients)
+                foreach ((DateTime startTime, McClient? client) in timeoutClients)
                 {
                     if (forceStop)
                         return;
@@ -248,7 +248,7 @@ public sealed class Scanner
     /// <summary>
     /// Thread with database. Update database with scanned data
     /// </summary>
-    private Lazy<Thread> updateDB;
+    private readonly Lazy<Thread> updateDB;
 
     private void updateDatabase()
     {

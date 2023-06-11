@@ -16,6 +16,8 @@ namespace McServersScanner.Core;
 /// </remarks>
 public sealed class Scanner
 {
+    public const int DEFAULT_CONNECTION_LIMIT = 1000;
+
     /// <summary>
     /// Number of ports to scan
     /// </summary>
@@ -27,7 +29,7 @@ public sealed class Scanner
     /// <summary>
     /// Maximum number of connections available at the same time
     /// </summary>
-    public int ConnectionLimit { get; internal set; } = 1000;
+    public int ConnectionLimit { get; internal set; } = DEFAULT_CONNECTION_LIMIT;
 
     /// <summary>
     /// Maximum number of bytes scanner can sent/receive by network per second
@@ -280,7 +282,7 @@ public sealed class Scanner
     /// <typeparam name="T">Type of class to copy</typeparam>
     /// <param name="typeEnumerable">Copy from</param>
     /// <param name="typeActionBlock">Copy to</param>
-    public async Task CopyToActionBlockAsync<T>(IEnumerable<T> typeEnumerable, BufferBlock<T> typeActionBlock)
+    public static async Task CopyToActionBlockAsync<T>(IEnumerable<T> typeEnumerable, BufferBlock<T> typeActionBlock)
         where T : class
     {
         foreach (T item in typeEnumerable)

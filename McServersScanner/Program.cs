@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using System.Net.Http.Headers;
 using System.Threading.Tasks.Dataflow;
 using CommandLine;
 using CommunityToolkit.HighPerformance.Buffers;
@@ -9,16 +10,18 @@ namespace McServersScanner;
 
 internal class Program
 {
+    private Lazy<Scanner> scanner = new();
+
     public static async Task Main(string[] args)
     {
-        ScannerConfiguration config;
+        ScannerBuilder scannerBuilder = new();
 
         //Parsing cmd params
         ParserResult<Options> result = Parser.Default.ParseArguments<Options>(args);
 
         try
         {
-            config = parseResult(result);
+            transferParseResultsToBuilder(result, scannerBuilder);
         }
         catch (Exception ex)
         {
@@ -31,28 +34,22 @@ internal class Program
 
         Console.CancelKeyPress += OnExit;
 
-        Scanner.ApplyConfiguration(config);
+        scanner.Value = scannerBuilder.Build();
 
-        await Scanner.Scan();
+        await scanner.Scan();
     }
 
-    private static ScannerConfiguration parseResult(ParserResult<Options> result)
-    {
-        ScannerConfiguration config = new();
-
+    private void transferParseResultsToBuilder(ParserResult<Options> result, ScannerBuilder builder) =>
         result.WithParsed(o =>
         {
             //Adding connection limit
-            int? conLimit = o.ConnectionLimit;
-
-            if (conLimit is not null)
-                config.ConnectionLimit = conLimit.Value;
+            builder.ConnectionLimit = o.ConnectionLimit;
 
             //Adding bandwidth limit
             string? bandwidthLimit = o.BandwidthLimit;
 
             if (!string.IsNullOrEmpty(bandwidthLimit))
-                config.BandwidthLimit = ParsingHelper.ConvertToNumberOfBytes(bandwidthLimit);
+                builder.BandwidthLimit = ParsingHelper.ConvertToNumberOfBytes(bandwidthLimit);
 
             //Adding Ports
             List<string>? portList = o.Ports?.ToList();
@@ -78,18 +75,16 @@ internal class Program
                         portUshort.Add(ushort.Parse(portString));
                     }
 
-                config.Ports = portUshort.ToArray();
+                builder.Ports = portUshort.ToArray();
             }
 
             //Adding ips
-            config.Ips = new BufferBlock<IPAddress>(new DataflowBlockOptions()
+            builder.Ips = new BufferBlock<IPAddress>(new DataflowBlockOptions()
             {
-                BoundedCapacity = config.ConnectionLimit ?? Scanner.ConnectionLimit
+                BoundedCapacity = builder.ConnectionLimit ?? Scanner.DEFAULT_CONNECTION_LIMIT
             });
 
-            int portsCount = config.Ports?.Length ?? Scanner.PortsCount;
-
-            List<string> ipOptionRange = o.Range!.ToList();
+            string[] ipOptionRange = o.Range!.ToArray();
 
             foreach (string ipOption in ipOptionRange)
                 if (ipOption.Contains('-')) //ip range
@@ -99,37 +94,31 @@ internal class Program
                     string firstIp = StringPool.Shared.GetOrAdd(splitIps[0]);
                     string lastIp = StringPool.Shared.GetOrAdd(splitIps[1]);
 
-                    config.TotalIps = NetworkHelper.GetIpRangeCount(firstIp, lastIp) * portsCount;
+                    builder.IpsCount = NetworkHelper.GetIpRangeCount(firstIp, lastIp);
 
                     IEnumerable<IPAddress>? range = NetworkHelper.FillIpRange(firstIp, lastIp);
 
-                    config.AddIpAddresses = Task.Run(() => Scanner.CopyToActionBlockAsync(range, config.Ips));
+                    builder.AddIpAddresses = Task.Run(() => Scanner.CopyToActionBlockAsync(range, builder.Ips));
                 }
                 else if (ipOption.Any(char.IsLetter)) //ips from file
                 {
-                    config.TotalIps = IOHelper.GetLinesCount(ipOption) * portsCount;
+                    builder.IpsCount = IOHelper.GetLinesCount(ipOption);
 
                     IEnumerable<string>? readIps = IOHelper.ReadLineByLine(ipOption);
 
-                    config.AddIpAddresses = Task.Run(() =>
-                        Scanner.CopyToActionBlockAsync(from ip in readIps select IPAddress.Parse(ip), config.Ips));
+                    builder.AddIpAddresses = Task.Run(() =>
+                        Scanner.CopyToActionBlockAsync(from ip in readIps select IPAddress.Parse(ip), builder.Ips));
                 }
                 else //single ip
                 {
-                    config.TotalIps = portsCount;
+                    builder.IpsCount = 1;
 
-                    config.Ips.Post(IPAddress.Parse(ipOption));
+                    builder.Ips.Post(IPAddress.Parse(ipOption));
                 }
 
             //Adding connection timeout
-            double? connectionTimeout = o.ConnectionTimeout;
-
-            if (connectionTimeout is not null)
-                config.Timeout = connectionTimeout.Value;
+            builder.Timeout = o.ConnectionTimeout;
         });
-
-        return config;
-    }
 
     /// <summary>
     /// Save progress on program interruption (Ctrl+C)

@@ -1,5 +1,4 @@
 ﻿using System.Net;
-using System.Threading;
 using System.Threading.Tasks.Dataflow;
 
 namespace McServersScanner.Core;
@@ -42,7 +41,7 @@ public sealed class ScannerBuilder
     /// <summary>
     /// Amount of ips to scan
     /// </summary>
-    public long? TotalIps = null;
+    public long? IpsCount = null;
 
     /// <summary>
     /// Builds the <see cref="Scanner"/>
@@ -57,7 +56,11 @@ public sealed class ScannerBuilder
         builtScanner.BandwidthLimit = BandwidthLimit ?? builtScanner.BandwidthLimit;
         builtScanner.Timeout = Timeout ?? builtScanner.Timeout;
         builtScanner.AddIpAddresses = AddIpAddresses ?? builtScanner.AddIpAddresses;
-        builtScanner.TotalIps = TotalIps ?? builtScanner.TotalIps;
+
+        builtScanner.TotalIps =
+            IpsCount * builtScanner.PortsCount
+            ?? builtScanner
+                .TotalIps; //TODO: remove TotalIps and IPsCount and replace it with Enumerable.Count or custom Count method
 
         return builtScanner;
     }

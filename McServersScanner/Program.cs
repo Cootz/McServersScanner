@@ -1,5 +1,4 @@
 ﻿using System.Net;
-using System.Net.Http.Headers;
 using System.Threading.Tasks.Dataflow;
 using CommandLine;
 using CommunityToolkit.HighPerformance.Buffers;
@@ -8,16 +7,21 @@ using McServersScanner.Core.Utils;
 
 namespace McServersScanner;
 
-internal class Program
+internal static class Program
 {
-    private Lazy<Scanner> scanner = new();
+    private static Scanner? scanner;
 
     public static async Task Main(string[] args)
     {
+        Console.CancelKeyPress += OnExit;
+
         ScannerBuilder scannerBuilder = new();
 
         //Parsing cmd params
         ParserResult<Options> result = Parser.Default.ParseArguments<Options>(args);
+
+        if (result.Errors.Any())
+            return;
 
         try
         {
@@ -29,17 +33,12 @@ internal class Program
             return;
         }
 
-        if (result.Errors.Any())
-            return;
-
-        Console.CancelKeyPress += OnExit;
-
-        scanner.Value = scannerBuilder.Build();
+        scanner = scannerBuilder.Build();
 
         await scanner.Scan();
     }
 
-    private void transferParseResultsToBuilder(ParserResult<Options> result, ScannerBuilder builder) =>
+    private static void transferParseResultsToBuilder(ParserResult<Options> result, ScannerBuilder builder) =>
         result.WithParsed(o =>
         {
             //Adding connection limit
@@ -125,7 +124,7 @@ internal class Program
     /// </summary>
     public static void OnExit(object? sender, ConsoleCancelEventArgs e)
     {
-        Scanner.ForceStop();
+        scanner?.ForceStop();
         Environment.Exit(0);
     }
 }

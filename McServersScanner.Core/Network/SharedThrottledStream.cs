@@ -1,4 +1,6 @@
-﻿namespace McServersScanner.Core.Network
+﻿using System.Reactive.Concurrency;
+
+namespace McServersScanner.Core.Network
 {
     public class SharedThrottledStream : Stream
     {

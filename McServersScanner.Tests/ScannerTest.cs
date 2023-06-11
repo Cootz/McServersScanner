@@ -33,7 +33,7 @@ public class ScannerTest
 
     private ScannerBuilder createBuilder()
     {
-        ScannerBuilder scannerBuilder = new()
+        ScannerBuilder builder = new()
         {
             Ips = new BufferBlock<IPAddress>(new DataflowBlockOptions
             {
@@ -47,11 +47,11 @@ public class ScannerTest
         IEnumerable<IPAddress> iPs = NetworkHelper.FillIpRange(ipStartAddress, ipEndAddress);
         long ipCount = NetworkHelper.GetIpRangeCount(ipStartAddress, ipEndAddress);
 
-        scannerBuilder.IpsCount = ipCount;
-        scannerBuilder.AddIpAddresses =
-            Task.Run(() => Scanner.CopyToActionBlockAsync(iPs, scannerBuilder.Ips));
+        builder.IpsCount = ipCount;
+        builder.AddIpAddresses =
+            Task.Run(() => Scanner.CopyToActionBlockAsync(iPs, builder.Ips));
 
-        return scannerBuilder;
+        return builder;
     }
 
     [TearDown]

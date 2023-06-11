@@ -34,7 +34,7 @@ public class ScannerTest
 
         Assert.DoesNotThrowAsync(async () => await Scanner.Scan());
 
-        Assert.That(File.Exists(DBController.DbPath));
+        Assert.That(File.Exists(DBController.DBPath));
     }
 
     [Test]

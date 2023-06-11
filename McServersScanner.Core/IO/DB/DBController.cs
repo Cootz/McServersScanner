@@ -5,9 +5,10 @@ namespace McServersScanner.Core.IO.DB;
 /// <summary>
 /// Provides access to database
 /// </summary>
+// ReSharper disable once InconsistentNaming
 public class DBController
 {
-    public static readonly string DbPath = Path.Combine(PathToFolder!, "servers.realm");
+    public static readonly string DBPath = Path.Combine(PathToFolder!, "servers.realm");
 
     public static string PathToFolder
     {
@@ -21,7 +22,7 @@ public class DBController
 
     public DBController()
     {
-        RealmConfiguration? config = new RealmConfiguration(DbPath);
+        RealmConfiguration? config = new RealmConfiguration(DBPath);
 
         realm = Realm.GetInstance(config);
     }

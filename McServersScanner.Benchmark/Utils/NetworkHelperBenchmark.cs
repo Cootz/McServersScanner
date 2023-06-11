@@ -1,7 +1,7 @@
 ﻿using BenchmarkDotNet.Attributes;
-using McServersScanner.Utils;
 using System.Net;
 using System.Threading.Tasks.Dataflow;
+using McServersScanner.Core.Utils;
 
 namespace McServersScanner.Benchmark.Utils
 {

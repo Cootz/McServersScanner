@@ -1,4 +1,4 @@
-﻿using McServersScanner.Utils;
+﻿using McServersScanner.Core.Utils;
 
 namespace McServersScanner.Tests.Utils
 {

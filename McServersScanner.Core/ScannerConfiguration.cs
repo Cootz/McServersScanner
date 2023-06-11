@@ -1,7 +1,7 @@
 ﻿using System.Net;
 using System.Threading.Tasks.Dataflow;
 
-namespace McServersScanner
+namespace McServersScanner.Core
 {
     /// <summary>
     /// Provide variables for using various scanner options

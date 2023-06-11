@@ -1,7 +1,7 @@
 ﻿using CommunityToolkit.HighPerformance.Buffers;
 using static System.String;
 
-namespace McServersScanner.Utils
+namespace McServersScanner.Core.Utils
 {
     /// <summary>
     /// Helps with IO stuff

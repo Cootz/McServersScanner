@@ -1,6 +1,6 @@
 ﻿using System.Net;
 
-namespace McServersScanner.Utils
+namespace McServersScanner.Core.Utils
 {
     /// <summary>
     /// Help with generating ranges of network stuff

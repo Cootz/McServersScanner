@@ -1,6 +1,6 @@
 ﻿using System.Reactive.Concurrency;
 
-namespace McServersScanner.Network
+namespace McServersScanner.Core.Network
 {
     public class ThrottleManager
     {

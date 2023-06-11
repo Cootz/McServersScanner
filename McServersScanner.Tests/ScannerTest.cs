@@ -1,7 +1,8 @@
-﻿using McServersScanner.IO.DB;
-using McServersScanner.Utils;
-using System.Net;
+﻿using System.Net;
 using System.Threading.Tasks.Dataflow;
+using McServersScanner.Core;
+using McServersScanner.Core.IO.DB;
+using McServersScanner.Core.Utils;
 
 namespace McServersScanner.Tests
 {

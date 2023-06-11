@@ -1,5 +1,5 @@
 ﻿using BenchmarkDotNet.Attributes;
-using McServersScanner.Utils;
+using McServersScanner.Core.Utils;
 
 namespace McServersScanner.Benchmark.Utils
 {

@@ -1,7 +1,7 @@
-﻿using Realms;
-using System.Text.Json;
+﻿using System.Text.Json;
+using Realms;
 
-namespace McServersScanner.IO.DB
+namespace McServersScanner.Core.IO.DB
 {
 
     /// <summary>

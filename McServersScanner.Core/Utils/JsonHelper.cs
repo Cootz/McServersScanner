@@ -1,4 +1,4 @@
-﻿namespace McServersScanner.Utils
+﻿namespace McServersScanner.Core.Utils
 {
     /// <summary>
     /// Helps with json conversion

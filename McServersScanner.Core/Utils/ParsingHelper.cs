@@ -1,4 +1,4 @@
-﻿namespace McServersScanner.Utils
+﻿namespace McServersScanner.Core.Utils
 {
     public static class ParsingHelper
     {

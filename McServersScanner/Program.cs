@@ -1,9 +1,11 @@
-﻿using CommandLine;
-using CommunityToolkit.HighPerformance.Buffers;
-using McServersScanner;
-using McServersScanner.Utils;
-using System.Net;
+﻿using System.Net;
 using System.Threading.Tasks.Dataflow;
+using CommandLine;
+using CommunityToolkit.HighPerformance.Buffers;
+using McServersScanner.Core;
+using McServersScanner.Core.Utils;
+
+namespace McServersScanner;
 
 internal class Program
 {
@@ -112,7 +114,8 @@ internal class Program
 
                     var readIps = IOHelper.ReadLineByLine(ipOption);
 
-                    config.AddIpAddresses = Task.Run(() => Scanner.CopyToActionBlockAsync(from ip in readIps select IPAddress.Parse(ip), config.Ips));
+                    config.AddIpAddresses = Task.Run(() =>
+                        Scanner.CopyToActionBlockAsync(from ip in readIps select IPAddress.Parse(ip), config.Ips));
                 }
                 else //single ip
                 {
@@ -127,7 +130,6 @@ internal class Program
 
             if (connectionTimeout is not null)
                 config.Timeout = connectionTimeout.Value;
-
         });
 
         return config;

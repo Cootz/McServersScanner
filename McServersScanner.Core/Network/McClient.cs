@@ -1,9 +1,9 @@
-﻿using CommunityToolkit.HighPerformance.Buffers;
-using System.Net;
+﻿using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using CommunityToolkit.HighPerformance.Buffers;
 
-namespace McServersScanner.Network
+namespace McServersScanner.Core.Network
 {
     public class McClient : IDisposable
     {

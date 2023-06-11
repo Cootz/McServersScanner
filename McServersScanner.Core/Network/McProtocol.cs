@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-namespace McServersScanner.Network
+namespace McServersScanner.Core.Network
 {
     /// <summary>
     /// Provide some types from minecraft protocol

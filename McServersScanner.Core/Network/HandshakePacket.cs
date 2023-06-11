@@ -1,6 +1,6 @@
 ﻿using System.Net;
 
-namespace McServersScanner.Network
+namespace McServersScanner.Core.Network
 {
     public class HandshakePacket : IPacket
     {

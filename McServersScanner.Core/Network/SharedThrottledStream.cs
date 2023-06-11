@@ -1,4 +1,4 @@
-﻿namespace McServersScanner.Network
+﻿namespace McServersScanner.Core.Network
 {
     public class SharedThrottledStream : Stream
     {

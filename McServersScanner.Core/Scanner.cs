@@ -1,12 +1,12 @@
-﻿using CommunityToolkit.HighPerformance.Buffers;
-using McServersScanner.IO.DB;
-using McServersScanner.Network;
-using McServersScanner.Utils;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Net;
 using System.Threading.Tasks.Dataflow;
+using CommunityToolkit.HighPerformance.Buffers;
+using McServersScanner.Core.IO.DB;
+using McServersScanner.Core.Network;
+using McServersScanner.Core.Utils;
 
-namespace McServersScanner
+namespace McServersScanner.Core
 {
     /// <summary>
     /// Contains scanning logic of the app

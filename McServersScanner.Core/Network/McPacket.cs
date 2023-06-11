@@ -1,6 +1,6 @@
 ﻿using System.Collections;
 
-namespace McServersScanner.Network
+namespace McServersScanner.Core.Network
 {
     public class McPacket<T> : IEnumerable<byte> where T : IPacket
     {

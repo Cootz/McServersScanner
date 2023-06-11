@@ -1,5 +1,4 @@
 ﻿using System.Reactive.Concurrency;
-using System.Threading;
 
 namespace McServersScanner.Network
 {
@@ -25,7 +24,8 @@ namespace McServersScanner.Network
             Current = this;
         }
 
-        public ThrottleManager(int maxBytesPerSecond) : this(maxBytesPerSecond, System.Reactive.Concurrency.Scheduler.Immediate)
+        public ThrottleManager(int maxBytesPerSecond) : this(maxBytesPerSecond,
+            System.Reactive.Concurrency.Scheduler.Immediate)
         {
         }
 
@@ -35,7 +35,7 @@ namespace McServersScanner.Network
 
             TimeSpan targetTime = TimeSpan.FromSeconds((double)processed / maxBytesPerSecond);
             TimeSpan actualTime = stopwatch.Elapsed;
-            
+
             return targetTime - actualTime;
         }
     }
@@ -48,13 +48,13 @@ namespace McServersScanner.Network
                 throw new ArgumentNullException("waitHandle");
 
             TaskCompletionSource<bool> tcs = new();
-            
+
             RegisteredWaitHandle rwh = ThreadPool.RegisterWaitForSingleObject(waitHandle,
                 delegate { tcs.TrySetResult(true); }, null, -1, true);
-            
+
             Task<bool> t = tcs.Task;
             t.ContinueWith(_ => rwh.Unregister(null));
-            
+
             return t;
         }
     }

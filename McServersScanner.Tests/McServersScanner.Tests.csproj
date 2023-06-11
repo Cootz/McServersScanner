@@ -17,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\McServersScanner\McServersScanner.csproj" />
+    <ProjectReference Include="..\McServersScanner.Core\McServersScanner.Core.csproj" />
   </ItemGroup>
 
 </Project>

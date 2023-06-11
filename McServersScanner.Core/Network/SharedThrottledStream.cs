@@ -1,7 +1,4 @@
-﻿using System.Diagnostics;
-using System.Reactive.Concurrency;
-
-namespace McServersScanner.Network
+﻿namespace McServersScanner.Network
 {
     public class SharedThrottledStream : Stream
     {

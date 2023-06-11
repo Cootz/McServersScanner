@@ -81,5 +81,5 @@ public static class NetworkHelper
     /// <param name="address"></param>
     /// <returns></returns>
     private static IPAddress convertIntToIpAddress(uint address) =>
-        new IPAddress(BitConverter.GetBytes(address).Reverse().ToArray());
+        new(BitConverter.GetBytes(address).Reverse().ToArray());
 }

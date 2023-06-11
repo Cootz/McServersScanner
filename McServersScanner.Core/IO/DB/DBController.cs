@@ -8,6 +8,7 @@ namespace McServersScanner.Core.IO.DB;
 // ReSharper disable once InconsistentNaming
 public class DBController
 {
+    // ReSharper disable once InconsistentNaming
     public static readonly string DBPath = Path.Combine(PathToFolder!, "servers.realm");
 
     public static string PathToFolder
@@ -22,7 +23,7 @@ public class DBController
 
     public DBController()
     {
-        RealmConfiguration? config = new RealmConfiguration(DBPath);
+        RealmConfiguration? config = new(DBPath);
 
         realm = Realm.GetInstance(config);
     }

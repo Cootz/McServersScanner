@@ -211,11 +211,11 @@ namespace McServersScanner
 
             McClient client = (McClient)result.AsyncState!;
 
-            if (!client.isConnected)
-            {
-                client.Dispose();
-                return;
-            }
+            //if (!client.isConnected)
+            //{
+            //    client.Dispose();
+            //    return;
+            //}
 
             string data = await client.GetServerInfo();
 

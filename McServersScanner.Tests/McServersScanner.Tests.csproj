@@ -21,10 +21,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Data\Mc1.19.2\EULA.txt">
+    <None Update="Data\Mc1.19.2\eula.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Data\Mc1.19.2\server.jar">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\Mc1.19.2\server.properties">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

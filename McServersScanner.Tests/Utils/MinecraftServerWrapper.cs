@@ -13,7 +13,7 @@ namespace McServersScanner.Tests.Utils
         public string ServerFile { get; }
         public string Version { get; }
 
-        public Process ServerProc { get; private set; }
+        public Process ServerProc { get; private set; } = null!;
 
         public bool Running
         {
@@ -22,8 +22,8 @@ namespace McServersScanner.Tests.Utils
 
         public MinecraftServerWrapper(string serverFile, string version)
         {
-            ServerPath = new FileInfo(serverFile).DirectoryName!;
-            ServerFile = serverFile;
+            ServerPath = Path.GetDirectoryName(serverFile)!;
+            ServerFile = Path.GetFileName(serverFile);
             Version = version;
         }
 
@@ -33,6 +33,7 @@ namespace McServersScanner.Tests.Utils
             {
                 WorkingDirectory = ServerPath,
                 RedirectStandardInput = true,
+                RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
                 CreateNoWindow = true,
@@ -47,12 +48,34 @@ namespace McServersScanner.Tests.Utils
             ServerProc.Start();
         }
 
+        public async Task WaitForLoad(TimeSpan? timeout = null)
+        {
+            const string stopFlag = "[Server thread/INFO]: Done";
+
+            string? line;
+
+            DateTime startTime = DateTime.Now;
+
+
+            while (true)
+            {
+                line = await ServerProc.StandardOutput.ReadLineAsync();
+
+                Debug.WriteLineIf(line is not null, line);
+
+                if (line is not null) {
+                    if (line.Contains(stopFlag))
+                        return;
+                }
+                
+                if (timeout is not null || DateTime.Now - startTime < timeout) return;
+            }
+        }
+
         public async Task StopAsync()
         {
             await ServerProc.StandardInput.WriteLineAsync("stop");
             await ServerProc.WaitForExitAsync();
         }
-
-
     }
 }

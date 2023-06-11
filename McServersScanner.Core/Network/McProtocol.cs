@@ -7,8 +7,8 @@ namespace McServersScanner.Core.Network;
 /// </summary>
 public static class McProtocol
 {
-    private const int SEGMENT_BIT = 0x7F;
-    private const int CONTINUE_BIT = 0x80;
+    private const int segment_bit = 0x7F;
+    private const int continue_bit = 0x80;
 
     /// <summary>
     /// Creates varInt
@@ -20,9 +20,9 @@ public static class McProtocol
     {
         List<byte> buffer = new();
 
-        while ((value & CONTINUE_BIT) != 0)
+        while ((value & continue_bit) != 0)
         {
-            buffer.Add((byte)((value & SEGMENT_BIT) | CONTINUE_BIT));
+            buffer.Add((byte)((value & segment_bit) | continue_bit));
             value = (int)(uint)value >> 7;
         }
 

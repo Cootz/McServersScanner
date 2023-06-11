@@ -15,8 +15,8 @@ public static class NetworkHelper
     /// <returns>Range of ip addresses</returns>
     public static IEnumerable<IPAddress> FillIpRange(IPAddress first, IPAddress last)
     {
-        for (uint i = ConvertIpAddressToInt(first); i <= ConvertIpAddressToInt(last); i++)
-            yield return ConvertIntToIpAddress(i);
+        for (uint i = convertIpAddressToInt(first); i <= convertIpAddressToInt(last); i++)
+            yield return convertIntToIpAddress(i);
     }
 
     /// <summary>
@@ -47,7 +47,7 @@ public static class NetworkHelper
     /// <param name="last">End of range</param>
     /// <returns>Total amout of ips in range</returns>
     public static long GetIpRangeCount(IPAddress first, IPAddress last) =>
-        ConvertIpAddressToInt(last) - ConvertIpAddressToInt(first) + 1;
+        convertIpAddressToInt(last) - convertIpAddressToInt(first) + 1;
 
     /// <summary>
     /// Calculates total amount of ips in range
@@ -72,7 +72,7 @@ public static class NetworkHelper
     /// </summary>
     /// <param name="address"></param>
     /// <returns></returns>
-    private static uint ConvertIpAddressToInt(IPAddress address) =>
+    private static uint convertIpAddressToInt(IPAddress address) =>
         BitConverter.ToUInt32(address.GetAddressBytes().Reverse().ToArray());
 
     /// <summary>
@@ -80,6 +80,6 @@ public static class NetworkHelper
     /// </summary>
     /// <param name="address"></param>
     /// <returns></returns>
-    private static IPAddress ConvertIntToIpAddress(uint address) =>
+    private static IPAddress convertIntToIpAddress(uint address) =>
         new IPAddress(BitConverter.GetBytes(address).Reverse().ToArray());
 }

@@ -20,12 +20,12 @@ public class McClient : IDisposable
     /// <summary>
     /// Client logic
     /// </summary>
-    private Socket Client { get; set; }
+    private Socket client { get; set; }
 
     /// <summary>
     /// Time when connection started
     /// </summary>
-    private DateTime InitTime { get; set; }
+    private DateTime initTime { get; set; }
 
     /// <summary>
     /// Invokes on successful connection
@@ -49,10 +49,10 @@ public class McClient : IDisposable
     public McClient(IPAddress ip, ushort port, int bandwidthLimit)
     {
         IpEndPoint = new IPEndPoint(ip, port);
-        Client = new Socket(IpEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+        client = new Socket(IpEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
         BandwidthLimit = bandwidthLimit;
 
-        InitTime = DateTime.Now;
+        initTime = DateTime.Now;
     }
 
     public McClient(IPAddress ip, ushort port, Action<IAsyncResult> onConnection, int bandwidthLimit) :
@@ -61,14 +61,14 @@ public class McClient : IDisposable
     /// <summary>
     /// Begins an asynchronous request for a remote host connection.
     /// </summary>
-    public IAsyncResult BeginConnect() => Client.BeginConnect(IpEndPoint, connectionCallBack, this);
+    public IAsyncResult BeginConnect() => client.BeginConnect(IpEndPoint, connectionCallBack, this);
 
     /// <summary>
     /// Gets a value that indicates whether a Socket is connected to a remote host
     /// </summary>
     public bool IsConnected
     {
-        get => Client.Connected;
+        get => client.Connected;
     }
 
     /// <summary>
@@ -76,7 +76,7 @@ public class McClient : IDisposable
     /// </summary>
     public DateTime InitDateTime
     {
-        get => InitTime;
+        get => initTime;
     }
 
     /// <summary>
@@ -96,7 +96,7 @@ public class McClient : IDisposable
             McPacket<HandshakePacket> packet =
                 new(new HandshakePacket(IpEndPoint.Address, protocolVersion, (ushort)IpEndPoint.Port));
 
-            SharedThrottledStream stream = new(new NetworkStream(Client, true));
+            SharedThrottledStream stream = new(new NetworkStream(client, true));
 
             //Send handshake
             Task? handshake = stream.WriteAsync(packet.ToArray()).AsTask();
@@ -128,12 +128,12 @@ public class McClient : IDisposable
     /// Asynchronously disconnects from server
     /// </summary>
     /// <returns></returns>
-    public async Task DisconnectAsync() => await Client.DisconnectAsync(false);
+    public async Task DisconnectAsync() => await client.DisconnectAsync(false);
 
     public void Dispose()
     {
         GC.SuppressFinalize(this);
-        Client.Dispose();
+        client.Dispose();
         Disposed = true;
     }
 }

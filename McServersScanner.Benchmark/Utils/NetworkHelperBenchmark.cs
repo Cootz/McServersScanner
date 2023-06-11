@@ -9,12 +9,12 @@ namespace McServersScanner.Benchmark.Utils;
 public class NetworkHelperBenchmark
 {
     private string startIp = "50.0.0.0";
-    private string endIP = "51.0.0.0";
+    private string endIp = "51.0.0.0";
 
     [Benchmark]
     public void GetIpRangeCountBenchmark()
     {
-        NetworkHelper.GetIpRangeCount(startIp, endIP);
+        NetworkHelper.GetIpRangeCount(startIp, endIp);
     }
 
     [Benchmark]
@@ -22,7 +22,7 @@ public class NetworkHelperBenchmark
     {
         BufferBlock<IPAddress> buffer = new();
 
-        foreach (IPAddress? ip in NetworkHelper.FillIpRange(startIp, endIP))
+        foreach (IPAddress? ip in NetworkHelper.FillIpRange(startIp, endIp))
         {
             buffer.Post(ip);
             buffer.Receive();

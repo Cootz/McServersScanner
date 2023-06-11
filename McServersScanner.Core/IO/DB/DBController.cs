@@ -7,9 +7,9 @@ namespace McServersScanner.Core.IO.DB;
 /// </summary>
 public class DBController
 {
-    public static readonly string DBPath = Path.Combine(Path_to_folder!, "servers.realm");
+    public static readonly string DbPath = Path.Combine(PathToFolder!, "servers.realm");
 
-    public static string Path_to_folder
+    public static string PathToFolder
     {
         get => AppDomain.CurrentDomain.BaseDirectory;
     }
@@ -21,7 +21,7 @@ public class DBController
 
     public DBController()
     {
-        RealmConfiguration? config = new RealmConfiguration(DBPath);
+        RealmConfiguration? config = new RealmConfiguration(DbPath);
 
         realm = Realm.GetInstance(config);
     }

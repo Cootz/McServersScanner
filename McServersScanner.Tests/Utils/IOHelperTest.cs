@@ -5,40 +5,40 @@ namespace McServersScanner.Tests.Utils;
 [TestFixture]
 public class IOHelperTest
 {
-    private const int N = 10;
+    private const int n = 10;
 
     [Test]
     public void TestGetLinesCount()
     {
-        string filePath = GenerateTestFile();
+        string filePath = generateTestFile();
 
         long linesCount = IOHelper.GetLinesCount(filePath);
 
-        Assert.That(linesCount, Is.EqualTo(N));
+        Assert.That(linesCount, Is.EqualTo(n));
     }
 
     [Test]
     public void TestReadFileLineByLine()
     {
-        string filePath = GenerateTestFile();
+        string filePath = generateTestFile();
 
         IEnumerable<string> lines = IOHelper.ReadLineByLine(filePath);
         IEnumerator<string> linesEnumerator = lines.GetEnumerator();
 
-        for (int i = 0; i < N; i++)
+        for (int i = 0; i < n; i++)
         {
             linesEnumerator.MoveNext();
             Assert.That(linesEnumerator.Current, Is.EqualTo($"Line {i}"));
         }
     }
 
-    private static string GenerateTestFile()
+    private static string generateTestFile()
     {
         string filePath = Path.GetTempFileName();
 
         using StreamWriter writer = new(filePath);
 
-        for (int i = 0; i < N; i++)
+        for (int i = 0; i < n; i++)
             writer.WriteLine("Line {0}", i);
 
         return filePath;

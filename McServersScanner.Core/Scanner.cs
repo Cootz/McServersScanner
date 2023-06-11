@@ -137,14 +137,14 @@ public static class Scanner
             if (forceStop)
                 return;
 
-            currentRatio = CalculateRatio(scannedIps, totalIps);
+            currentRatio = calculateRatio(scannedIps, totalIps);
 
             Console.Write("\r{0:0.00}% - {1}/{2}", currentRatio, scannedIps, totalIps);
 
             await Task.Delay(100);
         }
 
-        currentRatio = CalculateRatio(scannedIps, totalIps);
+        currentRatio = calculateRatio(scannedIps, totalIps);
         Console.WriteLine("{0:0.00}% - {1}/{2}", currentRatio, scannedIps, totalIps);
         Console.WriteLine("Waiting for the results...");
 
@@ -267,11 +267,11 @@ public static class Scanner
     /// <summary>
     /// Thread with database. Update database with scanned data
     /// </summary>
-    private static Thread updateDb = new(() => UpdateDatabase());
+    private static Thread updateDb = new(() => updateDatabase());
 
-    private static void UpdateDatabase()
+    private static void updateDatabase()
     {
-        DBController DB = new();
+        DBController db = new();
 
         while (!endDBThread)
         {
@@ -281,7 +281,7 @@ public static class Scanner
             {
                 try
                 {
-                    DB.AddOrUpdate(serverInfos.ReceiveAsync().Result).Wait();
+                    db.AddOrUpdate(serverInfos.ReceiveAsync().Result).Wait();
                 }
                 catch (Exception ex)
                 {
@@ -327,7 +327,7 @@ public static class Scanner
     /// <param name="currentInQueue">Current position in queue</param>
     /// <param name="length">Length of queue</param>
     /// <returns>Progress percentage rounded to 2 digits</returns>
-    private static double CalculateRatio(double currentInQueue, double length) => currentInQueue / length * 100.0;
+    private static double calculateRatio(double currentInQueue, double length) => currentInQueue / length * 100.0;
 
     /// <summary>
     /// Resets scanner to default state.
@@ -348,6 +348,6 @@ public static class Scanner
         totalIps = 0;
         scannedIps = 0;
 
-        updateDb = new Thread(UpdateDatabase);
+        updateDb = new Thread(updateDatabase);
     }
 }

@@ -16,6 +16,9 @@ namespace McServersScanner.Utils
         [Option("connection-limit", HelpText = "Max amount of connections at the same time")]
         public int? ConnectionLimit { get; set; }
 
+        [Option('b', "bandwidth-limit", HelpText = "Maximum number of bytes send/received by network per second")]
+        public string? BandwidthLimit { get; set; }
+
         [Option('t', "connection-timeout", HelpText = "Timeout option (in seconds)")]
         public double? ConnectionTimeout { get; set; }
     }

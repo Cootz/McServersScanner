@@ -9,14 +9,14 @@ internal class Program
 {
     private static async Task Main(string[] args)
     {
-        ScannerConfiguration config = new();
+        ScannerConfiguration config;
 
         //Parsing cmd params
         ParserResult<Options> result = Parser.Default.ParseArguments<Options>(args);
 
         try
         {
-            parseResult(config, result);
+            config = parseResult(result);
         }
         catch (Exception ex)
         {
@@ -27,57 +27,67 @@ internal class Program
         if (result.Errors.Any())
             return;
 
-        Console.CancelKeyPress += new ConsoleCancelEventHandler(OnExit);
+        Console.CancelKeyPress += OnExit;
 
         Scanner.ApplyConfiguration(config);
 
         await Scanner.Scan();
     }
 
-    private static void parseResult(ScannerConfiguration config, ParserResult<Options> result)
+    private static ScannerConfiguration parseResult(ParserResult<Options> result)
     {
+        ScannerConfiguration config = new();
+
         result.WithParsed(o =>
         {
             //Adding connection limit
             int? conLimit = o.ConnectionLimit;
 
             if (conLimit is not null)
-                config.connectionLimit = conLimit.Value;
+                config.ConnectionLimit = conLimit.Value;
+
+            //Adding bandwidth limit
+            string? bandwidthLimit = o.BandwidthLimit;
+
+            if (!string.IsNullOrEmpty(bandwidthLimit))
+                config.BandwidthLimit = ParsingHelper.ConvertToNumberOfBytes(bandwidthLimit);
 
             //Adding ports
             List<string>? portList = o.Ports?.ToList();
 
-            if (portList is not null)
+            if (portList?.Count > 0)
             {
-                List<ushort> portUshot = new();
+                List<ushort> portUshort = new();
 
                 foreach (string portString in portList)
                 {
                     if (portString.Contains('-')) //ports range
                     {
-                        string[] splittedPorts = portString.Split('-');
+                        string[] splitPorts = portString.Split('-');
 
-                        var range = NetworkHelper.FillPortRange(splittedPorts[0], splittedPorts[1]);
+                        var range = NetworkHelper.FillPortRange(splitPorts[0], splitPorts[1]);
                         foreach (ushort port in range)
-                            portUshot.Add(port);
+                            portUshort.Add(port);
                     }
                     else //single port
                     {
-                        if (portString.Any(c => char.IsLetter(c)))
+                        if (portString.Any(char.IsLetter))
                             throw new FormatException("Option \'p\' have wrong format");
 
-                        config.ports = new ushort[] { ushort.Parse(portString) };
+                        portUshort.Add(ushort.Parse(portString));
                     }
                 }
+
+                config.Ports = portUshort.ToArray();
             }
 
             //Adding ips
-            config.ips = new(new DataflowBlockOptions()
+            config.Ips = new(new DataflowBlockOptions()
             {
-                BoundedCapacity = config.connectionLimit ?? Scanner.ConnectionLimit
+                BoundedCapacity = config.ConnectionLimit ?? Scanner.ConnectionLimit
             });
 
-            int portsCount = config.ports?.Length ?? Scanner.PortsCount;
+            int portsCount = config.Ports?.Length ?? Scanner.PortsCount;
 
             List<string> ipOptionRange = o.Range!.ToList();
 
@@ -85,30 +95,30 @@ internal class Program
             {
                 if (ipOption.Contains('-')) //ip range
                 {
-                    string[] splittedIps = ipOption.Split('-');
+                    string[] splitIps = ipOption.Split('-');
 
-                    string firstIp = StringPool.Shared.GetOrAdd(splittedIps[0]);
-                    string lastIp = StringPool.Shared.GetOrAdd(splittedIps[1]);
+                    string firstIp = StringPool.Shared.GetOrAdd(splitIps[0]);
+                    string lastIp = StringPool.Shared.GetOrAdd(splitIps[1]);
 
-                    config.totalIps = NetworkHelper.GetIpRangeCount(firstIp, lastIp) * portsCount;
+                    config.TotalIps = NetworkHelper.GetIpRangeCount(firstIp, lastIp) * portsCount;
 
                     var range = NetworkHelper.FillIpRange(firstIp, lastIp);
 
-                    config.addIpAdresses = Task.Run(() => Scanner.CopyToActionBlockAsync(range, config.ips));
+                    config.AddIpAddresses = Task.Run(() => Scanner.CopyToActionBlockAsync(range, config.Ips));
                 }
-                else if (ipOption.Where(x => char.IsLetter(x)).Count() > 0) //ips from file
+                else if (ipOption.Any(char.IsLetter)) //ips from file
                 {
-                    config.totalIps = IOHelper.GetLinesCount(ipOption) * portsCount;
+                    config.TotalIps = IOHelper.GetLinesCount(ipOption) * portsCount;
 
-                    var readedIps = IOHelper.ReadLineByLine(ipOption);
+                    var readIps = IOHelper.ReadLineByLine(ipOption);
 
-                    config.addIpAdresses = Task.Run(() => Scanner.CopyToActionBlockAsync(from ip in readedIps select IPAddress.Parse(ip), config.ips));
+                    config.AddIpAddresses = Task.Run(() => Scanner.CopyToActionBlockAsync(from ip in readIps select IPAddress.Parse(ip), config.Ips));
                 }
                 else //single ip
                 {
-                    config.totalIps = portsCount;
+                    config.TotalIps = portsCount;
 
-                    config.ips.Post(IPAddress.Parse(ipOption));
+                    config.Ips.Post(IPAddress.Parse(ipOption));
                 }
             }
 
@@ -116,13 +126,15 @@ internal class Program
             double? connectionTimeout = o.ConnectionTimeout;
 
             if (connectionTimeout is not null)
-                config.timeout = connectionTimeout.Value;
+                config.Timeout = connectionTimeout.Value;
 
         });
+
+        return config;
     }
 
     /// <summary>
-    /// Save progress on programm interruption (Ctrl+C)
+    /// Save progress on program interruption (Ctrl+C)
     /// </summary>
     private static void OnExit(object? sender, ConsoleCancelEventArgs e)
     {

@@ -32,39 +32,39 @@ namespace McServersScanner.Network
         /// </summary>
         private readonly AsyncCallback? connectionCallBack;
 
-        public McClient(string ip, ushort port) : this(IPAddress.Parse(ip), port) { }
-        public McClient(string ip, ushort port, Action<IAsyncResult> onConnection) : this(IPAddress.Parse(ip), port, onConnection) { }
+        /// <summary>
+        /// Max number of bytes sent/received by network per second
+        /// </summary>
+        public int BandwidthLimit { get; set; }
 
-        public McClient(IPAddress ip, ushort port)
+        public McClient(string ip, ushort port, int bandwidthLimit) : this(IPAddress.Parse(ip), port, bandwidthLimit) { }
+        public McClient(string ip, ushort port, Action<IAsyncResult> onConnection , int bandwidthLimit) : this(IPAddress.Parse(ip), port, onConnection, bandwidthLimit) { }
+
+        public McClient(IPAddress ip, ushort port, int bandwidthLimit)
         {
             IpEndPoint = new IPEndPoint(ip, port);
             Client = new(IpEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+            BandwidthLimit = bandwidthLimit;
 
             InitTime = DateTime.Now;
         }
 
-        public McClient(IPAddress ip, ushort port, Action<IAsyncResult> onConnection) : this(ip, port)
-        {
-            connectionCallBack = new(onConnection);
-        }
+        public McClient(IPAddress ip, ushort port, Action<IAsyncResult> onConnection, int bandwidthLimit) : this(ip, port, bandwidthLimit) => connectionCallBack = new(onConnection);
 
         /// <summary>
         /// Begins an asynchronous request for a remote host connection.
         /// </summary>
-        public IAsyncResult BeginConnect()
-        {
-            return Client.BeginConnect(IpEndPoint, connectionCallBack, this);
-        }
+        public IAsyncResult BeginConnect() => Client.BeginConnect(IpEndPoint, connectionCallBack, this);
 
         /// <summary>
         /// Gets a value that indicates whether a Socket is connected to a remote host
         /// </summary>
-        public bool isConnected => Client.Connected;
+        public bool IsConnected => Client.Connected;
 
         /// <summary>
         /// Time when connection started
         /// </summary>
-        public DateTime initDateTime => InitTime;
+        public DateTime InitDateTime => InitTime;
 
         /// <summary>
         /// Tries to get information from server
@@ -75,28 +75,30 @@ namespace McServersScanner.Network
         public async Task<string> GetServerInfo()
         {
             int protocolVersion = 761;
-            StringBuilder response = new StringBuilder();
+            StringBuilder response = new();
 
             try
             {
                 //preparing packet
                 McPacket<HandshakePacket> packet = new(new HandshakePacket(IpEndPoint.Address, protocolVersion, (ushort)IpEndPoint.Port));
 
+                SharedThrottledStream stream = new(new NetworkStream(Client, true));
+
                 //Send handshake
-                var handshake = Client.SendAsync(packet.ToArray(), SocketFlags.None);
+                var handshake = stream.WriteAsync(packet.ToArray()).AsTask();
 
                 //Send ping req
                 byte[] pingData = { 1, 0 };
-                var request = Client.SendAsync(pingData, SocketFlags.None);
+                var request = stream.WriteAsync(pingData).AsTask();
 
                 byte[] buffer = new byte[1024];
-                int bytesReceived = 0;
+                int bytesReceived;
 
                 await Task.WhenAll(handshake, request);//Waiting for the packets to be sent
 
                 do
                 {
-                    bytesReceived = await Client.ReceiveAsync(buffer, SocketFlags.None);
+                    bytesReceived = await stream.ReadAsync(buffer);
                     response.Append(StringPool.Shared.GetOrAdd(Encoding.UTF8.GetString(buffer)));
                 } while (bytesReceived > 0);
             }
@@ -105,10 +107,7 @@ namespace McServersScanner.Network
                 return string.Empty;
             }
 
-            if (response.Length > 5)
-                return StringPool.Shared.GetOrAdd(response.Remove(0, 5).ToString());
-            else
-                return string.Empty;
+            return response.Length > 5 ? StringPool.Shared.GetOrAdd(response.Remove(0, 5).ToString()) : string.Empty;
         }
 
         /// <summary>
@@ -119,6 +118,7 @@ namespace McServersScanner.Network
 
         public void Dispose()
         {
+            GC.SuppressFinalize(this);
             Client.Dispose();
             Disposed = true;
         }

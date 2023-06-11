@@ -13,7 +13,7 @@ namespace McServersScanner.Tests
         {
             ScannerConfiguration scannerConfiguration = new()
             {
-                ips = new(new DataflowBlockOptions()
+                Ips = new(new DataflowBlockOptions
                 {
                     BoundedCapacity = Scanner.ConnectionLimit
                 })
@@ -25,15 +25,15 @@ namespace McServersScanner.Tests
             IEnumerable<IPAddress> iPs = NetworkHelper.FillIpRange(ipStartAddress, ipEndAddress);
             long ipCount = NetworkHelper.GetIpRangeCount(ipStartAddress, ipEndAddress);
 
-            scannerConfiguration.totalIps = ipCount;
-            scannerConfiguration.addIpAdresses = Task.Run(() => Scanner.CopyToActionBlockAsync(iPs, scannerConfiguration.ips));
+            scannerConfiguration.TotalIps = ipCount;
+            scannerConfiguration.AddIpAddresses =
+                Task.Run(() => Scanner.CopyToActionBlockAsync(iPs, scannerConfiguration.Ips));
 
             Scanner.ApplyConfiguration(scannerConfiguration);
 
             Assert.DoesNotThrowAsync(async () => await Scanner.Scan());
 
             Assert.That(File.Exists(DBController.DBPath));
-
         }
 
         [Test]
@@ -41,28 +41,29 @@ namespace McServersScanner.Tests
         {
             ScannerConfiguration scannerConfiguration = new()
             {
-                ips = new(new DataflowBlockOptions()
+                Ips = new(new DataflowBlockOptions
                 {
                     BoundedCapacity = Scanner.ConnectionLimit
                 })
             };
 
-            string ipStartAddress = "127.0.0.1";
-            string ipEndAddress = "127.0.1.254";
+            const string ipStartAddress = "127.0.0.1";
+            const string ipEndAddress = "127.0.1.254";
 
             IEnumerable<IPAddress> iPs = NetworkHelper.FillIpRange(ipStartAddress, ipEndAddress);
             long ipCount = NetworkHelper.GetIpRangeCount(ipStartAddress, ipEndAddress);
 
-            scannerConfiguration.totalIps = ipCount;
-            scannerConfiguration.addIpAdresses = Task.Run(() => Scanner.CopyToActionBlockAsync(iPs, scannerConfiguration.ips));
+            scannerConfiguration.TotalIps = ipCount;
+            scannerConfiguration.AddIpAddresses =
+                Task.Run(() => Scanner.CopyToActionBlockAsync(iPs, scannerConfiguration.Ips));
 
             Scanner.ApplyConfiguration(scannerConfiguration);
 
-            var scan = Scanner.Scan();
+            Task scan = Scanner.Scan();
 
             await Task.Delay(90);
 
-            Assert.DoesNotThrow(() => Scanner.ForceStop());
+            Assert.DoesNotThrow(Scanner.ForceStop);
         }
 
         [TearDown]
@@ -70,10 +71,7 @@ namespace McServersScanner.Tests
         {
             DBController controller = new();
 
-            controller.RealmQuerry((realm) =>
-            {
-                realm.WriteAsync(() => realm.RemoveAll<ServerInfo>());
-            });
+            controller.RealmQuerry((realm) => { realm.WriteAsync(realm.RemoveAll<ServerInfo>); });
 
             Scanner.Reset();
         }

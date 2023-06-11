@@ -11,31 +11,36 @@ namespace McServersScanner
         /// <summary>
         /// Block of Ips to scan
         /// </summary>
-        public BufferBlock<IPAddress> ips = null!;
+        public BufferBlock<IPAddress> Ips = null!;
 
         /// <summary>
         /// Array of ports to scan
         /// </summary>
-        public ushort[]? ports = null;
+        public ushort[]? Ports = null;
 
         /// <summary>
-        /// Amout of active connections app can handle at the same time
+        /// Amount of active connections app can handle at the same time
         /// </summary>
-        public int? connectionLimit = null;
+        public int? ConnectionLimit = null;
+
+        /// <summary>
+        /// Amount of bytes send/received by network per second
+        /// </summary>
+        public int? BandwidthLimit = null;
 
         /// <summary>
         /// Connection timeout in seconds
         /// </summary>
-        public double? timeout = null;
+        public double? Timeout = null;
 
         /// <summary>
-        /// Supplies <see cref="ips" with <see cref="IPAddress"/>es/>
+        /// Supplies <see cref="Ips" with <see cref="IPAddress"/>es/>
         /// </summary>
-        public Task? addIpAdresses = null;
+        public Task? AddIpAddresses = null;
 
         /// <summary>
         /// Amount of ips to scan
         /// </summary>
-        public long? totalIps = null;
+        public long? TotalIps = null;
     }
 }

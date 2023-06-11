@@ -6,6 +6,7 @@ namespace McServersScanner.Core.Utils
     /// <summary>
     /// Helps with IO stuff
     /// </summary>
+    // ReSharper disable once InconsistentNaming
     public static class IOHelper
     {
         /// <summary>

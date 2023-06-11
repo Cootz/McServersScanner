@@ -9,10 +9,10 @@ namespace McServersScanner.Core.IO.DB
     /// </summary>
     public class ServerInfo : RealmObject
     {
-        [PrimaryKey]
         /// <summary>
         /// Target server ip
         /// </summary>
+        [PrimaryKey]
         public string IP { get; private set; } = string.Empty;
 
         /// <summary>

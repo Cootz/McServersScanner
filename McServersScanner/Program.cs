@@ -9,7 +9,7 @@ namespace McServersScanner;
 
 internal class Program
 {
-    private static async Task Main(string[] args)
+    public static async Task Main(string[] args)
     {
         ScannerConfiguration config;
 
@@ -138,7 +138,7 @@ internal class Program
     /// <summary>
     /// Save progress on program interruption (Ctrl+C)
     /// </summary>
-    private static void OnExit(object? sender, ConsoleCancelEventArgs e)
+    public static void OnExit(object? sender, ConsoleCancelEventArgs e)
     {
         Scanner.ForceStop();
         Environment.Exit(0);

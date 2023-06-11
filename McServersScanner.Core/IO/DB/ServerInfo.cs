@@ -22,7 +22,7 @@ public class ServerInfo : RealmObject
     /// <summary>
     /// Amount of players online
     /// </summary>
-    public int? Online { get; set; } = null;
+    public int? Online { get; set; }
 
     /// <summary>
     /// Server description

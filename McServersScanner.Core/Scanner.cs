@@ -27,28 +27,22 @@ public static class Scanner
     /// <summary>
     /// Maximum number of connections available at the same time
     /// </summary>
-    public static int ConnectionLimit
-    {
-        get => connectionLimit;
-    }
+    public static int ConnectionLimit { get; private set; } = 1000;
 
     /// <summary>
     /// Maximum number of bytes scanner can sent/receive by network per second
     /// </summary>
-    public static int BandwidthLimit
-    {
-        get => bandwidthLimit;
-    }
+    public static int BandwidthLimit { get; private set; } = 1024 * 1024;
 
     /// <summary>
     /// Exit database thread if true
     /// </summary>
-    private static bool endDBThread = false;
+    private static bool endDBThread;
 
     /// <summary>
     /// Force running scanner to stop
     /// </summary>
-    private static bool forceStop = false;
+    private static bool forceStop;
 
     /// <summary>
     /// Block of Ips to scan
@@ -64,16 +58,6 @@ public static class Scanner
     /// Block of information about scanned servers
     /// </summary>
     private static BufferBlock<ServerInfo> serverInfos = new();
-
-    /// <summary>
-    /// Number of active connections that the app can support at the same time
-    /// </summary>
-    private static int connectionLimit = 1000;
-
-    /// <summary>
-    /// Number of bytes scanner can sent/receive by network per second
-    /// </summary>
-    private static int bandwidthLimit = 1024 * 1024;
 
     /// <summary>
     /// Connection timeout in seconds
@@ -93,12 +77,12 @@ public static class Scanner
     /// <summary>
     /// The number of ips to scan
     /// </summary>
-    private static long totalIps = 0;
+    private static long totalIps;
 
     /// <summary>
     /// Amount of ips being scanned
     /// </summary>
-    private static long scannedIps = 0;
+    private static long scannedIps;
 
     /// <summary>
     /// Applies scanner configuration
@@ -107,8 +91,8 @@ public static class Scanner
     {
         ips = configuration.Ips;
         ports = configuration.Ports ?? ports;
-        connectionLimit = configuration.ConnectionLimit ?? connectionLimit;
-        bandwidthLimit = configuration.BandwidthLimit ?? bandwidthLimit;
+        ConnectionLimit = configuration.ConnectionLimit ?? ConnectionLimit;
+        BandwidthLimit = configuration.BandwidthLimit ?? BandwidthLimit;
         timeout = configuration.Timeout ?? timeout;
         addIpAddresses = configuration.AddIpAddresses ?? addIpAddresses;
         totalIps = configuration.TotalIps ?? totalIps;
@@ -121,7 +105,7 @@ public static class Scanner
     {
         _ = new ThrottleManager(BandwidthLimit);
 
-        ServicePointManager.DefaultConnectionLimit = connectionLimit;
+        ServicePointManager.DefaultConnectionLimit = ConnectionLimit;
         double currentRatio;
 
         //Starting update db thread
@@ -155,7 +139,7 @@ public static class Scanner
     }
 
     /// <summary>
-    /// Looks <see cref="clients"/> for timeouted <see cref="McClient"/>s and remove them
+    /// Looks <see cref="clients"/> for timed-out <see cref="McClient"/>s and remove them
     /// </summary>
     /// <remarks>
     /// This task runs in different thread
@@ -168,7 +152,7 @@ public static class Scanner
         {
             if (!clients.IsEmpty)
             {
-                IEnumerable<KeyValuePair<DateTime, McClient>>? timeoutClients =
+                IEnumerable<KeyValuePair<DateTime, McClient>> timeoutClients =
                     from c in clients where DateTime.Now - c.Key > timeToConnect select c;
 
                 foreach ((DateTime startTime, McClient? client) in clients)
@@ -205,7 +189,7 @@ public static class Scanner
 
                 while (clients.Count >= ConnectionLimit) await Task.Delay(50);
 
-                McClient client = new(await ips.ReceiveAsync(), port, OnConnected, bandwidthLimit / connectionLimit);
+                McClient client = new(await ips.ReceiveAsync(), port, OnConnected, BandwidthLimit / ConnectionLimit);
 
                 try
                 {
@@ -215,6 +199,7 @@ public static class Scanner
                 }
                 catch
                 {
+                    // ignored
                 }
             }
     }
@@ -251,6 +236,7 @@ public static class Scanner
             }
             catch
             {
+                // ignored
             }
 
         try
@@ -259,6 +245,7 @@ public static class Scanner
         }
         catch
         {
+            // ignored
         }
 
         client.Dispose();
@@ -267,7 +254,7 @@ public static class Scanner
     /// <summary>
     /// Thread with database. Update database with scanned data
     /// </summary>
-    private static Thread updateDb = new(() => updateDatabase());
+    private static Thread updateDb = new(updateDatabase);
 
     private static void updateDatabase()
     {
@@ -340,8 +327,8 @@ public static class Scanner
         ips = null!;
         ports = new ushort[] { 25565 };
         serverInfos = new BufferBlock<ServerInfo>();
-        connectionLimit = 1000;
-        bandwidthLimit = 1024 * 1024;
+        ConnectionLimit = 1000;
+        BandwidthLimit = 1024 * 1024;
         timeout = 10;
         clients = new ConcurrentDictionary<DateTime, McClient>();
         addIpAddresses = Task.CompletedTask;

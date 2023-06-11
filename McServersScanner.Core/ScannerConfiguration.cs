@@ -34,7 +34,7 @@ public class ScannerConfiguration
     public double? Timeout = null;
 
     /// <summary>
-    /// Supplies <see cref="Ips" with <see cref="IPAddress"/>es/>
+    /// Supplies <see cref="Ips"/> with <see cref="IPAddress"/>
     /// </summary>
     public Task? AddIpAddresses = null;
 

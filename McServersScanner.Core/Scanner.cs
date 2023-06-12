@@ -2,7 +2,7 @@
 using System.Net;
 using System.Threading.Tasks.Dataflow;
 using CommunityToolkit.HighPerformance.Buffers;
-using McServersScanner.Core.IO.DB;
+using McServersScanner.Core.IO.Database;
 using McServersScanner.Core.Network;
 using McServersScanner.Core.Utils;
 
@@ -252,7 +252,7 @@ public sealed class Scanner
 
     private void updateDatabase()
     {
-        DBController db = new();
+        DatabaseController database = new();
 
         while (!endDBThread)
         {
@@ -262,7 +262,7 @@ public sealed class Scanner
             {
                 try
                 {
-                    db.AddOrUpdate(serverInfos.ReceiveAsync().Result).Wait();
+                    database.Add(serverInfos.ReceiveAsync().Result).Wait();
                 }
                 catch (Exception ex)
                 {

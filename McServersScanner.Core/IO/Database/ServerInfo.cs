@@ -1,7 +1,7 @@
 ﻿using System.Text.Json;
 using Realms;
 
-namespace McServersScanner.Core.IO.DB;
+namespace McServersScanner.Core.IO.Database;
 
 /// <summary>
 /// Store info about minecraft server
@@ -50,7 +50,15 @@ public class ServerInfo : RealmObject
 
         Online = serverInfo.RootElement.GetProperty("players").GetProperty("online").GetInt32();
 
-        Description = serverInfo.RootElement.GetProperty("description").GetProperty("text").GetString() ?? string.Empty;
+        try
+        {
+            Description = serverInfo.RootElement.GetProperty("description").GetProperty("text").GetString()
+                          ?? string.Empty;
+        }
+        catch (KeyNotFoundException)
+        {
+            Description = string.Empty;
+        }
 
         JsonInfo = jsonInfo;
     }

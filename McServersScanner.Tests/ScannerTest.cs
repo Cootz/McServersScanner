@@ -1,7 +1,7 @@
 ﻿using System.Net;
 using System.Threading.Tasks.Dataflow;
 using McServersScanner.Core;
-using McServersScanner.Core.IO.DB;
+using McServersScanner.Core.IO.Database;
 using McServersScanner.Core.Utils;
 
 namespace McServersScanner.Tests;
@@ -29,6 +29,9 @@ public class ScannerTest
         await Task.Delay(90);
 
         Assert.DoesNotThrow(scanner.ForceStop);
+
+        Assert.That(File.Exists(DatabaseController.DatabasePath));
+
     }
 
     private ScannerBuilder createBuilder()
@@ -57,8 +60,8 @@ public class ScannerTest
     [TearDown]
     public void CleanUp()
     {
-        DBController controller = new();
+        DatabaseController controller = new();
 
-        controller.RealmQuerry((realm) => { realm.WriteAsync(realm.RemoveAll<ServerInfo>); });
+        controller.RealmQuery((realm) => { realm.WriteAsync(realm.RemoveAll<ServerInfo>); });
     }
 }

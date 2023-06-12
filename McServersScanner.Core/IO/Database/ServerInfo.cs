@@ -1,7 +1,7 @@
 ﻿using System.Text.Json;
 using Realms;
 
-namespace McServersScanner.Core.IO.DB;
+namespace McServersScanner.Core.IO.Database;
 
 /// <summary>
 /// Store info about minecraft server

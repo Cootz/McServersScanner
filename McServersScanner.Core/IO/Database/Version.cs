@@ -1,7 +1,7 @@
 ﻿using System.Text.Json.Serialization;
 using Realms;
 
-namespace McServersScanner.Core.IO.DB;
+namespace McServersScanner.Core.IO.Database;
 
 public class Version : EmbeddedObject
 {

@@ -1,6 +1,6 @@
 ﻿using Realms;
 
-namespace McServersScanner.Core.IO.DB;
+namespace McServersScanner.Ccore.IO.Database;
 
 /// <summary>
 /// Provides access to database

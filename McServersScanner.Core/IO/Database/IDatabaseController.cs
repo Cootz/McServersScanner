@@ -1,4 +1,5 @@
-﻿using Realms;
+﻿using McServersScanner.Core.IO.Database.Models;
+using Realms;
 
 namespace McServersScanner.Core.IO.Database;
 

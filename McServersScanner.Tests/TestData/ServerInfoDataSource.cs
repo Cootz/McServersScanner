@@ -1,4 +1,7 @@
-﻿using McServersScanner.Core.IO.Database;
+﻿using McServersScanner.Core.IO.Database.Models;
+using NSubstitute;
+using NSubstitute.Extensions;
+using Version = McServersScanner.Core.IO.Database.Models.Version;
 
 namespace McServersScanner.Tests.TestData
 {
@@ -6,37 +9,48 @@ namespace McServersScanner.Tests.TestData
     {
         public const string JSON_SERVER_INFO =
             @"{
-                ""status"": ""success"",
+                ""address"": ""awesomeserver.example.com"",
                 ""online"": true,
-                ""motd"": ""Test MC | Let's build a new ..."",
                 ""description"": {
-                    ""extra"": [
-                        {
-                            ""color"": ""gold"",
-                            ""text"": ""D""
-                        },
-                        {
-                            ""color"": ""gold"",
-                            ""text"": ""a""
-                        }
-                    ],
-                    ""text"": """"
+                    ""text"": ""A Minecraft Server""
                 },
-                ""error"": null,
-                ""players"": {
-                    ""max"": 100,
-                    ""online"": 9
-                },
+                ""favicon"": ""data:image/png;base64.... big blob of bytes..."",
                 ""version"": {
-                    ""name"": ""Paper 1.18.2"",
-                    ""protocol"": 758
+                    ""name"": ""1.14.4"",
+                    ""protocol"": 498
                 },
-                ""last_updated"": ""1652491121"",
-                ""duration"": ""24093588""
+                ""players"": {
+                    ""online"": 1,
+                    ""max"": 20
+                }
             }";
 
         public const string SERVER_INFO_IP = "10.0.0.5";
 
+        public static readonly IServerInfo TestIServerInfo =
+            Substitute.For<IServerInfo>()
+                .Configure(s =>
+                {
+                    s.Ip.Returns(SERVER_INFO_IP);
+                    s.Version.Returns(new Version
+                    {
+                        Name = "1.14.4",
+                        Protocol = 498
+                    });
+                    s.Online.Returns(1);
+                    s.Description.Returns("A Minecraft Server");
+                    s.JsonInfo.Returns(JSON_SERVER_INFO);
+                });
+
+        /// <remarks>
+        /// DO NOT add this instance into realm
+        /// </remarks>
         public static readonly ServerInfo TestServerInfo = new(JSON_SERVER_INFO, SERVER_INFO_IP);
+
+        public static T Configure<T>(this T value, Action<T> action)
+        {
+            action(value);
+            return value;
+        }
     }
 }

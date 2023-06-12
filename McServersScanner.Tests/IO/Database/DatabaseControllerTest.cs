@@ -1,4 +1,5 @@
 ﻿using McServersScanner.Core.IO.Database;
+using McServersScanner.Core.IO.Database.Models;
 using McServersScanner.Tests.TestData;
 
 namespace McServersScanner.Tests.IO.Database;
@@ -13,7 +14,7 @@ public class DatabaseControllerTest
     [Test]
     public void AddServerInfoTest()
     {
-        ServerInfo serverInfo = ServerInfoDataSource.TestServerInfo;
+        ServerInfo serverInfo = new(ServerInfoDataSource.JSON_SERVER_INFO, ServerInfoDataSource.SERVER_INFO_IP);
 
         databaseController.Add(serverInfo);
 

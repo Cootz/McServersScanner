@@ -1,6 +1,6 @@
 ﻿using Realms;
 
-namespace McServersScanner.Ccore.IO.Database;
+namespace McServersScanner.Core.IO.Database;
 
 /// <summary>
 /// Provides access to database
@@ -25,6 +25,8 @@ public class DatabaseController : IDatabaseController
 
         realm = Realm.GetInstance(config);
     }
+
+    public IQueryable<T> Select<T>() where T : RealmObject => realm.All<T>();
 
     public async Task Add(ServerInfo serverInfo) =>
         await realm.WriteAsync(() => { realm.Add(serverInfo, true); });

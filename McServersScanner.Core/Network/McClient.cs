@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System.Diagnostics;
+using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using CommunityToolkit.HighPerformance.Buffers;
@@ -116,8 +117,9 @@ public class McClient : IDisposable
                 response.Append(StringPool.Shared.GetOrAdd(Encoding.UTF8.GetString(buffer)));
             } while (bytesReceived > 0);
         }
-        catch
+        catch (Exception e)
         {
+            Debug.WriteLine(e);
             return string.Empty;
         }
 

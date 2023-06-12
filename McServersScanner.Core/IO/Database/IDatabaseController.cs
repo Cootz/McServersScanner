@@ -8,6 +8,13 @@ namespace McServersScanner.Core.IO.Database;
 public interface IDatabaseController
 {
     /// <summary>
+    /// Gets table from database
+    /// </summary>
+    /// <typeparam name="T">Type of table to get</typeparam>
+    /// <returns>Table from database</returns>
+    IQueryable<T> Select<T>() where T : RealmObject;
+
+    /// <summary>
     /// Adds new <see cref="ServerInfo"/> to database 
     /// </summary>
     Task Add(ServerInfo serverInfo);

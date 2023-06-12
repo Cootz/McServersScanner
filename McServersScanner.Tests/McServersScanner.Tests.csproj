@@ -20,8 +20,4 @@
     <ProjectReference Include="..\McServersScanner.Core\McServersScanner.Core.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="IO\Database\" />
-  </ItemGroup>
-
 </Project>

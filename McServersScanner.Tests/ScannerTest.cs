@@ -34,7 +34,7 @@ public class ScannerTest
 
         Assert.DoesNotThrowAsync(async () => await Scanner.Scan());
 
-        Assert.That(File.Exists(DBController.DBPath));
+        Assert.That(File.Exists(DatabaseController.DatabasePath));
     }
 
     [Test]
@@ -70,9 +70,9 @@ public class ScannerTest
     [TearDown]
     public void CleanUp()
     {
-        DBController controller = new();
+        DatabaseController controller = new();
 
-        controller.RealmQuerry((realm) => { realm.WriteAsync(realm.RemoveAll<ServerInfo>); });
+        controller.RealmQuery((realm) => { realm.WriteAsync(realm.RemoveAll<ServerInfo>); });
 
         Scanner.Reset();
     }

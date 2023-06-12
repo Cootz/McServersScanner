@@ -258,7 +258,7 @@ public static class Scanner
 
     private static void updateDatabase()
     {
-        DBController db = new();
+        DatabaseController database = new();
 
         while (!endDBThread)
         {
@@ -268,7 +268,7 @@ public static class Scanner
             {
                 try
                 {
-                    db.AddOrUpdate(serverInfos.ReceiveAsync().Result).Wait();
+                    database.Add(serverInfos.ReceiveAsync().Result).Wait();
                 }
                 catch (Exception ex)
                 {

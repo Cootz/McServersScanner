@@ -94,8 +94,8 @@ public class McClient : IDisposable
         try
         {
             //preparing packet
-            McPacket<HandshakePacket> packet =
-                new(new HandshakePacket(IpEndPoint.Address, protocolVersion, (ushort)IpEndPoint.Port));
+            McPacket<HandshakePacketData> packet =
+                new(new HandshakePacketData(IpEndPoint.Address, protocolVersion, (ushort)IpEndPoint.Port));
 
             SharedThrottledStream stream = new(new NetworkStream(client, true));
 

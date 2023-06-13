@@ -14,7 +14,7 @@ public static class McProtocol
     /// Creates varInt
     /// </summary>
     /// <returns>
-    /// <see cref="List{byte}"/> representing varInt in protocol
+    /// <see cref="List{T}"/> representing varInt in protocol
     /// </returns>
     public static List<byte> WriteVarInt(int value)
     {
@@ -34,7 +34,7 @@ public static class McProtocol
     /// Creates string
     /// </summary>
     /// <returns>
-    /// <see cref="List{byte}"/> representing string in protocol
+    /// <see cref="List{T}"/> representing string in protocol
     /// </returns>
     public static List<byte> WriteString(string value)
     {

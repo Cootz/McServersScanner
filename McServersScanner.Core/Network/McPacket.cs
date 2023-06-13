@@ -2,9 +2,9 @@
 
 namespace McServersScanner.Core.Network;
 
-public class McPacket<T> : IEnumerable<byte> where T : IPacket
+public class McPacket<T> : IEnumerable<byte> where T : IPacketData
 {
-    private List<byte> packet = new();
+    private readonly List<byte> packet = new();
 
     public McPacket(T? packet)
     {

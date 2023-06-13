@@ -2,12 +2,12 @@
 
 namespace McServersScanner.Core.Network;
 
-public class HandshakePacket : IPacket
+public class HandshakePacketData : IPacketData
 {
     /// <summary>
     /// Tcp data with packet id
     /// </summary>
-    private List<byte> data = new()
+    private readonly List<byte> data = new()
     {
         0x0 //handshake packet id
     };
@@ -27,7 +27,7 @@ public class HandshakePacket : IPacket
     /// </summary>
     private ushort port { get; set; }
 
-    public HandshakePacket(IPAddress ip, int protocolVersion, ushort port)
+    public HandshakePacketData(IPAddress ip, int protocolVersion, ushort port)
     {
         this.ip = ip;
         this.protocolVersion = protocolVersion;
@@ -41,7 +41,7 @@ public class HandshakePacket : IPacket
     public byte[] GetData()
     {
         //Creating handshake data
-        int nextState = 1;
+        const int nextState = 1;
 
         data.AddRange(McProtocol.WriteVarInt(protocolVersion)); //Version
         data.AddRange(McProtocol.WriteString(ip.ToString())); //Ip

@@ -3,7 +3,7 @@
 /// <summary>
 /// Defines minecraft packet data
 /// </summary>
-public interface IPacket
+public interface IPacketData
 {
     public byte[] GetData();
 }

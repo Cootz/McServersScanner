@@ -97,25 +97,23 @@ public class McClient : IDisposable
             McPacket<HandshakePacketData> packet =
                 new(new HandshakePacketData(IpEndPoint.Address, protocolVersion, (ushort)IpEndPoint.Port));
 
-            SharedThrottledStream stream = new(new NetworkStream(client, true));
+            ThrottleManager manager = new(BandwidthLimit);
+
+            SharedThrottledStream stream = new(new NetworkStream(client, true), manager);
 
             //Send handshake
-            Task? handshake = stream.WriteAsync(packet.ToArray()).AsTask();
+            Task handshake = stream.WriteAsync(packet.ToArray()).AsTask();
 
             //Send ping req
             byte[] pingData = { 1, 0 };
-            Task? request = stream.WriteAsync(pingData).AsTask();
+            Task request = stream.WriteAsync(pingData).AsTask();
 
-            byte[] buffer = new byte[1024];
-            int bytesReceived;
+            byte[] buffer = new byte[32768];
 
             await Task.WhenAll(handshake, request); //Waiting for the packets to be sent
 
-            do
-            {
-                bytesReceived = await stream.ReadAsync(buffer);
-                response.Append(StringPool.Shared.GetOrAdd(Encoding.UTF8.GetString(buffer)));
-            } while (bytesReceived > 0);
+            _ = await stream.ReadAsync(buffer);
+            response.Append(StringPool.Shared.GetOrAdd(Encoding.UTF8.GetString(buffer)));
         }
         catch (Exception e)
         {

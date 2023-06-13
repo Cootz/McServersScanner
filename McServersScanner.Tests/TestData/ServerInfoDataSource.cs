@@ -1,6 +1,5 @@
 ﻿using McServersScanner.Core.IO.Database.Models;
 using NSubstitute;
-using NSubstitute.Extensions;
 using Version = McServersScanner.Core.IO.Database.Models.Version;
 
 namespace McServersScanner.Tests.TestData

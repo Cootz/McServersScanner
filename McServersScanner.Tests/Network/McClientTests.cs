@@ -1,27 +1,25 @@
-﻿using McServersScanner.Core.Network;
+﻿using System.Diagnostics;
+using McServersScanner.Core.Network;
 
 namespace McServersScanner.Tests.Network
 {
     [TestFixture]
     public class McClientTests
     {
-        [Test, Timeout(10000)]
+        [Test, Timeout(2000)]
         public async Task GetServerDataTest()
         {
-            string json_server_info = string.Empty;
+            McClient client = new("87.98.151.173", 25565, 1000);
 
-            McClient client = new("87.98.151.173", 25565,
-                async result => { json_server_info = await ((McClient)result.AsyncState!).GetServerInfo(); },
-                1000);
+            IAsyncResult connect = client.BeginConnect();
 
-            client.BeginConnect();
+            connect.AsyncWaitHandle.WaitOne();
 
-            while (json_server_info == string.Empty)
-            {
-                await Task.Delay(50);
-            }
+            string jsonServerInfo = await client.GetServerInfo();
 
-            Console.WriteLine(json_server_info);
+            Console.WriteLine(jsonServerInfo);
+
+            Assert.That(jsonServerInfo, Is.Not.EqualTo(string.Empty));
         }
     }
 }

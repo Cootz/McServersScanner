@@ -1,6 +1,6 @@
 ﻿using System.Collections;
 
-namespace McServersScanner.Core.Network;
+namespace McServersScanner.Core.Network.Packets;
 
 /// <summary>
 /// Represent minecraft packet that follows <see href="https://wiki.vg/Protocol#Packet_format">packet format</see>
@@ -18,7 +18,7 @@ public abstract class McPacket : IEnumerable<byte>
 
     private List<byte> lengthData
     {
-        get => McProtocol.WriteVarInt(data.Count);
+        get => McProtocol.WriteVarInt(data.Count + packetIdData.Count);
     }
 
     private List<byte> packetIdData

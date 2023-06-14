@@ -3,6 +3,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using CommunityToolkit.HighPerformance.Buffers;
+using McServersScanner.Core.Network.Packets;
 
 namespace McServersScanner.Core.Network;
 
@@ -21,7 +22,7 @@ public class McClient : IDisposable
     /// <summary>
     /// Client logic
     /// </summary>
-    private Socket client { get; set; }
+    private TcpClient client { get; set; }
 
     /// <summary>
     /// Time when connection started
@@ -50,7 +51,7 @@ public class McClient : IDisposable
     public McClient(IPAddress ip, ushort port, int bandwidthLimit)
     {
         IpEndPoint = new IPEndPoint(ip, port);
-        client = new Socket(IpEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+        client = new TcpClient(IpEndPoint.AddressFamily);
         BandwidthLimit = bandwidthLimit;
 
         initTime = DateTime.Now;
@@ -62,7 +63,8 @@ public class McClient : IDisposable
     /// <summary>
     /// Begins an asynchronous request for a remote host connection.
     /// </summary>
-    public IAsyncResult BeginConnect() => client.BeginConnect(IpEndPoint, connectionCallBack, this);
+    public IAsyncResult BeginConnect() =>
+        client.BeginConnect(IpEndPoint.Address, IpEndPoint.Port, connectionCallBack, this);
 
     /// <summary>
     /// Gets a value that indicates whether a Socket is connected to a remote host
@@ -94,23 +96,20 @@ public class McClient : IDisposable
         try
         {
             //preparing packet
-            McPacket<HandshakePacket> packet =
-                new(new HandshakePacket(IpEndPoint.Address, protocolVersion, (ushort)IpEndPoint.Port));
+            HandshakePacket packet = new(IpEndPoint.Address, protocolVersion, (ushort)IpEndPoint.Port);
 
             ThrottleManager manager = new(BandwidthLimit);
 
-            SharedThrottledStream stream = new(new NetworkStream(client, true), manager);
+            NetworkStream stream = client.GetStream();
 
             //Send handshake
-            Task handshake = stream.WriteAsync(packet.ToArray()).AsTask();
+            await stream.WriteAsync(packet.ToArray());
 
             //Send ping req
             byte[] pingData = { 1, 0 };
-            Task request = stream.WriteAsync(pingData).AsTask();
+            await stream.WriteAsync(pingData);
 
             byte[] buffer = new byte[32768];
-
-            await Task.WhenAll(handshake, request); //Waiting for the packets to be sent
 
             _ = await stream.ReadAsync(buffer);
             response.Append(StringPool.Shared.GetOrAdd(Encoding.UTF8.GetString(buffer)));
@@ -128,7 +127,7 @@ public class McClient : IDisposable
     /// Asynchronously disconnects from server
     /// </summary>
     /// <returns></returns>
-    public async Task DisconnectAsync() => await client.DisconnectAsync(false);
+    public async Task DisconnectAsync() => await client.Client.DisconnectAsync(true);
 
     public void Dispose()
     {

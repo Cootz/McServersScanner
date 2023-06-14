@@ -1,6 +1,6 @@
 ﻿using System.Net;
 
-namespace McServersScanner.Core.Network;
+namespace McServersScanner.Core.Network.Packets;
 
 public class HandshakePacket : McPacket
 {
@@ -16,12 +16,14 @@ public class HandshakePacket : McPacket
             //Creating handshake data
             const int nextState = 1;
 
-            data.AddRange(McProtocol.WriteVarInt(protocolVersion)); //Version
-            data.AddRange(McProtocol.WriteString(ip.ToString())); //Ip
-            data.AddRange(BitConverter.GetBytes(port)); //Port
-            data.AddRange(McProtocol.WriteVarInt(nextState)); //Next state
+            List<byte> rawData = new();
 
-            return data;
+            rawData.AddRange(McProtocol.WriteVarInt(protocolVersion)); //Version
+            rawData.AddRange(McProtocol.WriteString(ip.ToString())); //Ip
+            rawData.AddRange(BitConverter.GetBytes(port)); //Port
+            rawData.AddRange(McProtocol.WriteVarInt(nextState)); //Next state
+
+            return rawData;
         }
     }
 

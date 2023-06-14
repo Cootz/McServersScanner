@@ -94,8 +94,8 @@ public class McClient : IDisposable
         try
         {
             //preparing packet
-            McPacket<HandshakePacketData> packet =
-                new(new HandshakePacketData(IpEndPoint.Address, protocolVersion, (ushort)IpEndPoint.Port));
+            McPacket<HandshakePacket> packet =
+                new(new HandshakePacket(IpEndPoint.Address, protocolVersion, (ushort)IpEndPoint.Port));
 
             ThrottleManager manager = new(BandwidthLimit);
 

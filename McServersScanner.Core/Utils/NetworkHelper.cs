@@ -45,7 +45,7 @@ public static class NetworkHelper
     /// </summary>
     /// <param name="first">Start of range</param>
     /// <param name="last">End of range</param>
-    /// <returns>Total amout of ips in range</returns>
+    /// <returns>Total amount of ips in range</returns>
     public static long GetIpRangeCount(IPAddress first, IPAddress last) =>
         convertIpAddressToInt(last) - convertIpAddressToInt(first) + 1;
 
@@ -54,7 +54,7 @@ public static class NetworkHelper
     /// </summary>
     /// <param name="first">Start of range</param>
     /// <param name="last">End of range</param>
-    /// <returns>Total amout of ips in range</returns>
+    /// <returns>Total amount of ips in range</returns>
     public static long GetIpRangeCount(string first, string last) =>
         GetIpRangeCount(IPAddress.Parse(first), IPAddress.Parse(last));
 

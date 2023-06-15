@@ -6,7 +6,7 @@
 public static class JsonHelper
 {
     /// <summary>
-    /// Remove everything exept json data from string
+    /// Remove everything except json data from string
     /// </summary>
     /// <param name="dirtyJson">String with json data in it</param>
     /// <returns>Clean json string ready to convert</returns>
@@ -23,8 +23,7 @@ public static class JsonHelper
 
             if (currentChar == '{')
                 balance++;
-            else if (currentChar == '}')
-                balance--;
+            else if (currentChar == '}') balance--;
 
             i++;
         } while (balance > 0);

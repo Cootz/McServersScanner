@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using McServersScanner.Core.Network;
+﻿using McServersScanner.Core.Network;
 
 namespace McServersScanner.Tests.Network
 {

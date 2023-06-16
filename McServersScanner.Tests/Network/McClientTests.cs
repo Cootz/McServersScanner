@@ -8,7 +8,10 @@ namespace McServersScanner.Tests.Network
         [Test, Timeout(2000)]
         public async Task GetServerDataTest()
         {
-            McClient client = new("87.98.151.173", 25565, 1000);
+            McClient client = new("87.98.151.173", 25565)
+            {
+                BandwidthLimit = 1000
+            };
 
             IAsyncResult connect = client.BeginConnect();
 

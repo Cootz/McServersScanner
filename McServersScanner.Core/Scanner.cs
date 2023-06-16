@@ -190,7 +190,11 @@ public static class Scanner
 
                 while (clients.Count >= ConnectionLimit) await Task.Delay(50);
 
-                McClient client = new(await ips.ReceiveAsync(), port, OnConnected, BandwidthLimit / ConnectionLimit);
+                McClient client = new(await ips.ReceiveAsync(), port)
+                {
+                    ConnectionCallBack = OnConnected,
+                    BandwidthLimit = BandwidthLimit / ConnectionLimit
+                };
 
                 try
                 {
@@ -206,7 +210,7 @@ public static class Scanner
     }
 
     /// <summary>
-    /// Callback for <see cref="McClient.connectionCallBack"/>. Sends server info and receives answer
+    /// Callback for <see cref="McClient.ConnectionCallBack"/>. Sends server info and receives answer
     /// </summary>
     /// <param name="result"></param>
     public static async void OnConnected(IAsyncResult result)

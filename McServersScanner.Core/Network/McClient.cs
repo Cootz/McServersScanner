@@ -12,7 +12,7 @@ public class McClient : IDisposable
     /// <summary>
     /// Server IP address + port
     /// </summary>
-    public IPEndPoint IpEndPoint { get; private set; }
+    public IPEndPoint IpEndPoint { get; init; }
 
     /// <summary>
     /// Checks if instance disposed
@@ -22,7 +22,7 @@ public class McClient : IDisposable
     /// <summary>
     /// Client logic
     /// </summary>
-    private TcpClient client { get; set; }
+    private TcpClient client { get; }
 
     /// <summary>
     /// Time when connection started
@@ -32,39 +32,32 @@ public class McClient : IDisposable
     /// <summary>
     /// Invokes on successful connection
     /// </summary>
-    private readonly AsyncCallback? connectionCallBack;
+    public AsyncCallback? ConnectionCallBack { get; init; }
 
     /// <summary>
     /// Max number of bytes sent/received by network per second
     /// </summary>
-    public int BandwidthLimit { get; set; }
+    public int BandwidthLimit { get; init; }
 
-    public McClient(string ip, ushort port, int bandwidthLimit) : this(IPAddress.Parse(ip), port, bandwidthLimit)
+    public McClient(string ip, ushort port) : this(IPAddress.Parse(ip), port)
     {
     }
 
-    public McClient(string ip, ushort port, Action<IAsyncResult> onConnection, int bandwidthLimit) : this(
-        IPAddress.Parse(ip), port, onConnection, bandwidthLimit)
-    {
-    }
-
-    public McClient(IPAddress ip, ushort port, int bandwidthLimit)
+    public McClient(IPAddress ip, ushort port)
     {
         IpEndPoint = new IPEndPoint(ip, port);
         client = new TcpClient(IpEndPoint.AddressFamily);
-        BandwidthLimit = bandwidthLimit;
-
-        initTime = DateTime.Now;
     }
-
-    public McClient(IPAddress ip, ushort port, Action<IAsyncResult> onConnection, int bandwidthLimit) :
-        this(ip, port, bandwidthLimit) => connectionCallBack = new AsyncCallback(onConnection);
 
     /// <summary>
     /// Begins an asynchronous request for a remote host connection.
     /// </summary>
-    public IAsyncResult BeginConnect() =>
-        client.BeginConnect(IpEndPoint.Address, IpEndPoint.Port, connectionCallBack, this);
+    public IAsyncResult BeginConnect()
+    {
+        initTime = DateTime.Now;
+
+        return client.BeginConnect(IpEndPoint.Address, IpEndPoint.Port, ConnectionCallBack, this);
+    }
 
     /// <summary>
     /// Gets a value that indicates whether a Socket is connected to a remote host
@@ -90,15 +83,13 @@ public class McClient : IDisposable
     /// </remarks>
     public async Task<string> GetServerInfo()
     {
-        int protocolVersion = 761;
+        const int protocolVersion = 761;
         StringBuilder response = new();
 
         try
         {
             //preparing packet
             HandshakePacket packet = new(IpEndPoint.Address, protocolVersion, (ushort)IpEndPoint.Port);
-
-            ThrottleManager manager = new(BandwidthLimit);
 
             NetworkStream stream = client.GetStream();
 

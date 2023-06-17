@@ -9,6 +9,7 @@ namespace McServersScanner.Core;
 public sealed class ScannerBuilder : IScannerOptions
 {
     public const int DEFAULT_CONNECTION_LIMIT = 1000;
+    public const int DEFAULT_BANDWIDTH_LIMIT = 1024 * 1024;
 
     /// <summary>
     /// Block of Ips to scan
@@ -28,7 +29,7 @@ public sealed class ScannerBuilder : IScannerOptions
     /// <summary>
     /// Amount of bytes send/received by network per second
     /// </summary>
-    public int BandwidthLimit { get; set; } = 1024 * 1024;
+    public int BandwidthLimit { get; set; } = DEFAULT_BANDWIDTH_LIMIT;
 
     /// <summary>
     /// Connection timeout in seconds

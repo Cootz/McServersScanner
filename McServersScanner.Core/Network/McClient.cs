@@ -3,6 +3,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using CommunityToolkit.HighPerformance.Buffers;
+using McServersScanner.Core.IO;
 using McServersScanner.Core.Network.Packets;
 
 namespace McServersScanner.Core.Network;
@@ -91,7 +92,7 @@ public class McClient : IDisposable
             //preparing packet
             HandshakePacket packet = new(IpEndPoint.Address, protocolVersion, (ushort)IpEndPoint.Port);
 
-            NetworkStream stream = client.GetStream();
+            SharedThrottledStream stream = new(client.GetStream(), ThrottleManager.Instance);
 
             //Send handshake
             await stream.WriteAsync(packet.ToArray());

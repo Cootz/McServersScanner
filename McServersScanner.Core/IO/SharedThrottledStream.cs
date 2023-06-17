@@ -1,6 +1,4 @@
-﻿using System.Reactive.Concurrency;
-
-namespace McServersScanner.Core.Network;
+﻿namespace McServersScanner.Core.IO;
 
 public class SharedThrottledStream : Stream
 {
@@ -14,35 +12,15 @@ public class SharedThrottledStream : Stream
         this.throttleManager = throttleManager;
     }
 
-    public SharedThrottledStream(Stream parent)
-        : this(parent, ThrottleManager.Current)
-    {
-    }
-
     public void Throttle(int bytes)
     {
-        TimeSpan sleep = throttleManager.GetSleepTime(bytes);
-
-        if (sleep <= TimeSpan.Zero) return;
-
-        using AutoResetEvent waitHandle = new(false);
-
-        throttleManager.Scheduler.Sleep(sleep).GetAwaiter().OnCompleted(() => waitHandle.Set());
-
-        waitHandle.WaitOne();
+        ThrottleAsync(bytes).Wait();
     }
 
     public async Task ThrottleAsync(int bytes)
     {
-        TimeSpan sleep = throttleManager.GetSleepTime(bytes);
-
-        if (sleep <= TimeSpan.Zero) return;
-
-        using AutoResetEvent waitHandle = new(false);
-
-        throttleManager.Scheduler.Sleep(sleep).GetAwaiter().OnCompleted(() => waitHandle.Set());
-
-        await waitHandle.WaitOneAsync();
+        if (throttleManager.CurrentQuota < bytes)
+            await throttleManager;
     }
 
     public override bool CanRead

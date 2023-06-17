@@ -17,25 +17,15 @@ namespace McServersScanner.Core;
 /// </remarks>
 public sealed class Scanner
 {
-    public const int DEFAULT_CONNECTION_LIMIT = 1000;
-
-    /// <summary>
-    /// Number of ports to scan
-    /// </summary>
-    public int PortsCount
-    {
-        get => Ports.Length;
-    }
-
     /// <summary>
     /// Maximum number of connections available at the same time
     /// </summary>
-    public int ConnectionLimit { get; internal set; } = DEFAULT_CONNECTION_LIMIT;
+    public int ConnectionLimit { get; internal init; }
 
     /// <summary>
     /// Maximum number of bytes scanner can sent/receive by network per second
     /// </summary>
-    public int BandwidthLimit { get; internal set; } = 1024 * 1024;
+    public int BandwidthLimit { get; internal init; }
 
     /// <summary>
     /// Exit database thread if true
@@ -55,7 +45,7 @@ public sealed class Scanner
     /// <summary>
     /// Array of ports to scan
     /// </summary>
-    internal ushort[] Ports = { 25565 };
+    internal ushort[] Ports { get; init; } = null!;
 
     /// <summary>
     /// Block of information about scanned servers
@@ -65,7 +55,7 @@ public sealed class Scanner
     /// <summary>
     /// Connection timeout in seconds
     /// </summary>
-    internal double Timeout = 10;
+    internal double Timeout { get; init; }
 
     /// <summary>
     /// List of clients
@@ -75,12 +65,12 @@ public sealed class Scanner
     /// <summary>
     /// Supplies <see cref="ips"/> with <see cref="IPAddress"/>
     /// </summary>
-    internal Task AddIpAddresses = Task.CompletedTask;
+    internal Task AddIpAddresses { get; init; } = null!;
 
     /// <summary>
     /// The number of ips to scan
     /// </summary>
-    internal long TotalIps;
+    internal long TotalIps { get; init; }
 
     /// <summary>
     /// Amount of ips being scanned

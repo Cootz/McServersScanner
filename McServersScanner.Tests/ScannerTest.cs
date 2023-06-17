@@ -1,7 +1,8 @@
 ﻿using System.Net;
 using System.Threading.Tasks.Dataflow;
 using McServersScanner.Core;
-using McServersScanner.Core.IO.DB;
+using McServersScanner.Core.IO.Database;
+using McServersScanner.Core.IO.Database.Models;
 using McServersScanner.Core.Utils;
 
 namespace McServersScanner.Tests;
@@ -16,7 +17,7 @@ public class ScannerTest
 
         Assert.DoesNotThrowAsync(async () => await scanner.Scan());
 
-        Assert.That(File.Exists(DBController.DBPath));
+        Assert.That(File.Exists(DatabaseController.DatabasePath));
     }
 
     [Test]
@@ -37,8 +38,9 @@ public class ScannerTest
         {
             Ips = new BufferBlock<IPAddress>(new DataflowBlockOptions
             {
-                BoundedCapacity = Scanner.DEFAULT_CONNECTION_LIMIT
-            })
+                BoundedCapacity = ScannerBuilder.DEFAULT_CONNECTION_LIMIT
+            }),
+            Timeout = 1
         };
 
         const string ipStartAddress = "127.0.0.1";
@@ -57,8 +59,8 @@ public class ScannerTest
     [TearDown]
     public void CleanUp()
     {
-        DBController controller = new();
+        DatabaseController controller = new();
 
-        controller.RealmQuerry((realm) => { realm.WriteAsync(realm.RemoveAll<ServerInfo>); });
+        controller.RealmQuery((realm) => { realm.WriteAsync(realm.RemoveAll<ServerInfo>); });
     }
 }

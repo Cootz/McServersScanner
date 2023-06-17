@@ -8,6 +8,8 @@ namespace McServersScanner.Core;
 /// </summary>
 public sealed class ScannerBuilder
 {
+    public const int DEFAULT_CONNECTION_LIMIT = 1000;
+
     /// <summary>
     /// Block of Ips to scan
     /// </summary>
@@ -16,32 +18,32 @@ public sealed class ScannerBuilder
     /// <summary>
     /// Array of Ports to scan
     /// </summary>
-    public ushort[]? Ports = null;
+    public ushort[] Ports = { 25565 };
 
     /// <summary>
     /// Amount of active connections app can handle at the same time
     /// </summary>
-    public int? ConnectionLimit = null;
+    public int ConnectionLimit { get; set; } = DEFAULT_CONNECTION_LIMIT;
 
     /// <summary>
     /// Amount of bytes send/received by network per second
     /// </summary>
-    public int? BandwidthLimit = null;
+    public int BandwidthLimit = 1024 * 1024;
 
     /// <summary>
     /// Connection timeout in seconds
     /// </summary>
-    public double? Timeout = null;
+    public double Timeout { get; set; } = 10;
 
     /// <summary>
     /// Supplies <see cref="Ips"/> with <see cref="IPAddress"/>
     /// </summary>
-    public Task? AddIpAddresses = null;
+    public Task AddIpAddresses = Task.CompletedTask;
 
     /// <summary>
     /// Amount of ips to scan
     /// </summary>
-    public long? IpsCount = null;
+    public long IpsCount { get; set; } = 1;
 
     /// <summary>
     /// Builds the <see cref="Scanner"/>
@@ -49,18 +51,16 @@ public sealed class ScannerBuilder
     /// <returns>A configured <see cref="Scanner"/></returns>
     public Scanner Build()
     {
-        Scanner builtScanner = new(Ips);
-
-        builtScanner.Ports = Ports ?? builtScanner.Ports;
-        builtScanner.ConnectionLimit = ConnectionLimit ?? builtScanner.ConnectionLimit;
-        builtScanner.BandwidthLimit = BandwidthLimit ?? builtScanner.BandwidthLimit;
-        builtScanner.Timeout = Timeout ?? builtScanner.Timeout;
-        builtScanner.AddIpAddresses = AddIpAddresses ?? builtScanner.AddIpAddresses;
-
-        builtScanner.TotalIps =
-            IpsCount * builtScanner.PortsCount
-            ?? builtScanner
-                .TotalIps; //TODO: remove TotalIps and IPsCount and replace it with Enumerable.Count or custom Count method
+        Scanner builtScanner = new(Ips)
+        {
+            Ports = Ports,
+            ConnectionLimit = ConnectionLimit,
+            BandwidthLimit = BandwidthLimit,
+            Timeout = Timeout,
+            AddIpAddresses = AddIpAddresses,
+            TotalIps = IpsCount
+                       * Ports.Length //TODO: remove TotalIps and IPsCount and replace it with Enumerable.Count or custom Count method
+        };
 
         return builtScanner;
     }

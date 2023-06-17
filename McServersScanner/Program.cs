@@ -42,7 +42,8 @@ internal static class Program
         result.WithParsed(o =>
         {
             //Adding connection limit
-            builder.ConnectionLimit = o.ConnectionLimit;
+            if (o.ConnectionLimit.HasValue)
+                builder.ConnectionLimit = o.ConnectionLimit.Value;
 
             //Adding bandwidth limit
             string? bandwidthLimit = o.BandwidthLimit;
@@ -80,7 +81,7 @@ internal static class Program
             //Adding ips
             builder.Ips = new BufferBlock<IPAddress>(new DataflowBlockOptions()
             {
-                BoundedCapacity = builder.ConnectionLimit ?? Scanner.DEFAULT_CONNECTION_LIMIT
+                BoundedCapacity = builder.ConnectionLimit
             });
 
             string[] ipOptionRange = o.Range!.ToArray();
@@ -116,7 +117,8 @@ internal static class Program
                 }
 
             //Adding connection timeout
-            builder.Timeout = o.ConnectionTimeout;
+            if (o.ConnectionTimeout.HasValue)
+                builder.Timeout = o.ConnectionTimeout.Value;
         });
 
     /// <summary>

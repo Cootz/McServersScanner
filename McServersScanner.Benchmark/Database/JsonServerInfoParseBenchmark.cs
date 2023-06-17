@@ -1,7 +1,7 @@
 ﻿using BenchmarkDotNet.Attributes;
-using McServersScanner.Core.IO.DB;
+using McServersScanner.Core.IO.Database.Models;
 
-namespace McServersScanner.Benchmark.DB;
+namespace McServersScanner.Benchmark.Database;
 
 [MemoryDiagnoser]
 public class JsonServerInfoParseBenchmark

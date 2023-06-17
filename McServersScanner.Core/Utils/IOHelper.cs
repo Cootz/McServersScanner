@@ -13,7 +13,7 @@ public static class IOHelper
     /// Reads file line by line
     /// </summary>
     /// <param name="path">Path to file</param>
-    /// <returns><see cref="IEnumerable{string}"/></returns>
+    /// <returns><see cref="IEnumerable{T}"/></returns>
     /// <remarks>
     /// Ignores empty lines
     /// </remarks>
@@ -27,7 +27,7 @@ public static class IOHelper
     }
 
     /// <summary>
-    /// Simulates <see cref="ReadLineByLine(string)"/> behavior to calculate it length
+    /// Simulates <see cref="ReadLineByLine(string)"/> behavior to calculate length of <see cref="IEnumerable{T}"/> is returns
     /// </summary>
     /// <param name="path">Path to file</param>
     /// <returns>Amount of non empty lines</returns>

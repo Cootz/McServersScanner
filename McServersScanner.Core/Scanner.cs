@@ -2,7 +2,8 @@
 using System.Net;
 using System.Threading.Tasks.Dataflow;
 using CommunityToolkit.HighPerformance.Buffers;
-using McServersScanner.Core.IO.DB;
+using McServersScanner.Core.IO.Database;
+using McServersScanner.Core.IO.Database.Models;
 using McServersScanner.Core.Network;
 using McServersScanner.Core.Utils;
 
@@ -183,7 +184,11 @@ public sealed class Scanner
 
                 while (clients.Count >= ConnectionLimit) await Task.Delay(50);
 
-                McClient client = new(await ips.ReceiveAsync(), port, OnConnected, BandwidthLimit / ConnectionLimit);
+                McClient client = new(await ips.ReceiveAsync(), port)
+                {
+                    ConnectionCallBack = OnConnected,
+                    BandwidthLimit = BandwidthLimit / ConnectionLimit
+                };
 
                 try
                 {
@@ -199,7 +204,7 @@ public sealed class Scanner
     }
 
     /// <summary>
-    /// Callback for <see cref="McClient.connectionCallBack"/>. Sends server info and receives answer
+    /// Callback for <see cref="McClient.ConnectionCallBack"/>. Sends server info and receives answer
     /// </summary>
     /// <param name="result"></param>
     public async void OnConnected(IAsyncResult result)
@@ -252,7 +257,7 @@ public sealed class Scanner
 
     private void updateDatabase()
     {
-        DBController db = new();
+        DatabaseController database = new();
 
         while (!endDBThread)
         {
@@ -262,7 +267,7 @@ public sealed class Scanner
             {
                 try
                 {
-                    db.AddOrUpdate(serverInfos.ReceiveAsync().Result).Wait();
+                    database.Add(serverInfos.ReceiveAsync().Result).Wait();
                 }
                 catch (Exception ex)
                 {

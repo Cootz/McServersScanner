@@ -1,7 +1,9 @@
-﻿using System.Net;
+﻿using System.Diagnostics;
+using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using CommunityToolkit.HighPerformance.Buffers;
+using McServersScanner.Core.Network.Packets;
 
 namespace McServersScanner.Core.Network;
 
@@ -10,7 +12,7 @@ public class McClient : IDisposable
     /// <summary>
     /// Server IP address + port
     /// </summary>
-    public IPEndPoint IpEndPoint { get; private set; }
+    public IPEndPoint IpEndPoint { get; init; }
 
     /// <summary>
     /// Checks if instance disposed
@@ -20,7 +22,7 @@ public class McClient : IDisposable
     /// <summary>
     /// Client logic
     /// </summary>
-    private Socket client { get; set; }
+    private TcpClient client { get; }
 
     /// <summary>
     /// Time when connection started
@@ -30,38 +32,32 @@ public class McClient : IDisposable
     /// <summary>
     /// Invokes on successful connection
     /// </summary>
-    private readonly AsyncCallback? connectionCallBack;
+    public AsyncCallback? ConnectionCallBack { get; init; }
 
     /// <summary>
     /// Max number of bytes sent/received by network per second
     /// </summary>
-    public int BandwidthLimit { get; set; }
+    public int BandwidthLimit { get; init; }
 
-    public McClient(string ip, ushort port, int bandwidthLimit) : this(IPAddress.Parse(ip), port, bandwidthLimit)
+    public McClient(string ip, ushort port) : this(IPAddress.Parse(ip), port)
     {
     }
 
-    public McClient(string ip, ushort port, Action<IAsyncResult> onConnection, int bandwidthLimit) : this(
-        IPAddress.Parse(ip), port, onConnection, bandwidthLimit)
-    {
-    }
-
-    public McClient(IPAddress ip, ushort port, int bandwidthLimit)
+    public McClient(IPAddress ip, ushort port)
     {
         IpEndPoint = new IPEndPoint(ip, port);
-        client = new Socket(IpEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-        BandwidthLimit = bandwidthLimit;
-
-        initTime = DateTime.Now;
+        client = new TcpClient(IpEndPoint.AddressFamily);
     }
-
-    public McClient(IPAddress ip, ushort port, Action<IAsyncResult> onConnection, int bandwidthLimit) :
-        this(ip, port, bandwidthLimit) => connectionCallBack = new AsyncCallback(onConnection);
 
     /// <summary>
     /// Begins an asynchronous request for a remote host connection.
     /// </summary>
-    public IAsyncResult BeginConnect() => client.BeginConnect(IpEndPoint, connectionCallBack, this);
+    public IAsyncResult BeginConnect()
+    {
+        initTime = DateTime.Now;
+
+        return client.BeginConnect(IpEndPoint.Address, IpEndPoint.Port, ConnectionCallBack, this);
+    }
 
     /// <summary>
     /// Gets a value that indicates whether a Socket is connected to a remote host
@@ -87,37 +83,31 @@ public class McClient : IDisposable
     /// </remarks>
     public async Task<string> GetServerInfo()
     {
-        int protocolVersion = 761;
+        const int protocolVersion = 761;
         StringBuilder response = new();
 
         try
         {
             //preparing packet
-            McPacket<HandshakePacket> packet =
-                new(new HandshakePacket(IpEndPoint.Address, protocolVersion, (ushort)IpEndPoint.Port));
+            HandshakePacket packet = new(IpEndPoint.Address, protocolVersion, (ushort)IpEndPoint.Port);
 
-            SharedThrottledStream stream = new(new NetworkStream(client, true));
+            NetworkStream stream = client.GetStream();
 
             //Send handshake
-            Task? handshake = stream.WriteAsync(packet.ToArray()).AsTask();
+            await stream.WriteAsync(packet.ToArray());
 
             //Send ping req
             byte[] pingData = { 1, 0 };
-            Task? request = stream.WriteAsync(pingData).AsTask();
+            await stream.WriteAsync(pingData);
 
-            byte[] buffer = new byte[1024];
-            int bytesReceived;
+            byte[] buffer = new byte[32768];
 
-            await Task.WhenAll(handshake, request); //Waiting for the packets to be sent
-
-            do
-            {
-                bytesReceived = await stream.ReadAsync(buffer);
-                response.Append(StringPool.Shared.GetOrAdd(Encoding.UTF8.GetString(buffer)));
-            } while (bytesReceived > 0);
+            _ = await stream.ReadAsync(buffer);
+            response.Append(StringPool.Shared.GetOrAdd(Encoding.UTF8.GetString(buffer)));
         }
-        catch
+        catch (Exception e)
         {
+            Debug.WriteLine(e);
             return string.Empty;
         }
 
@@ -128,7 +118,7 @@ public class McClient : IDisposable
     /// Asynchronously disconnects from server
     /// </summary>
     /// <returns></returns>
-    public async Task DisconnectAsync() => await client.DisconnectAsync(false);
+    public async Task DisconnectAsync() => await client.Client.DisconnectAsync(true);
 
     public void Dispose()
     {

@@ -1,47 +1,46 @@
-﻿using McServersScanner.Utils;
+﻿using McServersScanner.Core.Utils;
 
-namespace McServersScanner.Tests.Utils
+namespace McServersScanner.Tests.Utils;
+
+[TestFixture]
+public class IOHelperTest
 {
-    [TestFixture]
-    public class IOHelperTest
+    private const int n = 10;
+
+    [Test]
+    public void TestGetLinesCount()
     {
-        const int N = 10;
+        string filePath = generateTestFile();
 
-        [Test]
-        public void TestGetLinesCount()
+        long linesCount = IOHelper.GetLinesCount(filePath);
+
+        Assert.That(linesCount, Is.EqualTo(n));
+    }
+
+    [Test]
+    public void TestReadFileLineByLine()
+    {
+        string filePath = generateTestFile();
+
+        IEnumerable<string> lines = IOHelper.ReadLineByLine(filePath);
+        IEnumerator<string> linesEnumerator = lines.GetEnumerator();
+
+        for (int i = 0; i < n; i++)
         {
-            string filePath = GenerateTestFile();
-
-            long linesCount = IOHelper.GetLinesCount(filePath);
-
-            Assert.That(linesCount, Is.EqualTo(N));
+            linesEnumerator.MoveNext();
+            Assert.That(linesEnumerator.Current, Is.EqualTo($"Line {i}"));
         }
+    }
 
-        [Test]
-        public void TestReadFileLineByLine()
-        {
-            string filePath = GenerateTestFile();
+    private static string generateTestFile()
+    {
+        string filePath = Path.GetTempFileName();
 
-            IEnumerable<string> lines = IOHelper.ReadLineByLine(filePath);
-            IEnumerator<string> linesEnumerator = lines.GetEnumerator();
+        using StreamWriter writer = new(filePath);
 
-            for (int i = 0; i < N; i++)
-            {
-                linesEnumerator.MoveNext();
-                Assert.That(linesEnumerator.Current, Is.EqualTo($"Line {i}"));
-            }
-        }
+        for (int i = 0; i < n; i++)
+            writer.WriteLine("Line {0}", i);
 
-        private static string GenerateTestFile()
-        {
-            string filePath = Path.GetTempFileName();
-
-            using StreamWriter writer = new(filePath);
-
-            for (int i = 0; i < N; i++)
-                writer.WriteLine("Line {0}", i);
-
-            return filePath;
-        }
+        return filePath;
     }
 }

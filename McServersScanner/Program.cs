@@ -1,22 +1,31 @@
-﻿using CommandLine;
-using CommunityToolkit.HighPerformance.Buffers;
-using McServersScanner;
-using McServersScanner.Utils;
-using System.Net;
+﻿using System.Net;
 using System.Threading.Tasks.Dataflow;
+using CommandLine;
+using CommunityToolkit.HighPerformance.Buffers;
+using McServersScanner.Core;
+using McServersScanner.Core.Utils;
 
-internal class Program
+namespace McServersScanner;
+
+internal static class Program
 {
-    private static async Task Main(string[] args)
+    private static Scanner? scanner;
+
+    public static async Task Main(string[] args)
     {
-        ScannerConfiguration config;
+        Console.CancelKeyPress += OnExit;
+
+        ScannerBuilder scannerBuilder = new();
 
         //Parsing cmd params
         ParserResult<Options> result = Parser.Default.ParseArguments<Options>(args);
 
+        if (result.Errors.Any())
+            return;
+
         try
         {
-            config = parseResult(result);
+            transferParseResultsToBuilder(result, scannerBuilder);
         }
         catch (Exception ex)
         {
@@ -24,35 +33,25 @@ internal class Program
             return;
         }
 
-        if (result.Errors.Any())
-            return;
+        scanner = scannerBuilder.Build();
 
-        Console.CancelKeyPress += OnExit;
-
-        Scanner.ApplyConfiguration(config);
-
-        await Scanner.Scan();
+        await scanner.Scan();
     }
 
-    private static ScannerConfiguration parseResult(ParserResult<Options> result)
-    {
-        ScannerConfiguration config = new();
-
+    private static void transferParseResultsToBuilder(ParserResult<Options> result, ScannerBuilder builder) =>
         result.WithParsed(o =>
         {
             //Adding connection limit
-            int? conLimit = o.ConnectionLimit;
-
-            if (conLimit is not null)
-                config.ConnectionLimit = conLimit.Value;
+            if (o.ConnectionLimit.HasValue)
+                builder.ConnectionLimit = o.ConnectionLimit.Value;
 
             //Adding bandwidth limit
             string? bandwidthLimit = o.BandwidthLimit;
 
             if (!string.IsNullOrEmpty(bandwidthLimit))
-                config.BandwidthLimit = ParsingHelper.ConvertToNumberOfBytes(bandwidthLimit);
+                builder.BandwidthLimit = ParsingHelper.ConvertToNumberOfBytes(bandwidthLimit);
 
-            //Adding ports
+            //Adding Ports
             List<string>? portList = o.Ports?.ToList();
 
             if (portList?.Count > 0)
@@ -60,12 +59,11 @@ internal class Program
                 List<ushort> portUshort = new();
 
                 foreach (string portString in portList)
-                {
-                    if (portString.Contains('-')) //ports range
+                    if (portString.Contains('-')) //Ports range
                     {
                         string[] splitPorts = portString.Split('-');
 
-                        var range = NetworkHelper.FillPortRange(splitPorts[0], splitPorts[1]);
+                        IEnumerable<ushort>? range = NetworkHelper.FillPortRange(splitPorts[0], splitPorts[1]);
                         foreach (ushort port in range)
                             portUshort.Add(port);
                     }
@@ -76,23 +74,19 @@ internal class Program
 
                         portUshort.Add(ushort.Parse(portString));
                     }
-                }
 
-                config.Ports = portUshort.ToArray();
+                builder.Ports = portUshort.ToArray();
             }
 
             //Adding ips
-            config.Ips = new(new DataflowBlockOptions()
+            builder.Ips = new BufferBlock<IPAddress>(new DataflowBlockOptions()
             {
-                BoundedCapacity = config.ConnectionLimit ?? Scanner.ConnectionLimit
+                BoundedCapacity = builder.ConnectionLimit
             });
 
-            int portsCount = config.Ports?.Length ?? Scanner.PortsCount;
-
-            List<string> ipOptionRange = o.Range!.ToList();
+            string[] ipOptionRange = o.Range!.ToArray();
 
             foreach (string ipOption in ipOptionRange)
-            {
                 if (ipOption.Contains('-')) //ip range
                 {
                     string[] splitIps = ipOption.Split('-');
@@ -100,45 +94,39 @@ internal class Program
                     string firstIp = StringPool.Shared.GetOrAdd(splitIps[0]);
                     string lastIp = StringPool.Shared.GetOrAdd(splitIps[1]);
 
-                    config.TotalIps = NetworkHelper.GetIpRangeCount(firstIp, lastIp) * portsCount;
+                    builder.IpsCount = NetworkHelper.GetIpRangeCount(firstIp, lastIp);
 
-                    var range = NetworkHelper.FillIpRange(firstIp, lastIp);
+                    IEnumerable<IPAddress>? range = NetworkHelper.FillIpRange(firstIp, lastIp);
 
-                    config.AddIpAddresses = Task.Run(() => Scanner.CopyToActionBlockAsync(range, config.Ips));
+                    builder.AddIpAddresses = Task.Run(() => Scanner.CopyToBufferBlockAsync(range, builder.Ips));
                 }
                 else if (ipOption.Any(char.IsLetter)) //ips from file
                 {
-                    config.TotalIps = IOHelper.GetLinesCount(ipOption) * portsCount;
+                    builder.IpsCount = IOHelper.GetLinesCount(ipOption);
 
-                    var readIps = IOHelper.ReadLineByLine(ipOption);
+                    IEnumerable<string>? readIps = IOHelper.ReadLineByLine(ipOption);
 
-                    config.AddIpAddresses = Task.Run(() => Scanner.CopyToActionBlockAsync(from ip in readIps select IPAddress.Parse(ip), config.Ips));
+                    builder.AddIpAddresses = Task.Run(() =>
+                        Scanner.CopyToBufferBlockAsync(from ip in readIps select IPAddress.Parse(ip), builder.Ips));
                 }
                 else //single ip
                 {
-                    config.TotalIps = portsCount;
+                    builder.IpsCount = 1;
 
-                    config.Ips.Post(IPAddress.Parse(ipOption));
+                    builder.Ips.Post(IPAddress.Parse(ipOption));
                 }
-            }
 
             //Adding connection timeout
-            double? connectionTimeout = o.ConnectionTimeout;
-
-            if (connectionTimeout is not null)
-                config.Timeout = connectionTimeout.Value;
-
+            if (o.ConnectionTimeout.HasValue)
+                builder.Timeout = o.ConnectionTimeout.Value;
         });
-
-        return config;
-    }
 
     /// <summary>
     /// Save progress on program interruption (Ctrl+C)
     /// </summary>
-    private static void OnExit(object? sender, ConsoleCancelEventArgs e)
+    public static void OnExit(object? sender, ConsoleCancelEventArgs e)
     {
-        Scanner.ForceStop();
+        scanner?.ForceStop();
         Environment.Exit(0);
     }
 }

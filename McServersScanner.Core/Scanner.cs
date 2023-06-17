@@ -15,7 +15,7 @@ namespace McServersScanner.Core;
 /// <remarks>
 /// Only one instance of this class can exist in application
 /// </remarks>
-public sealed class Scanner
+public sealed class Scanner : IScannerOptions
 {
     /// <summary>
     /// Maximum number of connections available at the same time
@@ -37,6 +37,11 @@ public sealed class Scanner
     /// </summary>
     private bool forceStop;
 
+    public BufferBlock<IPAddress> Ips
+    {
+        get => ips;
+    }
+
     /// <summary>
     /// Block of Ips to scan
     /// </summary>
@@ -45,7 +50,7 @@ public sealed class Scanner
     /// <summary>
     /// Array of ports to scan
     /// </summary>
-    internal ushort[] Ports { get; init; } = null!;
+    public ushort[] Ports { get; internal init; } = null!;
 
     /// <summary>
     /// Block of information about scanned servers
@@ -55,7 +60,7 @@ public sealed class Scanner
     /// <summary>
     /// Connection timeout in seconds
     /// </summary>
-    internal double Timeout { get; init; }
+    public double Timeout { get; internal init; }
 
     /// <summary>
     /// List of clients
@@ -65,12 +70,12 @@ public sealed class Scanner
     /// <summary>
     /// Supplies <see cref="ips"/> with <see cref="IPAddress"/>
     /// </summary>
-    internal Task AddIpAddresses { get; init; } = null!;
+    public Task AddIpAddresses { get; internal init; } = null!;
 
     /// <summary>
     /// The number of ips to scan
     /// </summary>
-    internal long TotalIps { get; init; }
+    public long TotalIps { get; internal init; }
 
     /// <summary>
     /// Amount of ips being scanned
@@ -108,6 +113,7 @@ public sealed class Scanner
 
             currentRatio = calculateRatio(scannedIps, TotalIps);
 
+            //TODO: This shouldn't be bound to Console class. Change to Logger or any type of writable stream 
             Console.Write("\r{0:0.00}% - {1}/{2}", currentRatio, scannedIps, TotalIps);
 
             await Task.Delay(100);
@@ -188,7 +194,7 @@ public sealed class Scanner
                 }
                 catch
                 {
-                    // ignored
+                    // TODO: Add logging
                 }
             }
     }
@@ -225,7 +231,7 @@ public sealed class Scanner
             }
             catch
             {
-                // ignored
+                // TODO: Add logging
             }
 
         try
@@ -234,7 +240,7 @@ public sealed class Scanner
         }
         catch
         {
-            // ignored
+            // TODO: Add logging
         }
 
         client.Dispose();

@@ -2,6 +2,7 @@
 using System.Net;
 using System.Threading.Tasks.Dataflow;
 using CommunityToolkit.HighPerformance.Buffers;
+using McServersScanner.Core.IO;
 using McServersScanner.Core.IO.Database;
 using McServersScanner.Core.IO.Database.Models;
 using McServersScanner.Core.Network;

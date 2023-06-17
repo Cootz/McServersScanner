@@ -3,43 +3,40 @@ using System.Threading.Tasks.Dataflow;
 
 namespace McServersScanner.Core;
 
-/// <summary>
-/// Provide variables for using various scanner options
-/// </summary>
-public class ScannerConfiguration
+public interface IScannerOptions
 {
     /// <summary>
     /// Block of Ips to scan
     /// </summary>
-    public BufferBlock<IPAddress> Ips = null!;
+    BufferBlock<IPAddress> Ips { get; }
 
     /// <summary>
-    /// Array of ports to scan
+    /// Array of Ports to scan
     /// </summary>
-    public ushort[]? Ports = null;
+    ushort[] Ports { get; }
 
     /// <summary>
     /// Amount of active connections app can handle at the same time
     /// </summary>
-    public int? ConnectionLimit = null;
+    int ConnectionLimit { get; }
 
     /// <summary>
     /// Amount of bytes send/received by network per second
     /// </summary>
-    public int? BandwidthLimit = null;
+    int BandwidthLimit { get; }
 
     /// <summary>
     /// Connection timeout in seconds
     /// </summary>
-    public double? Timeout = null;
+    double Timeout { get; }
 
     /// <summary>
     /// Supplies <see cref="Ips"/> with <see cref="IPAddress"/>
     /// </summary>
-    public Task? AddIpAddresses = null;
+    Task AddIpAddresses { get; }
 
     /// <summary>
     /// Amount of ips to scan
     /// </summary>
-    public long? TotalIps = null;
+    long TotalIps { get; }
 }

@@ -13,27 +13,9 @@ public class ScannerTest
     [Test]
     public void NormalScannerRun()
     {
-        ScannerConfiguration scannerConfiguration = new()
-        {
-            Ips = new BufferBlock<IPAddress>(new DataflowBlockOptions
-            {
-                BoundedCapacity = Scanner.ConnectionLimit
-            })
-        };
+        Scanner scanner = createBuilder().Build();
 
-        string ipStartAddress = "127.0.0.1";
-        string ipEndAddress = "127.0.1.254";
-
-        IEnumerable<IPAddress> iPs = NetworkHelper.FillIpRange(ipStartAddress, ipEndAddress);
-        long ipCount = NetworkHelper.GetIpRangeCount(ipStartAddress, ipEndAddress);
-
-        scannerConfiguration.TotalIps = ipCount;
-        scannerConfiguration.AddIpAddresses =
-            Task.Run(() => Scanner.CopyToActionBlockAsync(iPs, scannerConfiguration.Ips));
-
-        Scanner.ApplyConfiguration(scannerConfiguration);
-
-        Assert.DoesNotThrowAsync(async () => await Scanner.Scan());
+        Assert.DoesNotThrowAsync(async () => await scanner.Scan());
 
         Assert.That(File.Exists(DatabaseController.DatabasePath));
     }
@@ -41,12 +23,25 @@ public class ScannerTest
     [Test]
     public async Task ScannerRunWithForceStop()
     {
-        ScannerConfiguration scannerConfiguration = new()
+        Scanner scanner = createBuilder().Build();
+
+        Task scan = scanner.Scan();
+
+        await Task.Delay(90);
+
+        Assert.DoesNotThrow(scanner.ForceStop);
+    }
+
+    private static ScannerBuilder createBuilder()
+    {
+        ScannerBuilder builder = new()
         {
             Ips = new BufferBlock<IPAddress>(new DataflowBlockOptions
             {
-                BoundedCapacity = Scanner.ConnectionLimit
-            })
+                BoundedCapacity = ScannerBuilder.DEFAULT_CONNECTION_LIMIT
+            }),
+            Timeout = 0.3d,
+            ConnectionLimit = 100
         };
 
         const string ipStartAddress = "127.0.0.1";
@@ -55,17 +50,11 @@ public class ScannerTest
         IEnumerable<IPAddress> iPs = NetworkHelper.FillIpRange(ipStartAddress, ipEndAddress);
         long ipCount = NetworkHelper.GetIpRangeCount(ipStartAddress, ipEndAddress);
 
-        scannerConfiguration.TotalIps = ipCount;
-        scannerConfiguration.AddIpAddresses =
-            Task.Run(() => Scanner.CopyToActionBlockAsync(iPs, scannerConfiguration.Ips));
+        builder.IpsCount = ipCount;
+        builder.AddIpAddresses =
+            Task.Run(() => Scanner.CopyToBufferBlockAsync(iPs, builder.Ips));
 
-        Scanner.ApplyConfiguration(scannerConfiguration);
-
-        Task scan = Scanner.Scan();
-
-        await Task.Delay(90);
-
-        Assert.DoesNotThrow(Scanner.ForceStop);
+        return builder;
     }
 
     [TearDown]
@@ -74,7 +63,5 @@ public class ScannerTest
         DatabaseController controller = new();
 
         controller.RealmQuery((realm) => { realm.WriteAsync(realm.RemoveAll<ServerInfo>); });
-
-        Scanner.Reset();
     }
 }

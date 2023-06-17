@@ -15,94 +15,83 @@ namespace McServersScanner.Core;
 /// <remarks>
 /// Only one instance of this class can exist in application
 /// </remarks>
-public static class Scanner
+public sealed class Scanner : IScannerOptions
 {
-    /// <summary>
-    /// Number of ports to scan
-    /// </summary>
-    public static int PortsCount
-    {
-        get => ports.Length;
-    }
-
     /// <summary>
     /// Maximum number of connections available at the same time
     /// </summary>
-    public static int ConnectionLimit { get; private set; } = 1000;
+    public int ConnectionLimit { get; internal init; }
 
     /// <summary>
     /// Maximum number of bytes scanner can sent/receive by network per second
     /// </summary>
-    public static int BandwidthLimit { get; private set; } = 1024 * 1024;
+    public int BandwidthLimit { get; internal init; }
 
     /// <summary>
     /// Exit database thread if true
     /// </summary>
-    private static bool endDBThread;
+    private bool endDBThread;
 
     /// <summary>
     /// Force running scanner to stop
     /// </summary>
-    private static bool forceStop;
+    private bool forceStop;
+
+    public BufferBlock<IPAddress> Ips
+    {
+        get => ips;
+    }
 
     /// <summary>
     /// Block of Ips to scan
     /// </summary>
-    private static BufferBlock<IPAddress> ips = null!;
+    private readonly BufferBlock<IPAddress> ips;
 
     /// <summary>
     /// Array of ports to scan
     /// </summary>
-    private static ushort[] ports = { 25565 };
+    public ushort[] Ports { get; internal init; } = null!;
 
     /// <summary>
     /// Block of information about scanned servers
     /// </summary>
-    private static BufferBlock<ServerInfo> serverInfos = new();
+    private readonly BufferBlock<ServerInfo> serverInfos = new();
 
     /// <summary>
     /// Connection timeout in seconds
     /// </summary>
-    private static double timeout = 10;
+    public double Timeout { get; internal init; }
 
     /// <summary>
     /// List of clients
     /// </summary>
-    private static ConcurrentDictionary<DateTime, McClient> clients = new();
+    private readonly ConcurrentDictionary<DateTime, McClient> clients = new();
 
     /// <summary>
     /// Supplies <see cref="ips"/> with <see cref="IPAddress"/>
     /// </summary>
-    private static Task addIpAddresses = Task.CompletedTask;
+    public Task AddIpAddresses { get; internal init; } = null!;
 
     /// <summary>
     /// The number of ips to scan
     /// </summary>
-    private static long totalIps;
+    public long TotalIps { get; internal init; }
 
     /// <summary>
     /// Amount of ips being scanned
     /// </summary>
-    private static long scannedIps;
+    private long scannedIps;
 
-    /// <summary>
-    /// Applies scanner configuration
-    /// </summary>
-    public static void ApplyConfiguration(ScannerConfiguration configuration)
+    internal Scanner(BufferBlock<IPAddress> ips)
     {
-        ips = configuration.Ips;
-        ports = configuration.Ports ?? ports;
-        ConnectionLimit = configuration.ConnectionLimit ?? ConnectionLimit;
-        BandwidthLimit = configuration.BandwidthLimit ?? BandwidthLimit;
-        timeout = configuration.Timeout ?? timeout;
-        addIpAddresses = configuration.AddIpAddresses ?? addIpAddresses;
-        totalIps = configuration.TotalIps ?? totalIps;
+        this.ips = ips;
+        updateDB = new Lazy<Thread>(() => new Thread(updateDatabase));
     }
 
     /// <summary>
     /// Start scanning
     /// </summary>
-    public static async Task Scan()
+    public async Task Scan()
     {
         _ = new ThrottleManager(BandwidthLimit);
 
@@ -110,33 +99,36 @@ public static class Scanner
         double currentRatio;
 
         //Starting update db thread
-        updateDb.Start();
+        updateDB.Value.Start();
 
         //Running workers
         Task writer = Task.Run(WriterAsync);
         Task reader = Task.Run(ReaderAsync);
 
         //Showing progress
-        while (scannedIps < totalIps)
+        while (scannedIps < TotalIps)
         {
             if (forceStop)
                 return;
 
-            currentRatio = calculateRatio(scannedIps, totalIps);
+            currentRatio = calculateRatio(scannedIps, TotalIps);
 
-            Console.Write("\r{0:0.00}% - {1}/{2}", currentRatio, scannedIps, totalIps);
+            //TODO: This shouldn't be bound to Console class. Change to Logger or any type of writable stream 
+            Console.Write("\r{0:0.00}% - {1}/{2}", currentRatio, scannedIps, TotalIps);
 
-            await Task.Delay(100);
+            await Task.Delay(100); //TODO: this is pretty weird way to show progress
         }
 
-        currentRatio = calculateRatio(scannedIps, totalIps);
-        Console.WriteLine("{0:0.00}% - {1}/{2}", currentRatio, scannedIps, totalIps);
+        currentRatio = calculateRatio(scannedIps, TotalIps);
+        Console.WriteLine("{0:0.00}% - {1}/{2}", currentRatio, scannedIps, TotalIps);
         Console.WriteLine("Waiting for the results...");
 
-        await Task.WhenAll(writer, reader, addIpAddresses); //awaiting for results
+        await Task.WhenAll(writer, reader, AddIpAddresses); //awaiting for results
 
         endDBThread = true; //exiting db thread
-        updateDb.Join();
+        updateDB.Value.Join();
+
+        static double calculateRatio(double currentInQueue, double length) => currentInQueue / length * 100.0;
     }
 
     /// <summary>
@@ -145,9 +137,9 @@ public static class Scanner
     /// <remarks>
     /// This task runs in different thread
     /// </remarks>
-    public static async Task ReaderAsync()
+    public async Task ReaderAsync()
     {
-        TimeSpan timeToConnect = TimeSpan.FromSeconds(timeout);
+        TimeSpan timeToConnect = TimeSpan.FromSeconds(Timeout);
 
         do
         {
@@ -156,7 +148,7 @@ public static class Scanner
                 IEnumerable<KeyValuePair<DateTime, McClient>> timeoutClients =
                     from c in clients where DateTime.Now - c.Key > timeToConnect select c;
 
-                foreach ((DateTime startTime, McClient? client) in clients)
+                foreach ((DateTime startTime, McClient? client) in timeoutClients)
                 {
                     if (forceStop)
                         return;
@@ -169,7 +161,7 @@ public static class Scanner
             }
 
             await Task.Delay(TimeSpan.FromMilliseconds(100));
-        } while (totalIps - scannedIps > 0);
+        } while (TotalIps - scannedIps > 0);
     }
 
     /// <summary>
@@ -178,12 +170,12 @@ public static class Scanner
     /// <remarks>
     /// This task runs in different thread
     /// </remarks>
-    public static async Task WriterAsync()
+    public async Task WriterAsync()
     {
         long addedIps = 0;
 
-        while (totalIps - addedIps > 0)
-            foreach (ushort port in ports)
+        while (TotalIps - addedIps > 0)
+            foreach (ushort port in Ports)
             {
                 if (forceStop)
                     return;
@@ -204,7 +196,7 @@ public static class Scanner
                 }
                 catch
                 {
-                    // ignored
+                    // TODO: Add logging
                 }
             }
     }
@@ -213,7 +205,7 @@ public static class Scanner
     /// Callback for <see cref="McClient.ConnectionCallBack"/>. Sends server info and receives answer
     /// </summary>
     /// <param name="result"></param>
-    public static async void OnConnected(IAsyncResult result)
+    public async void OnConnected(IAsyncResult result)
     {
         if (result.AsyncState is null)
             return;
@@ -241,7 +233,7 @@ public static class Scanner
             }
             catch
             {
-                // ignored
+                // TODO: Add logging
             }
 
         try
@@ -250,7 +242,7 @@ public static class Scanner
         }
         catch
         {
-            // ignored
+            // TODO: Add logging
         }
 
         client.Dispose();
@@ -259,87 +251,48 @@ public static class Scanner
     /// <summary>
     /// Thread with database. Update database with scanned data
     /// </summary>
-    private static Thread updateDb = new(updateDatabase);
+    private readonly Lazy<Thread> updateDB;
 
-    private static void updateDatabase()
+    private async void updateDatabase()
     {
         DatabaseController database = new();
 
         while (!endDBThread)
         {
-            int collectedInfosCount = serverInfos.Count;
-
-            while (collectedInfosCount > 0)
+            try
             {
-                try
-                {
-                    database.Add(serverInfos.ReceiveAsync().Result).Wait();
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine("{0}: {1}; {2}", ex.Source, ex.Message, ex.InnerException?.Message ?? "");
-                }
-
-                collectedInfosCount--;
+                await database.Add(await serverInfos.ReceiveAsync());
             }
-
-            Thread.Sleep(100);
+            catch (Exception ex)
+            {
+                Console.WriteLine("{0}: {1}; {2}", ex.Source, ex.Message, ex.InnerException?.Message ?? "");
+            }
         }
     }
 
     /// <summary>
-    /// Asynchronously copy data from enumerable to actionBlock
+    /// Asynchronously copy data from enumerable to buffer block
     /// </summary>
     /// <typeparam name="T">Type of class to copy</typeparam>
     /// <param name="typeEnumerable">Copy from</param>
-    /// <param name="typeActionBlock">Copy to</param>
-    public static async Task CopyToActionBlockAsync<T>(IEnumerable<T> typeEnumerable, BufferBlock<T> typeActionBlock)
+    /// <param name="bufferBlock">Copy to</param>
+    public static async Task CopyToBufferBlockAsync<T>(IEnumerable<T> typeEnumerable, BufferBlock<T> bufferBlock)
         where T : class
     {
         foreach (T item in typeEnumerable)
-            await typeActionBlock.SendAsync(item);
+            await bufferBlock.SendAsync(item);
     }
 
     /// <summary>
     /// Force all running tasks and threads to stop
     /// </summary>
-    public static void ForceStop()
+    public void ForceStop()
     {
         endDBThread = true;
         forceStop = true;
 
         Console.WriteLine("\nStopping application...");
 
-        updateDb.Join();
-    }
-
-    /// <summary>
-    /// Calculates percentage ratio of servers scanning progress
-    /// </summary>
-    /// <param name="currentInQueue">Current position in queue</param>
-    /// <param name="length">Length of queue</param>
-    /// <returns>Progress percentage rounded to 2 digits</returns>
-    private static double calculateRatio(double currentInQueue, double length) => currentInQueue / length * 100.0;
-
-    /// <summary>
-    /// Resets scanner to default state.
-    /// <para><b>FOR TESTING PURPOSE ONLY</b></para>
-    /// </summary>
-    public static void Reset()
-    {
-        endDBThread = false;
-        forceStop = false;
-        ips = null!;
-        ports = new ushort[] { 25565 };
-        serverInfos = new BufferBlock<ServerInfo>();
-        ConnectionLimit = 1000;
-        BandwidthLimit = 1024 * 1024;
-        timeout = 10;
-        clients = new ConcurrentDictionary<DateTime, McClient>();
-        addIpAddresses = Task.CompletedTask;
-        totalIps = 0;
-        scannedIps = 0;
-
-        updateDb = new Thread(updateDatabase);
+        updateDB.Value.Join();
     }
 }

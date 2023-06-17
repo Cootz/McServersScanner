@@ -19,7 +19,7 @@ namespace McServersScanner.Tests.IO.Database.Models
         {
             ServerInfo serverInfo = new(ServerInfoDataSource.JSON_SERVER_INFO, ServerInfoDataSource.SERVER_INFO_IP);
 
-            bool equal = (serverInfo as IServerInfo).Equals((IServerInfo)ServerInfoDataSource.TestServerInfo);
+            bool equal = (serverInfo as IServerInfo).Equals(ServerInfoDataSource.TestServerInfo);
 
             Assert.That(equal, Is.True);
         }

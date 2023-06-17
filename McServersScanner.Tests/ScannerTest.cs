@@ -32,7 +32,7 @@ public class ScannerTest
         Assert.DoesNotThrow(scanner.ForceStop);
     }
 
-    private ScannerBuilder createBuilder()
+    private static ScannerBuilder createBuilder()
     {
         ScannerBuilder builder = new()
         {
@@ -40,7 +40,8 @@ public class ScannerTest
             {
                 BoundedCapacity = ScannerBuilder.DEFAULT_CONNECTION_LIMIT
             }),
-            Timeout = 1
+            Timeout = 0.3d,
+            ConnectionLimit = 100
         };
 
         const string ipStartAddress = "127.0.0.1";

@@ -251,29 +251,20 @@ public sealed class Scanner : IScannerOptions
     /// </summary>
     private readonly Lazy<Thread> updateDB;
 
-    private void updateDatabase()
+    private async void updateDatabase()
     {
         DatabaseController database = new();
 
         while (!endDBThread)
         {
-            int collectedInfosCount = serverInfos.Count;
-
-            while (collectedInfosCount > 0)
+            try
             {
-                try
-                {
-                    database.Add(serverInfos.ReceiveAsync().Result).Wait();
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine("{0}: {1}; {2}", ex.Source, ex.Message, ex.InnerException?.Message ?? "");
-                }
-
-                collectedInfosCount--;
+                await database.Add(await serverInfos.ReceiveAsync());
             }
-
-            Thread.Sleep(100);
+            catch (Exception ex)
+            {
+                Console.WriteLine("{0}: {1}; {2}", ex.Source, ex.Message, ex.InnerException?.Message ?? "");
+            }
         }
     }
 

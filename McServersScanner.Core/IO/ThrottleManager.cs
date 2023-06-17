@@ -1,4 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
+using System.Timers;
 
 namespace McServersScanner.Core.IO;
 
@@ -10,6 +11,8 @@ public class ThrottleManager
 
     public readonly int MaxBytesPerSecond;
 
+    private TaskCompletionSource tcs = new();
+
     public ThrottleManager(int maxBytesPerSecond)
     {
         MaxBytesPerSecond = maxBytesPerSecond;
@@ -18,7 +21,12 @@ public class ThrottleManager
 
         timer.Interval = 1000;
         timer.AutoReset = true;
-        timer.Elapsed += (_, _) => CurrentQuota = MaxBytesPerSecond;
+        timer.Elapsed += (_, _) =>
+        {
+            CurrentQuota = MaxBytesPerSecond;
+            tcs.SetResult();
+            tcs = new TaskCompletionSource();
+        };
 
         timer.Start();
     }
@@ -40,31 +48,5 @@ public class ThrottleManager
         return true;
     }
 
-    public TaskAwaiter GetAwaiter() =>
-        Task.Run(() => SpinWait.SpinUntil(() => CurrentQuota == MaxBytesPerSecond)).GetAwaiter();
-
-    public class ThrottleAwaiter : ICriticalNotifyCompletion, INotifyCompletion
-    {
-        private readonly ThrottleManager manager;
-
-        public ThrottleAwaiter(ThrottleManager manager) => this.manager = manager;
-
-        public void GetResult()
-        {
-        }
-
-        public bool IsCompleted
-        {
-            get => manager.CurrentQuota == manager.MaxBytesPerSecond;
-        }
-
-        public void OnCompleted(Action continuation)
-        {
-        }
-
-        public void UnsafeOnCompleted(Action continuation)
-        {
-            throw new NotImplementedException();
-        }
-    }
+    public TaskAwaiter GetAwaiter() => tcs.Task.GetAwaiter();
 }

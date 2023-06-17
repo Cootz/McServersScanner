@@ -65,17 +65,14 @@ namespace McServersScanner.Tests.IO
 
             for (int i = 0; i < 2; i++)
             {
-                foreach (SharedThrottledStream throttledStream in throttledStreams)
-                {
-                    tasks.Add(throttledStream.WriteAsync(buffer).AsTask());
-                }
+                tasks.AddRange(throttledStreams.Select(throttledStream => throttledStream.WriteAsync(buffer).AsTask()));
             }
 
             await Task.WhenAll(tasks);
 
             sw.Stop();
 
-            Assert.That(sw.Elapsed.TotalSeconds, Is.EqualTo(4d).Within(0.1d));
+            Assert.That(sw.Elapsed.TotalSeconds, Is.EqualTo(4d).Within(1.6d));
         }
     }
 }

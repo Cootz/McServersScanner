@@ -98,7 +98,7 @@ internal static class Program
 
                     IEnumerable<IPAddress>? range = NetworkHelper.FillIpRange(firstIp, lastIp);
 
-                    builder.AddIpAddresses = Task.Run(() => Scanner.CopyToActionBlockAsync(range, builder.Ips));
+                    builder.AddIpAddresses = Task.Run(() => Scanner.CopyToBufferBlockAsync(range, builder.Ips));
                 }
                 else if (ipOption.Any(char.IsLetter)) //ips from file
                 {
@@ -107,7 +107,7 @@ internal static class Program
                     IEnumerable<string>? readIps = IOHelper.ReadLineByLine(ipOption);
 
                     builder.AddIpAddresses = Task.Run(() =>
-                        Scanner.CopyToActionBlockAsync(from ip in readIps select IPAddress.Parse(ip), builder.Ips));
+                        Scanner.CopyToBufferBlockAsync(from ip in readIps select IPAddress.Parse(ip), builder.Ips));
                 }
                 else //single ip
                 {

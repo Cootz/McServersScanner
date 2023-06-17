@@ -127,6 +127,8 @@ public sealed class Scanner : IScannerOptions
 
         endDBThread = true; //exiting db thread
         updateDB.Value.Join();
+
+        static double calculateRatio(double currentInQueue, double length) => currentInQueue / length * 100.0;
     }
 
     /// <summary>
@@ -269,16 +271,16 @@ public sealed class Scanner : IScannerOptions
     }
 
     /// <summary>
-    /// Asynchronously copy data from enumerable to actionBlock
+    /// Asynchronously copy data from enumerable to buffer block
     /// </summary>
     /// <typeparam name="T">Type of class to copy</typeparam>
     /// <param name="typeEnumerable">Copy from</param>
-    /// <param name="typeActionBlock">Copy to</param>
-    public static async Task CopyToActionBlockAsync<T>(IEnumerable<T> typeEnumerable, BufferBlock<T> typeActionBlock)
+    /// <param name="bufferBlock">Copy to</param>
+    public static async Task CopyToBufferBlockAsync<T>(IEnumerable<T> typeEnumerable, BufferBlock<T> bufferBlock)
         where T : class
     {
         foreach (T item in typeEnumerable)
-            await typeActionBlock.SendAsync(item);
+            await bufferBlock.SendAsync(item);
     }
 
     /// <summary>
@@ -293,12 +295,4 @@ public sealed class Scanner : IScannerOptions
 
         updateDB.Value.Join();
     }
-
-    /// <summary>
-    /// Calculates percentage ratio of servers scanning progress
-    /// </summary>
-    /// <param name="currentInQueue">Current position in queue</param>
-    /// <param name="length">Length of queue</param>
-    /// <returns>Progress percentage rounded to 2 digits</returns>
-    private double calculateRatio(double currentInQueue, double length) => currentInQueue / length * 100.0;
 }

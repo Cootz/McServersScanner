@@ -51,7 +51,7 @@ public class ScannerTest
 
         builder.IpsCount = ipCount;
         builder.AddIpAddresses =
-            Task.Run(() => Scanner.CopyToActionBlockAsync(iPs, builder.Ips));
+            Task.Run(() => Scanner.CopyToBufferBlockAsync(iPs, builder.Ips));
 
         return builder;
     }

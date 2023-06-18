@@ -1,5 +1,4 @@
 ﻿using System.Runtime.CompilerServices;
-using System.Timers;
 
 namespace McServersScanner.Core.IO;
 

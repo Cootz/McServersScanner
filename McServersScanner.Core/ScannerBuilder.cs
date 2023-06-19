@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using System.Net.Http.Headers;
 using System.Threading.Tasks.Dataflow;
 using McServersScanner.Core.IO;
 using Microsoft.Extensions.DependencyInjection;
@@ -63,7 +64,10 @@ public sealed class ScannerBuilder : IScannerOptions
     /// <returns>A configured <see cref="Scanner"/></returns>
     public Scanner Build()
     {
-        hostBuilder.ConfigureServices(services => { services.AddSingleton<ThrottleManager>(); });
+        hostBuilder.ConfigureServices(services =>
+            {
+                services.AddSingleton<ThrottleManager>(_ => new ThrottleManager(ConnectionLimit));
+            });
 
         IHost host = hostBuilder.Build();
 

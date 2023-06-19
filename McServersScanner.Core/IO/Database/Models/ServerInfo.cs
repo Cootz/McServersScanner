@@ -8,15 +8,15 @@ namespace McServersScanner.Core.IO.Database.Models;
 /// </summary>
 public class ServerInfo : RealmObject, IServerInfo
 {
-    [MapTo("IP")] [PrimaryKey] public string Ip { get; internal set; }
+    [MapTo("IP")] [PrimaryKey] public string Ip { get; internal set; } = string.Empty;
 
-    public Version Version { get; set; }
+    public Version Version { get; set; } = null!;
 
     public int? Online { get; set; }
 
-    public string Description { get; set; }
+    public string Description { get; set; } = null!;
 
-    public string JsonInfo { get; set; }
+    public string JsonInfo { get; set; } = null!;
 
     private ServerInfo()
     {

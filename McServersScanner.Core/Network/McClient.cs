@@ -40,14 +40,17 @@ public class McClient : IDisposable
     /// </summary>
     public int BandwidthLimit { get; init; }
 
-    public McClient(string ip, ushort port) : this(IPAddress.Parse(ip), port)
+    private readonly IServiceProvider services;
+
+    public McClient(string ip, ushort port, IServiceProvider services) : this(IPAddress.Parse(ip), port, services)
     {
     }
 
-    public McClient(IPAddress ip, ushort port)
+    public McClient(IPAddress ip, ushort port, IServiceProvider services)
     {
         IpEndPoint = new IPEndPoint(ip, port);
         client = new TcpClient(IpEndPoint.AddressFamily);
+        this.services = services;
     }
 
     /// <summary>

@@ -42,7 +42,7 @@ public sealed class Scanner : IScannerOptions
         get => ips;
     }
 
-    private IServiceProvider services { get; }
+    private readonly IServiceProvider services;
 
     /// <summary>
     /// Block of Ips to scan
@@ -185,7 +185,7 @@ public sealed class Scanner : IScannerOptions
 
                 while (clients.Count >= ConnectionLimit) await Task.Delay(50);
 
-                McClient client = new(await ips.ReceiveAsync(), port)
+                McClient client = new(await ips.ReceiveAsync(), port, services)
                 {
                     ConnectionCallBack = OnConnected,
                     BandwidthLimit = BandwidthLimit / ConnectionLimit

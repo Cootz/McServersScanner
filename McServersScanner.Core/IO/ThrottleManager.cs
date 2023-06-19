@@ -4,13 +4,6 @@ namespace McServersScanner.Core.IO;
 
 public class ThrottleManager
 {
-    private static ThrottleManager? instance;
-
-    public static ThrottleManager Instance
-    {
-        get => instance ??= new ThrottleManager(ScannerBuilder.DEFAULT_BANDWIDTH_LIMIT);
-    }
-
     public int CurrentQuota;
 
     private readonly System.Timers.Timer timer = new();

@@ -1,5 +1,7 @@
 ﻿using System.Net;
 using System.Threading.Tasks.Dataflow;
+using McServersScanner.Core.IO;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 namespace McServersScanner.Core;
@@ -61,6 +63,8 @@ public sealed class ScannerBuilder : IScannerOptions
     /// <returns>A configured <see cref="Scanner"/></returns>
     public Scanner Build()
     {
+        hostBuilder.ConfigureServices(services => { services.AddSingleton<ThrottleManager>(); });
+
         IHost host = hostBuilder.Build();
 
         Scanner builtScanner = new(Ips, host.Services)

@@ -65,9 +65,9 @@ public sealed class ScannerBuilder : IScannerOptions
     public Scanner Build()
     {
         hostBuilder.ConfigureServices(services =>
-            {
-                services.AddSingleton<ThrottleManager>(_ => new ThrottleManager(ConnectionLimit));
-            });
+        {
+            services.AddSingleton<IThrottleManager, ThrottleManager>(_ => new ThrottleManager(ConnectionLimit));
+        });
 
         IHost host = hostBuilder.Build();
 

@@ -1,4 +1,5 @@
 ﻿using McServersScanner.Core.Network;
+using NSubstitute;
 
 namespace McServersScanner.Tests.Network
 {
@@ -10,7 +11,7 @@ namespace McServersScanner.Tests.Network
         {
             const string targetIp = "87.98.151.173";
 
-            McClient client = new(targetIp, 25565)
+            McClient client = new(targetIp, 25565, Substitute.For<IServiceProvider>())
             {
                 BandwidthLimit = 1000
             };

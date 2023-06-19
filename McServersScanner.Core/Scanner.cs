@@ -42,6 +42,8 @@ public sealed class Scanner : IScannerOptions
         get => ips;
     }
 
+    private readonly IServiceProvider services;
+
     /// <summary>
     /// Block of Ips to scan
     /// </summary>
@@ -82,10 +84,11 @@ public sealed class Scanner : IScannerOptions
     /// </summary>
     private long scannedIps;
 
-    internal Scanner(BufferBlock<IPAddress> ips)
+    internal Scanner(BufferBlock<IPAddress> ips, IServiceProvider services)
     {
         this.ips = ips;
         updateDB = new Lazy<Thread>(() => new Thread(updateDatabase));
+        this.services = services;
     }
 
     /// <summary>
@@ -182,7 +185,7 @@ public sealed class Scanner : IScannerOptions
 
                 while (clients.Count >= ConnectionLimit) await Task.Delay(50);
 
-                McClient client = new(await ips.ReceiveAsync(), port)
+                McClient client = new(await ips.ReceiveAsync(), port, services)
                 {
                     ConnectionCallBack = OnConnected,
                     BandwidthLimit = BandwidthLimit / ConnectionLimit

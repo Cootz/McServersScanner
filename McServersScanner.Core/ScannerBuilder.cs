@@ -1,5 +1,4 @@
 ﻿using System.Net;
-using System.Net.Http.Headers;
 using System.Threading.Tasks.Dataflow;
 using McServersScanner.Core.IO;
 using Microsoft.Extensions.DependencyInjection;
@@ -45,7 +44,7 @@ public sealed class ScannerBuilder : IScannerOptions
     /// </summary>
     public Task AddIpAddresses { get; set; } = Task.CompletedTask;
 
-    private IHostBuilder hostBuilder = Host.CreateDefaultBuilder();
+    private readonly IHostBuilder hostBuilder = Host.CreateDefaultBuilder();
 
     public long TotalIps
     {

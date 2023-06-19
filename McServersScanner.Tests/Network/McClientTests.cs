@@ -1,4 +1,6 @@
-﻿using McServersScanner.Core.Network;
+﻿using McServersScanner.Core;
+using McServersScanner.Core.IO;
+using McServersScanner.Core.Network;
 using NSubstitute;
 
 namespace McServersScanner.Tests.Network
@@ -11,7 +13,12 @@ namespace McServersScanner.Tests.Network
         {
             const string targetIp = "87.98.151.173";
 
-            McClient client = new(targetIp, 25565, Substitute.For<IServiceProvider>())
+            IServiceProvider services = Substitute.For<IServiceProvider>();
+
+            services.GetService(Arg.Any<Type>())
+                .ReturnsForAnyArgs(new ThrottleManager(ScannerBuilder.DEFAULT_BANDWIDTH_LIMIT));
+
+            McClient client = new(targetIp, 25565, services)
             {
                 BandwidthLimit = 1000
             };

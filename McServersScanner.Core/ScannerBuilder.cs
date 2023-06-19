@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using System.Threading.Tasks.Dataflow;
+using Microsoft.Extensions.Hosting;
 
 namespace McServersScanner.Core;
 
@@ -40,6 +41,8 @@ public sealed class ScannerBuilder : IScannerOptions
     /// </summary>
     public Task AddIpAddresses { get; set; } = Task.CompletedTask;
 
+    private IHostBuilder hostBuilder = Host.CreateDefaultBuilder();
+
     public long TotalIps
     {
         get => IpsCount
@@ -57,7 +60,9 @@ public sealed class ScannerBuilder : IScannerOptions
     /// <returns>A configured <see cref="Scanner"/></returns>
     public Scanner Build()
     {
-        Scanner builtScanner = new(Ips)
+        IHost host = hostBuilder.Build();
+
+        Scanner builtScanner = new(Ips, host.Services)
         {
             Ports = Ports,
             ConnectionLimit = ConnectionLimit,

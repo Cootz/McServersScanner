@@ -42,6 +42,8 @@ public sealed class Scanner : IScannerOptions
         get => ips;
     }
 
+    private IServiceProvider services { get; }
+
     /// <summary>
     /// Block of Ips to scan
     /// </summary>
@@ -82,10 +84,11 @@ public sealed class Scanner : IScannerOptions
     /// </summary>
     private long scannedIps;
 
-    internal Scanner(BufferBlock<IPAddress> ips)
+    internal Scanner(BufferBlock<IPAddress> ips, IServiceProvider services)
     {
         this.ips = ips;
         updateDB = new Lazy<Thread>(() => new Thread(updateDatabase));
+        this.services = services;
     }
 
     /// <summary>

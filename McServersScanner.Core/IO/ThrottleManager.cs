@@ -2,7 +2,10 @@
 
 namespace McServersScanner.Core.IO;
 
-public class ThrottleManager
+/// <summary>
+/// Handle throttling from multiple <see cref="SharedThrottledStream"/>
+/// </summary>
+public class ThrottleManager : IThrottleManager
 {
     public int CurrentQuota;
 

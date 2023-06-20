@@ -11,7 +11,7 @@ public class ThrottleManager : IThrottleManager
 
     private readonly System.Timers.Timer timer = new();
 
-    public readonly int MaxBytesPerSecond;
+    public int MaxBytesPerSecond { get; }
 
     private TaskCompletionSource tcs = new();
 

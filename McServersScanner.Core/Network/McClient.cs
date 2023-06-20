@@ -41,7 +41,7 @@ public class McClient : IDisposable
     /// </summary>
     public int BandwidthLimit { get; init; }
 
-    private readonly ThrottleManager manager;
+    private readonly IThrottleManager manager;
 
     public McClient(string ip, ushort port, IServiceProvider services) : this(IPAddress.Parse(ip), port, services)
     {
@@ -52,7 +52,7 @@ public class McClient : IDisposable
         IpEndPoint = new IPEndPoint(ip, port);
         client = new TcpClient(IpEndPoint.AddressFamily);
 
-        manager = services.GetService<ThrottleManager>()!;
+        manager = services.GetService<IThrottleManager>()!;
     }
 
     /// <summary>

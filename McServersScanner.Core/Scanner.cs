@@ -268,7 +268,7 @@ public sealed class Scanner : IScannerOptions
     /// </summary>
     private readonly Lazy<Thread> updateDB;
 
-    private async void updateDatabase()
+    private void updateDatabase()
     {
         DatabaseController database = new();
 
@@ -276,10 +276,9 @@ public sealed class Scanner : IScannerOptions
         {
             try
             {
-                ServerInfo info = await serverInfos.ReceiveAsync(databaseCancellationTokenSource.Token)
-                    .ConfigureAwait(true);
+                ServerInfo info = serverInfos.ReceiveAsync(databaseCancellationTokenSource.Token).Result;
 
-                await database.Add(info).ConfigureAwait(true);
+                database.Add(info).Wait();
             }
             catch (Exception ex)
             {

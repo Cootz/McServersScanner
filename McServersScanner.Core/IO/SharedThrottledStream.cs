@@ -4,9 +4,9 @@ public class SharedThrottledStream : Stream
 {
     private readonly Stream parent;
 
-    private readonly ThrottleManager throttleManager;
+    private readonly IThrottleManager throttleManager;
 
-    public SharedThrottledStream(Stream parent, ThrottleManager throttleManager)
+    public SharedThrottledStream(Stream parent, IThrottleManager throttleManager)
     {
         this.parent = parent;
         this.throttleManager = throttleManager;

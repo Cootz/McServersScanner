@@ -7,6 +7,8 @@ namespace McServersScanner.Core.IO;
 /// </summary>
 public interface IThrottleManager
 {
+    int MaxBytesPerSecond { get; }
+
     /// <summary>
     /// Handle throttling from multiple threads
     /// </summary>

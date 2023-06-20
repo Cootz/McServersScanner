@@ -3,7 +3,9 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using CommunityToolkit.HighPerformance.Buffers;
+using McServersScanner.Core.IO;
 using McServersScanner.Core.Network.Packets;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace McServersScanner.Core.Network;
 
@@ -39,7 +41,7 @@ public class McClient : IDisposable
     /// </summary>
     public int BandwidthLimit { get; init; }
 
-    private readonly IServiceProvider services;
+    private readonly ThrottleManager manager;
 
     public McClient(string ip, ushort port, IServiceProvider services) : this(IPAddress.Parse(ip), port, services)
     {
@@ -49,7 +51,8 @@ public class McClient : IDisposable
     {
         IpEndPoint = new IPEndPoint(ip, port);
         client = new TcpClient(IpEndPoint.AddressFamily);
-        this.services = services;
+
+        manager = services.GetService<ThrottleManager>()!;
     }
 
     /// <summary>
@@ -94,7 +97,7 @@ public class McClient : IDisposable
             //preparing packet
             HandshakePacket packet = new(IpEndPoint.Address, protocolVersion, (ushort)IpEndPoint.Port);
 
-            NetworkStream stream = client.GetStream();
+            SharedThrottledStream stream = new(client.GetStream(), manager);
 
             //Send handshake
             await stream.WriteAsync(packet.ToArray());

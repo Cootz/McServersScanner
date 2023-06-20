@@ -1,5 +1,7 @@
 ﻿using System.Net;
 using System.Threading.Tasks.Dataflow;
+using McServersScanner.Core.IO;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 namespace McServersScanner.Core;
@@ -10,6 +12,7 @@ namespace McServersScanner.Core;
 public sealed class ScannerBuilder : IScannerOptions
 {
     public const int DEFAULT_CONNECTION_LIMIT = 1000;
+    public const int DEFAULT_BANDWIDTH_LIMIT = 1024 * 1024;
 
     /// <summary>
     /// Block of Ips to scan
@@ -29,7 +32,7 @@ public sealed class ScannerBuilder : IScannerOptions
     /// <summary>
     /// Amount of bytes send/received by network per second
     /// </summary>
-    public int BandwidthLimit { get; set; } = 1024 * 1024;
+    public int BandwidthLimit { get; set; } = DEFAULT_BANDWIDTH_LIMIT;
 
     /// <summary>
     /// Connection timeout in seconds
@@ -41,7 +44,7 @@ public sealed class ScannerBuilder : IScannerOptions
     /// </summary>
     public Task AddIpAddresses { get; set; } = Task.CompletedTask;
 
-    private IHostBuilder hostBuilder = Host.CreateDefaultBuilder();
+    private readonly IHostBuilder hostBuilder = Host.CreateDefaultBuilder();
 
     public long TotalIps
     {
@@ -60,6 +63,11 @@ public sealed class ScannerBuilder : IScannerOptions
     /// <returns>A configured <see cref="Scanner"/></returns>
     public Scanner Build()
     {
+        hostBuilder.ConfigureServices(services =>
+        {
+            services.AddSingleton<IThrottleManager, ThrottleManager>(_ => new ThrottleManager(ConnectionLimit));
+        });
+
         IHost host = hostBuilder.Build();
 
         Scanner builtScanner = new(Ips, host.Services)

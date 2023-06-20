@@ -126,13 +126,13 @@ public sealed class Scanner : IScannerOptions
             currentRatio = calculateRatio(scannedIps, TotalIps);
 
             //TODO: This shouldn't be bound to Console class. Change to Logger or any type of writable stream 
-            Console.Write("\r{0:0.00}% - {1}/{2}\n", currentRatio, scannedIps, TotalIps);
+            Console.Write("\r{0:0.00}% - {1}/{2}", currentRatio, scannedIps, TotalIps);
 
             await Task.Delay(100); //TODO: this is pretty weird way to show progress
         }
 
         currentRatio = calculateRatio(scannedIps, TotalIps);
-        Console.WriteLine("{0:0.00}% - {1}/{2}\n", currentRatio, scannedIps, TotalIps);
+        Console.WriteLine("{0:0.00}% - {1}/{2}", currentRatio, scannedIps, TotalIps);
         Console.WriteLine("Waiting for the results...");
 
         await Task.WhenAll(writer, reader, AddIpAddresses); //awaiting for results

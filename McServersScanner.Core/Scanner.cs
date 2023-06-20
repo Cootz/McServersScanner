@@ -89,6 +89,8 @@ public sealed class Scanner : IScannerOptions
 
     private readonly ILogger<Scanner>? logger;
 
+    private readonly CancellationTokenSource databaseCancellationTokenSource = new();
+
     internal Scanner(BufferBlock<IPAddress> ips, IServiceProvider services)
     {
         this.ips = ips;
@@ -124,13 +126,13 @@ public sealed class Scanner : IScannerOptions
             currentRatio = calculateRatio(scannedIps, TotalIps);
 
             //TODO: This shouldn't be bound to Console class. Change to Logger or any type of writable stream 
-            Console.Write("\r{0:0.00}% - {1}/{2}", currentRatio, scannedIps, TotalIps);
+            Console.Write("\r{0:0.00}% - {1}/{2}\n", currentRatio, scannedIps, TotalIps);
 
             await Task.Delay(100); //TODO: this is pretty weird way to show progress
         }
 
         currentRatio = calculateRatio(scannedIps, TotalIps);
-        Console.WriteLine("{0:0.00}% - {1}/{2}", currentRatio, scannedIps, TotalIps);
+        Console.WriteLine("{0:0.00}% - {1}/{2}\n", currentRatio, scannedIps, TotalIps);
         Console.WriteLine("Waiting for the results...");
 
         await Task.WhenAll(writer, reader, AddIpAddresses); //awaiting for results
@@ -156,7 +158,7 @@ public sealed class Scanner : IScannerOptions
             if (!clients.IsEmpty)
             {
                 IEnumerable<KeyValuePair<DateTime, McClient>> timeoutClients =
-                    from c in clients where DateTime.Now - c.Key > timeToConnect select c;
+                    from c in clients where DateTime.Now - c.Key > timeToConnect && !c.Value.IsConnected select c;
 
                 foreach ((DateTime startTime, McClient? client) in timeoutClients)
                 {
@@ -274,7 +276,10 @@ public sealed class Scanner : IScannerOptions
         {
             try
             {
-                await database.Add(await serverInfos.ReceiveAsync());
+                ServerInfo info = await serverInfos.ReceiveAsync(databaseCancellationTokenSource.Token)
+                    .ConfigureAwait(true);
+
+                await database.Add(info).ConfigureAwait(true);
             }
             catch (Exception ex)
             {
@@ -304,6 +309,8 @@ public sealed class Scanner : IScannerOptions
     {
         endDBThread = true;
         forceStop = true;
+
+        databaseCancellationTokenSource.Cancel();
 
         Console.WriteLine("\nStopping application...");
 

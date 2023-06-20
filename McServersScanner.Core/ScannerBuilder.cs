@@ -3,6 +3,7 @@ using System.Threading.Tasks.Dataflow;
 using McServersScanner.Core.IO;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Serilog;
 
 namespace McServersScanner.Core;
 
@@ -58,6 +59,19 @@ public sealed class ScannerBuilder : IScannerOptions
     public long IpsCount { get; set; } = 1;
 
     /// <summary>
+    /// Configures default console logger
+    /// </summary>
+    public ScannerBuilder ConfigureDefaultLogger()
+    {
+        Log.Logger = new LoggerConfiguration()
+            .Enrich.FromLogContext()
+            .WriteTo.Console()
+            .CreateLogger();
+
+        return this;
+    }
+
+    /// <summary>
     /// Builds the <see cref="Scanner"/>
     /// </summary>
     /// <returns>A configured <see cref="Scanner"/></returns>
@@ -67,6 +81,8 @@ public sealed class ScannerBuilder : IScannerOptions
         {
             services.AddSingleton<IThrottleManager, ThrottleManager>(_ => new ThrottleManager(ConnectionLimit));
         });
+
+        hostBuilder.UseSerilog();
 
         IHost host = hostBuilder.Build();
 

@@ -33,7 +33,7 @@ internal static class Program
             return;
         }
 
-        scanner = scannerBuilder.Build();
+        scanner = scannerBuilder.ConfigureDefaultLogger().Build();
 
         await scanner.Scan();
     }

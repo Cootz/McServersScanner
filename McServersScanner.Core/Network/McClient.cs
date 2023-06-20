@@ -52,7 +52,7 @@ public class McClient : IDisposable
         IpEndPoint = new IPEndPoint(ip, port);
         client = new TcpClient(IpEndPoint.AddressFamily);
 
-        manager = services.GetService<ThrottleManager>()!;
+        manager = (ThrottleManager)services.GetService<IThrottleManager>()!;
     }
 
     /// <summary>

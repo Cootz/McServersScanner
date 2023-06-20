@@ -206,7 +206,8 @@ public sealed class Scanner : IScannerOptions
                 }
                 catch (Exception ex)
                 {
-                    logger?.LogError("{0}: {1}; {2}", ex.Source, ex.Message, ex.InnerException?.Message ?? "");
+                    logger?.LogError("{ex_source}: {ex_message}; {inner_ex_message}",
+                        ex.Source, ex.Message, ex.InnerException?.Message ?? "");
                 }
             }
     }
@@ -243,7 +244,8 @@ public sealed class Scanner : IScannerOptions
             }
             catch (Exception ex)
             {
-                logger?.LogError("{0}: {1}; {2}", ex.Source, ex.Message, ex.InnerException?.Message ?? "");
+                logger?.LogError("{ex_source}: {ex_message}; {inner_ex_message}",
+                    ex.Source, ex.Message, ex.InnerException?.Message ?? "");
             }
 
         try
@@ -252,7 +254,8 @@ public sealed class Scanner : IScannerOptions
         }
         catch (Exception ex)
         {
-            logger?.LogError("{0}: {1}; {2}", ex.Source, ex.Message, ex.InnerException?.Message ?? "");
+            logger?.LogError("{ex_source}: {ex_message}; {inner_ex_message}",
+                ex.Source, ex.Message, ex.InnerException?.Message ?? "");
         }
 
         client.Dispose();
@@ -275,7 +278,8 @@ public sealed class Scanner : IScannerOptions
             }
             catch (Exception ex)
             {
-                logger?.LogError("{0}: {1}; {2}", ex.Source, ex.Message, ex.InnerException?.Message ?? "");
+                logger?.LogError("{ex_source}: {ex_message}; {inner_ex_message}",
+                    ex.Source, ex.Message, ex.InnerException?.Message ?? "");
             }
         }
     }

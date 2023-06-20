@@ -7,6 +7,8 @@ using McServersScanner.Core.IO.Database;
 using McServersScanner.Core.IO.Database.Models;
 using McServersScanner.Core.Network;
 using McServersScanner.Core.Utils;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace McServersScanner.Core;
 
@@ -85,11 +87,15 @@ public sealed class Scanner : IScannerOptions
     /// </summary>
     private long scannedIps;
 
+    private readonly ILogger<Scanner>? logger;
+
     internal Scanner(BufferBlock<IPAddress> ips, IServiceProvider services)
     {
         this.ips = ips;
         updateDB = new Lazy<Thread>(() => new Thread(updateDatabase));
         this.services = services;
+
+        logger = services.GetService<ILogger<Scanner>>();
     }
 
     /// <summary>
@@ -198,9 +204,9 @@ public sealed class Scanner : IScannerOptions
                     clients.TryAdd(DateTime.Now, client);
                     addedIps++;
                 }
-                catch
+                catch (Exception ex)
                 {
-                    // TODO: Add logging
+                    logger?.LogError("{0}: {1}; {2}", ex.Source, ex.Message, ex.InnerException?.Message ?? "");
                 }
             }
     }
@@ -235,18 +241,18 @@ public sealed class Scanner : IScannerOptions
                 ServerInfo serverInfo = new(jsonData, StringPool.Shared.GetOrAdd(client.IpEndPoint.Address.ToString()));
                 serverInfos.Post(serverInfo);
             }
-            catch
+            catch (Exception ex)
             {
-                // TODO: Add logging
+                logger?.LogError("{0}: {1}; {2}", ex.Source, ex.Message, ex.InnerException?.Message ?? "");
             }
 
         try
         {
             await client.DisconnectAsync();
         }
-        catch
+        catch (Exception ex)
         {
-            // TODO: Add logging
+            logger?.LogError("{0}: {1}; {2}", ex.Source, ex.Message, ex.InnerException?.Message ?? "");
         }
 
         client.Dispose();
@@ -269,7 +275,7 @@ public sealed class Scanner : IScannerOptions
             }
             catch (Exception ex)
             {
-                Console.WriteLine("{0}: {1}; {2}", ex.Source, ex.Message, ex.InnerException?.Message ?? "");
+                logger?.LogError("{0}: {1}; {2}", ex.Source, ex.Message, ex.InnerException?.Message ?? "");
             }
         }
     }

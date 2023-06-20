@@ -2,7 +2,7 @@
   "profiles": {
     "McServersScanner": {
       "commandName": "Project",
-      "commandLineArgs": "-I 148.251.233.5 -b 1G --connection-limit 1000"
+      "commandLineArgs": "-I 70.0.0.1-71.0.0.1 -b 1G --connection-limit 1000 -t 0.5"
     },
     "Docker": {
       "commandName": "Docker"

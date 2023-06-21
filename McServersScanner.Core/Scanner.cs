@@ -97,8 +97,6 @@ public sealed class Scanner : IScannerOptions
     /// </summary>
     public async Task Scan()
     {
-        _ = new ThrottleManager(BandwidthLimit);
-
         ServicePointManager.DefaultConnectionLimit = ConnectionLimit;
         double currentRatio;
 

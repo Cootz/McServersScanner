@@ -6,6 +6,7 @@ using CommunityToolkit.HighPerformance.Buffers;
 using McServersScanner.Core.IO;
 using McServersScanner.Core.Network.Packets;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace McServersScanner.Core.Network;
 
@@ -42,6 +43,7 @@ public class McClient : IDisposable
     public int BandwidthLimit { get; init; }
 
     private readonly IThrottleManager manager;
+    private readonly ILogger<McClient>? logger;
 
     public McClient(string ip, ushort port, IServiceProvider services) : this(IPAddress.Parse(ip), port, services)
     {
@@ -53,6 +55,7 @@ public class McClient : IDisposable
         client = new TcpClient(IpEndPoint.AddressFamily);
 
         manager = services.GetService<IThrottleManager>()!;
+        logger = services.GetService<ILogger<McClient>>();
     }
 
     /// <summary>
@@ -111,9 +114,9 @@ public class McClient : IDisposable
             _ = await stream.ReadAsync(buffer);
             response.Append(StringPool.Shared.GetOrAdd(Encoding.UTF8.GetString(buffer)));
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            Debug.WriteLine(e);
+            logger?.LogError(ex, $"{nameof(GetServerInfo)} for {IpEndPoint} aborted");
             return string.Empty;
         }
 

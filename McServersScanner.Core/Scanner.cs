@@ -234,6 +234,8 @@ public sealed class Scanner : IScannerOptions
             return;
         }
 
+        logger?.LogInformation("Successfully connected to {ip_address}", client.IpEndPoint);
+
         string data = await client.GetServerInfo();
 
         if (data.StartsWith('{'))
@@ -311,7 +313,7 @@ public sealed class Scanner : IScannerOptions
 
         databaseCancellationTokenSource.Cancel();
 
-        Console.WriteLine("\nStopping application...");
+        logger?.LogInformation("\nStopping application...");
 
         updateDB.Value.Join();
     }

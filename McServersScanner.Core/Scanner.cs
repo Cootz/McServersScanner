@@ -208,8 +208,7 @@ public sealed class Scanner : IScannerOptions
                 }
                 catch (Exception ex)
                 {
-                    logger?.LogError("{ex_source}: {ex_message}; {inner_ex_message}",
-                        ex.Source, ex.Message, ex.InnerException?.Message ?? "");
+                    logger?.LogError(ex, "Cannot connect to {ip_address}", client.IpEndPoint);
                 }
             }
     }
@@ -246,7 +245,7 @@ public sealed class Scanner : IScannerOptions
 
                 ServerInfo serverInfo = new(jsonData, StringPool.Shared.GetOrAdd(client.IpEndPoint.Address.ToString()));
                 serverInfos.Post(serverInfo);
-                logger?.LogInformation("Successfully parsed {raw_data} into {server_info}", data, serverInfo);
+                logger?.LogInformation("Successfully parsed {raw_data}", data);
             }
             catch (Exception ex)
             {
@@ -285,8 +284,7 @@ public sealed class Scanner : IScannerOptions
             }
             catch (Exception ex)
             {
-                logger?.LogError("{ex_source}: {ex_message}; {inner_ex_message}",
-                    ex.Source, ex.Message, ex.InnerException?.Message ?? "");
+                logger?.LogError(ex, "Database thread has thrown an exception");
             }
         }
     }

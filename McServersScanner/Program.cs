@@ -4,9 +4,7 @@ using CommandLine;
 using CommunityToolkit.HighPerformance.Buffers;
 using McServersScanner.Core;
 using McServersScanner.Core.Utils;
-using Microsoft.Extensions.Logging;
 using Serilog;
-using Serilog.Core;
 
 namespace McServersScanner;
 

@@ -239,18 +239,20 @@ public sealed class Scanner : IScannerOptions
         string data = await client.GetServerInfo();
 
         if (data.StartsWith('{'))
+        {
             try
             {
                 string jsonData = StringPool.Shared.GetOrAdd(JsonHelper.ConvertToJsonString(data));
 
                 ServerInfo serverInfo = new(jsonData, StringPool.Shared.GetOrAdd(client.IpEndPoint.Address.ToString()));
                 serverInfos.Post(serverInfo);
+                logger?.LogInformation("Successfully parsed {raw_data} into {server_info}", data, serverInfo);
             }
             catch (Exception ex)
             {
-                logger?.LogError("{ex_source}: {ex_message}; {inner_ex_message}",
-                    ex.Source, ex.Message, ex.InnerException?.Message ?? "");
+                logger?.LogError(ex, "Cannot parse data: {raw_data}", data);
             }
+        }
 
         try
         {
@@ -258,8 +260,7 @@ public sealed class Scanner : IScannerOptions
         }
         catch (Exception ex)
         {
-            logger?.LogError("{ex_source}: {ex_message}; {inner_ex_message}",
-                ex.Source, ex.Message, ex.InnerException?.Message ?? "");
+            logger?.LogError(ex, "Failed to disconnect {ip_address}", client.IpEndPoint);
         }
 
         client.Dispose();

@@ -61,11 +61,25 @@ public sealed class ScannerBuilder : IScannerOptions
     /// <summary>
     /// Configures default console logger
     /// </summary>
-    public ScannerBuilder ConfigureDefaultLogger()
+    public ScannerBuilder ConfigureConsoleLogger()
     {
         Log.Logger = new LoggerConfiguration()
             .Enrich.FromLogContext()
             .WriteTo.Console()
+            .CreateLogger();
+
+        return this;
+    }
+
+    /// <summary>
+    /// Configures default file logger
+    /// </summary>
+    /// <param name="path">Path to the logfile</param>
+    public ScannerBuilder ConfigureFileLogger(string path = "log.txt")
+    {
+        Log.Logger = new LoggerConfiguration()
+            .Enrich.FromLogContext()
+            .WriteTo.File(path)
             .CreateLogger();
 
         return this;

@@ -82,7 +82,7 @@ public sealed class ScannerBuilder : IScannerOptions
             services.AddSingleton<IThrottleManager, ThrottleManager>(_ => new ThrottleManager(ConnectionLimit));
         });
 
-        hostBuilder.UseSerilog();
+        hostBuilder.UseSerilog(dispose: true);
 
         IHost host = hostBuilder.Build();
 

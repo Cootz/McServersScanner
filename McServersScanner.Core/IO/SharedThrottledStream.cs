@@ -67,6 +67,13 @@ public class SharedThrottledStream : Stream
         return read;
     }
 
+    public override int ReadByte()
+    {
+        int read = parent.ReadByte();
+        Throttle(1);
+        return read;
+    }
+
     public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
     {
         int read = await parent.ReadAsync(buffer, offset, count, cancellationToken);

@@ -31,6 +31,33 @@ public static class McProtocol
     }
 
     /// <summary>
+    /// Reads varInt from the <see cref="Stream"/>
+    /// </summary>
+    /// <returns>
+    /// <see cref="int"/> representation of varIntS
+    /// </returns>
+    public static int ReadVarInt(Stream input)
+    {
+        int value = 0;
+        int position = 0;
+
+        while (true)
+        {
+            byte currentByte = (byte)input.ReadByte();
+
+            value |= (currentByte & segment_bit) << position;
+
+            if ((currentByte & continue_bit) == 0) break;
+
+            position += 7;
+
+            if (position >= 32) throw new IndexOutOfRangeException("Var int is too long");
+        }
+
+        return value;
+    }
+
+    /// <summary>
     /// Creates string
     /// </summary>
     /// <returns>

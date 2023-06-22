@@ -26,7 +26,7 @@ public sealed class Scanner : IScannerOptions
     public int ConnectionLimit { get; internal init; }
 
     /// <summary>
-    /// Maximum number of bytes scanner can sent/receive by network per second
+    /// Maximum number of bytes scanner can send/receive by network per second
     /// </summary>
     public int BandwidthLimit { get; internal init; }
 
@@ -105,8 +105,6 @@ public sealed class Scanner : IScannerOptions
     /// </summary>
     public async Task Scan()
     {
-        _ = new ThrottleManager(BandwidthLimit);
-
         ServicePointManager.DefaultConnectionLimit = ConnectionLimit;
         double currentRatio;
 
@@ -177,7 +175,7 @@ public sealed class Scanner : IScannerOptions
     }
 
     /// <summary>
-    /// Creates new <see cref="McClient"/>, starts and add it to <see cref="clients"/>
+    /// Create new <see cref="McClient"/>, start and add it to <see cref="clients"/>
     /// </summary>
     /// <remarks>
     /// This task runs in different thread
@@ -216,7 +214,6 @@ public sealed class Scanner : IScannerOptions
     /// <summary>
     /// Callback for <see cref="McClient.ConnectionCallBack"/>. Sends server info and receives answer
     /// </summary>
-    /// <param name="result"></param>
     public async void OnConnected(IAsyncResult result)
     {
         if (result.AsyncState is null)

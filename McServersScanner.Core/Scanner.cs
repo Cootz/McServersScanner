@@ -2,11 +2,12 @@
 using System.Net;
 using System.Threading.Tasks.Dataflow;
 using CommunityToolkit.HighPerformance.Buffers;
-using McServersScanner.Core.IO;
 using McServersScanner.Core.IO.Database;
 using McServersScanner.Core.IO.Database.Models;
 using McServersScanner.Core.Network;
 using McServersScanner.Core.Utils;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace McServersScanner.Core;
 
@@ -85,11 +86,17 @@ public sealed class Scanner : IScannerOptions
     /// </summary>
     private long scannedIps;
 
+    private readonly ILogger<Scanner>? logger;
+
+    private readonly CancellationTokenSource databaseCancellationTokenSource = new();
+
     internal Scanner(BufferBlock<IPAddress> ips, IServiceProvider services)
     {
         this.ips = ips;
         updateDB = new Lazy<Thread>(() => new Thread(updateDatabase));
         this.services = services;
+
+        logger = services.GetService<ILogger<Scanner>>();
     }
 
     /// <summary>
@@ -127,7 +134,8 @@ public sealed class Scanner : IScannerOptions
 
         await Task.WhenAll(writer, reader, AddIpAddresses); //awaiting for results
 
-        endDBThread = true; //exiting db thread
+        exitDatabase();
+
         updateDB.Value.Join();
 
         static double calculateRatio(double currentInQueue, double length) => currentInQueue / length * 100.0;
@@ -148,7 +156,7 @@ public sealed class Scanner : IScannerOptions
             if (!clients.IsEmpty)
             {
                 IEnumerable<KeyValuePair<DateTime, McClient>> timeoutClients =
-                    from c in clients where DateTime.Now - c.Key > timeToConnect select c;
+                    from c in clients where DateTime.Now - c.Key > timeToConnect && !c.Value.IsConnected select c;
 
                 foreach ((DateTime startTime, McClient? client) in timeoutClients)
                 {
@@ -196,9 +204,9 @@ public sealed class Scanner : IScannerOptions
                     clients.TryAdd(DateTime.Now, client);
                     addedIps++;
                 }
-                catch
+                catch (Exception ex)
                 {
-                    // TODO: Add logging
+                    logger?.LogError(ex, "Cannot connect to {ip_address}", client.IpEndPoint);
                 }
             }
     }
@@ -222,28 +230,33 @@ public sealed class Scanner : IScannerOptions
             return;
         }
 
+        logger?.LogInformation("Successfully connected to {ip_address}", client.IpEndPoint);
+
         string data = await client.GetServerInfo();
 
         if (data.StartsWith('{'))
+        {
             try
             {
                 string jsonData = StringPool.Shared.GetOrAdd(JsonHelper.ConvertToJsonString(data));
 
                 ServerInfo serverInfo = new(jsonData, StringPool.Shared.GetOrAdd(client.IpEndPoint.Address.ToString()));
                 serverInfos.Post(serverInfo);
+                logger?.LogInformation("Successfully parsed {raw_data}", data);
             }
-            catch
+            catch (Exception ex)
             {
-                // TODO: Add logging
+                logger?.LogError(ex, "Cannot parse data: {raw_data}", data);
             }
+        }
 
         try
         {
             await client.DisconnectAsync();
         }
-        catch
+        catch (Exception ex)
         {
-            // TODO: Add logging
+            logger?.LogError(ex, "Failed to disconnect {ip_address}", client.IpEndPoint);
         }
 
         client.Dispose();
@@ -254,7 +267,7 @@ public sealed class Scanner : IScannerOptions
     /// </summary>
     private readonly Lazy<Thread> updateDB;
 
-    private async void updateDatabase()
+    private void updateDatabase()
     {
         DatabaseController database = new();
 
@@ -262,13 +275,21 @@ public sealed class Scanner : IScannerOptions
         {
             try
             {
-                await database.Add(await serverInfos.ReceiveAsync());
+                ServerInfo info = serverInfos.ReceiveAsync(databaseCancellationTokenSource.Token).Result;
+
+                database.Add(info).Wait();
             }
             catch (Exception ex)
             {
-                Console.WriteLine("{0}: {1}; {2}", ex.Source, ex.Message, ex.InnerException?.Message ?? "");
+                logger?.LogError(ex, "Database thread has thrown an exception");
             }
         }
+    }
+
+    private void exitDatabase()
+    {
+        endDBThread = true;
+        databaseCancellationTokenSource.Cancel();
     }
 
     /// <summary>
@@ -289,10 +310,12 @@ public sealed class Scanner : IScannerOptions
     /// </summary>
     public void ForceStop()
     {
-        endDBThread = true;
         forceStop = true;
 
-        Console.WriteLine("\nStopping application...");
+        exitDatabase();
+
+        logger?.LogInformation("\nStopping application...");
+        //TODO: Write the same text to output stream
 
         updateDB.Value.Join();
     }

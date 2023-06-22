@@ -4,6 +4,7 @@ using CommandLine;
 using CommunityToolkit.HighPerformance.Buffers;
 using McServersScanner.Core;
 using McServersScanner.Core.Utils;
+using Serilog;
 
 namespace McServersScanner;
 
@@ -23,13 +24,15 @@ internal static class Program
         if (result.Errors.Any())
             return;
 
+        scannerBuilder.ConfigureFileLogger();
+
         try
         {
             transferParseResultsToBuilder(result, scannerBuilder);
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex.Message);
+            Log.Logger.Error(ex, "Parameters parsing thrown an exception");
             return;
         }
 

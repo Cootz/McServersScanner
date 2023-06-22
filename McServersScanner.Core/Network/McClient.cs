@@ -108,7 +108,9 @@ public class McClient : IDisposable
             byte[] pingData = { 1, 0 };
             await stream.WriteAsync(pingData);
 
-            byte[] buffer = new byte[32768];
+            int length = McProtocol.ReadVarInt(stream);
+
+            byte[] buffer = new byte[length];
 
             _ = await stream.ReadAsync(buffer);
             response.Append(StringPool.Shared.GetOrAdd(Encoding.UTF8.GetString(buffer)));

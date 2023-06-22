@@ -34,7 +34,7 @@ public static class McProtocol
     /// Reads varInt from the <see cref="Stream"/>
     /// </summary>
     /// <returns>
-    /// <see cref="int"/> representation of varIntS
+    /// <see cref="int"/> representation of varInt
     /// </returns>
     public static int ReadVarInt(Stream input)
     {

@@ -313,6 +313,7 @@ public sealed class Scanner : IScannerOptions
         databaseCancellationTokenSource.Cancel();
 
         logger?.LogInformation("\nStopping application...");
+        //TODO: Write the same text to output stream
 
         updateDB.Value.Join();
     }

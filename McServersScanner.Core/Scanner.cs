@@ -238,9 +238,7 @@ public sealed class Scanner : IScannerOptions
         {
             try
             {
-                string jsonData = StringPool.Shared.GetOrAdd(JsonHelper.ConvertToJsonString(data));
-
-                ServerInfo serverInfo = new(jsonData, StringPool.Shared.GetOrAdd(client.IpEndPoint.Address.ToString()));
+                ServerInfo serverInfo = new(data, StringPool.Shared.GetOrAdd(client.IpEndPoint.Address.ToString()));
                 serverInfos.Post(serverInfo);
                 logger?.LogInformation("Successfully parsed {raw_data}", data);
             }

@@ -24,7 +24,7 @@ internal static class Program
         if (result.Errors.Any())
             return;
 
-        scannerBuilder.ConfigureFileLogger();
+        scannerBuilder.ConfigureConsoleLogger();
 
         try
         {

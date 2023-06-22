@@ -15,8 +15,8 @@ namespace McServersScanner.Tests.Network
 
             IServiceProvider services = Substitute.For<IServiceProvider>();
 
-            services.GetService(Arg.Any<Type>())
-                .ReturnsForAnyArgs(new ThrottleManager(ScannerBuilder.DEFAULT_BANDWIDTH_LIMIT));
+            services.GetService(typeof(IThrottleManager))
+                .Returns(new ThrottleManager(ScannerBuilder.DEFAULT_BANDWIDTH_LIMIT));
 
             McClient client = new(targetIp, 25565, services)
             {

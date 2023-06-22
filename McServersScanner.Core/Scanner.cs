@@ -135,7 +135,8 @@ public sealed class Scanner : IScannerOptions
 
         await Task.WhenAll(writer, reader, AddIpAddresses); //awaiting for results
 
-        endDBThread = true; //exiting db thread
+        exitDatabase();
+
         updateDB.Value.Join();
 
         static double calculateRatio(double currentInQueue, double length) => currentInQueue / length * 100.0;
@@ -286,6 +287,12 @@ public sealed class Scanner : IScannerOptions
         }
     }
 
+    private void exitDatabase()
+    {
+        endDBThread = true;
+        databaseCancellationTokenSource.Cancel();
+    }
+
     /// <summary>
     /// Asynchronously copy data from enumerable to buffer block
     /// </summary>
@@ -304,10 +311,9 @@ public sealed class Scanner : IScannerOptions
     /// </summary>
     public void ForceStop()
     {
-        endDBThread = true;
         forceStop = true;
 
-        databaseCancellationTokenSource.Cancel();
+        exitDatabase();
 
         logger?.LogInformation("\nStopping application...");
         //TODO: Write the same text to output stream

@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System.Diagnostics;
+using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using CommunityToolkit.HighPerformance.Buffers;
@@ -92,7 +93,7 @@ public class McClient : IDisposable
     public async Task<string> GetServerInfo()
     {
         const int protocolVersion = 761;
-        StringBuilder response = new();
+        string response;
 
         try
         {
@@ -113,7 +114,20 @@ public class McClient : IDisposable
             byte[] buffer = new byte[length];
 
             _ = await stream.ReadAsync(buffer);
-            response.Append(StringPool.Shared.GetOrAdd(Encoding.UTF8.GetString(buffer)));
+
+            MemoryStream memoryStream = new(buffer);
+
+            int packetId = memoryStream.ReadByte();
+
+            Debug.Assert(packetId == 0);
+
+            length = McProtocol.ReadVarInt(memoryStream);
+
+            byte[] jsonData = new byte[length];
+
+            _ = await memoryStream.ReadAsync(jsonData);
+
+            response = StringPool.Shared.GetOrAdd(Encoding.UTF8.GetString(jsonData));
         }
         catch (Exception ex)
         {
@@ -121,7 +135,7 @@ public class McClient : IDisposable
             return string.Empty;
         }
 
-        return response.Length > 5 ? StringPool.Shared.GetOrAdd(response.Remove(0, 5).ToString()) : string.Empty;
+        return StringPool.Shared.GetOrAdd(response);
     }
 
     /// <summary>

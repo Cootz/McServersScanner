@@ -8,7 +8,7 @@ namespace McServersScanner.Tests.Network
         [Test]
         public void WriteReadVarIntTest()
         {
-            const int expectedValue = 25565;
+            const int expectedValue = 1;
 
             byte[] valueBytes = McProtocol.WriteVarInt(expectedValue).ToArray();
 

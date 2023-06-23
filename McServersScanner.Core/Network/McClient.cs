@@ -130,7 +130,11 @@ public class McClient : IDisposable
 
             int packetId = memoryStream.ReadByte();
 
-            Debug.Assert(packetId == 0);
+            if (packetId != 0)
+            {
+                logger?.LogError("Packet id != 0 for {ip_address}", IpEndPoint);
+                return string.Empty;
+            }
 
             string json = await McProtocol.ReadStringAsync(memoryStream);
 

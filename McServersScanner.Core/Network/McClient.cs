@@ -109,28 +109,32 @@ public class McClient : IDisposable
             byte[] pingData = { 1, 0 };
             await stream.WriteAsync(pingData);
 
-            int length;
+            int length = McProtocol.ReadVarInt(stream);
 
-            while ((length = McProtocol.ReadVarInt(stream)) != -1)
+            byte[] buffer = new byte[length];
+
+            int receivedBytes;
+
+            using MemoryStream memoryStream = new(length);
+
+            //Receive packet and write it to the memory stream
+            do
             {
-                byte[] buffer = new byte[length];
+                receivedBytes = await stream.ReadAsync(buffer);
+                await memoryStream.WriteAsync(buffer, 0, receivedBytes);
 
-                _ = await stream.ReadAsync(buffer);
+                length -= receivedBytes;
+            } while (receivedBytes > 0 && length > 0);
 
-                MemoryStream memoryStream = new(buffer);
+            memoryStream.Position = 0;
 
-                int packetId = memoryStream.ReadByte();
+            int packetId = memoryStream.ReadByte();
 
-                // Debug.Assert(packetId == 0);
+            Debug.Assert(packetId == 0);
 
-                length = McProtocol.ReadVarInt(memoryStream);
+            string json = await McProtocol.ReadStringAsync(memoryStream);
 
-                byte[] jsonData = new byte[length];
-
-                _ = await memoryStream.ReadAsync(jsonData);
-
-                response.Append(StringPool.Shared.GetOrAdd(Encoding.UTF8.GetString(jsonData)));
-            }
+            response.Append(StringPool.Shared.GetOrAdd(json));
         }
         catch (Exception ex)
         {

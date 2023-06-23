@@ -43,14 +43,7 @@ public static class McProtocol
 
         while (true)
         {
-            int readByte = input.ReadByte();
-
-            if (readByte == -1)
-            {
-                return -1;
-            }
-
-            byte currentByte = (byte)readByte;
+            byte currentByte = (byte)input.ReadByte();
 
             value |= (currentByte & segment_bit) << position;
 
@@ -79,5 +72,24 @@ public static class McProtocol
         buffer.AddRange(valAsBytes);
 
         return buffer;
+    }
+
+    /// <summary>
+    /// Asynchronously read <see cref="string"/> from <paramref name="input"/>
+    /// </summary>
+    /// <returns>
+    /// <see cref="string"/> extracted from <paramref name="input"/>
+    /// </returns>
+    public static async Task<string> ReadStringAsync(Stream input)
+    {
+        int length = ReadVarInt(input);
+
+        byte[] buffer = new byte[length];
+
+        _ = await input.ReadAsync(buffer);
+
+        string result = Encoding.Unicode.GetString(buffer);
+
+        return result;
     }
 }

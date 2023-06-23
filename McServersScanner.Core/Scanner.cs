@@ -244,7 +244,7 @@ public sealed class Scanner : IScannerOptions
             }
             catch (Exception ex)
             {
-                logger?.LogError(ex, "Cannot parse data: {raw_data}", data);
+                logger?.LogError(ex, "Cannot parse data from {ip_address}: {raw_data}", client.IpEndPoint, data);
             }
         }
 

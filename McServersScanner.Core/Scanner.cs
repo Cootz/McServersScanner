@@ -5,7 +5,6 @@ using CommunityToolkit.HighPerformance.Buffers;
 using McServersScanner.Core.IO.Database;
 using McServersScanner.Core.IO.Database.Models;
 using McServersScanner.Core.Network;
-using McServersScanner.Core.Utils;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 

@@ -1,7 +1,5 @@
-﻿using System.Diagnostics;
-using System.Net;
+﻿using System.Net;
 using System.Net.Sockets;
-using System.Text;
 using CommunityToolkit.HighPerformance.Buffers;
 using McServersScanner.Core.IO;
 using McServersScanner.Core.Network.Packets;
@@ -93,7 +91,7 @@ public class McClient : IDisposable
     public async Task<string> GetServerInfo()
     {
         const int protocolVersion = 761;
-        StringBuilder response = new();
+        string response;
 
         try
         {
@@ -136,9 +134,7 @@ public class McClient : IDisposable
                 return string.Empty;
             }
 
-            string json = await McProtocol.ReadStringAsync(memoryStream);
-
-            response.Append(StringPool.Shared.GetOrAdd(json));
+            response = await McProtocol.ReadStringAsync(memoryStream);
         }
         catch (Exception ex)
         {
@@ -146,7 +142,7 @@ public class McClient : IDisposable
             return string.Empty;
         }
 
-        return StringPool.Shared.GetOrAdd(response.ToString());
+        return StringPool.Shared.GetOrAdd(response);
     }
 
     /// <summary>

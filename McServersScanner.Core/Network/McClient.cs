@@ -93,7 +93,7 @@ public class McClient : IDisposable
     public async Task<string> GetServerInfo()
     {
         const int protocolVersion = 761;
-        string response;
+        StringBuilder response = new();
 
         try
         {
@@ -109,25 +109,28 @@ public class McClient : IDisposable
             byte[] pingData = { 1, 0 };
             await stream.WriteAsync(pingData);
 
-            int length = McProtocol.ReadVarInt(stream);
+            int length;
 
-            byte[] buffer = new byte[length];
+            while ((length = McProtocol.ReadVarInt(stream)) != -1)
+            {
+                byte[] buffer = new byte[length];
 
-            _ = await stream.ReadAsync(buffer);
+                _ = await stream.ReadAsync(buffer);
 
-            MemoryStream memoryStream = new(buffer);
+                MemoryStream memoryStream = new(buffer);
 
-            int packetId = memoryStream.ReadByte();
+                int packetId = memoryStream.ReadByte();
 
-            Debug.Assert(packetId == 0);
+                // Debug.Assert(packetId == 0);
 
-            length = McProtocol.ReadVarInt(memoryStream);
+                length = McProtocol.ReadVarInt(memoryStream);
 
-            byte[] jsonData = new byte[length];
+                byte[] jsonData = new byte[length];
 
-            _ = await memoryStream.ReadAsync(jsonData);
+                _ = await memoryStream.ReadAsync(jsonData);
 
-            response = StringPool.Shared.GetOrAdd(Encoding.UTF8.GetString(jsonData));
+                response.Append(StringPool.Shared.GetOrAdd(Encoding.UTF8.GetString(jsonData)));
+            }
         }
         catch (Exception ex)
         {
@@ -135,7 +138,7 @@ public class McClient : IDisposable
             return string.Empty;
         }
 
-        return StringPool.Shared.GetOrAdd(response);
+        return StringPool.Shared.GetOrAdd(response.ToString());
     }
 
     /// <summary>

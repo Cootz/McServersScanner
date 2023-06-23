@@ -43,7 +43,14 @@ public static class McProtocol
 
         while (true)
         {
-            byte currentByte = (byte)input.ReadByte();
+            int readByte = input.ReadByte();
+
+            if (readByte == -1)
+            {
+                return -1;
+            }
+
+            byte currentByte = (byte)readByte;
 
             value |= (currentByte & segment_bit) << position;
 

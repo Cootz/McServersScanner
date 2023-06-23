@@ -26,7 +26,7 @@ public class ThrottleManager : IThrottleManager
         timer.Elapsed += (_, _) =>
         {
             CurrentQuota = MaxBytesPerSecond;
-            tcs.SetResult();
+            tcs.TrySetResult();
             tcs = new TaskCompletionSource();
         };
 

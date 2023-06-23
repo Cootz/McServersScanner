@@ -88,7 +88,7 @@ public static class McProtocol
 
         _ = await input.ReadAsync(buffer);
 
-        string result = Encoding.Unicode.GetString(buffer);
+        string result = Encoding.Default.GetString(buffer);
 
         return result;
     }

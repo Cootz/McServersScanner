@@ -5,7 +5,6 @@ using CommunityToolkit.HighPerformance.Buffers;
 using McServersScanner.Core.IO.Database;
 using McServersScanner.Core.IO.Database.Models;
 using McServersScanner.Core.Network;
-using McServersScanner.Core.Utils;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -238,15 +237,13 @@ public sealed class Scanner : IScannerOptions
         {
             try
             {
-                string jsonData = StringPool.Shared.GetOrAdd(JsonHelper.ConvertToJsonString(data));
-
-                ServerInfo serverInfo = new(jsonData, StringPool.Shared.GetOrAdd(client.IpEndPoint.Address.ToString()));
+                ServerInfo serverInfo = new(data, StringPool.Shared.GetOrAdd(client.IpEndPoint.Address.ToString()));
                 serverInfos.Post(serverInfo);
                 logger?.LogInformation("Successfully parsed {raw_data}", data);
             }
             catch (Exception ex)
             {
-                logger?.LogError(ex, "Cannot parse data: {raw_data}", data);
+                logger?.LogError(ex, "Cannot parse data from {ip_address}: {raw_data}", client.IpEndPoint, data);
             }
         }
 

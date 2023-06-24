@@ -1,6 +1,5 @@
 ﻿using System.Net;
 using System.Net.Sockets;
-using System.Text;
 using CommunityToolkit.HighPerformance.Buffers;
 using McServersScanner.Core.IO;
 using McServersScanner.Core.Network.Packets;
@@ -92,7 +91,7 @@ public class McClient : IDisposable
     public async Task<string> GetServerInfo()
     {
         const int protocolVersion = 761;
-        StringBuilder response = new();
+        string response;
 
         try
         {
@@ -108,10 +107,34 @@ public class McClient : IDisposable
             byte[] pingData = { 1, 0 };
             await stream.WriteAsync(pingData);
 
-            byte[] buffer = new byte[32768];
+            int length = McProtocol.ReadVarInt(stream);
 
-            _ = await stream.ReadAsync(buffer);
-            response.Append(StringPool.Shared.GetOrAdd(Encoding.UTF8.GetString(buffer)));
+            byte[] buffer = new byte[length];
+
+            int receivedBytes;
+
+            using MemoryStream memoryStream = new(length);
+
+            //Receive packet and write it to the memory stream
+            do
+            {
+                receivedBytes = await stream.ReadAsync(buffer);
+                await memoryStream.WriteAsync(buffer, 0, receivedBytes);
+
+                length -= receivedBytes;
+            } while (receivedBytes > 0 && length > 0);
+
+            memoryStream.Position = 0;
+
+            int packetId = memoryStream.ReadByte();
+
+            if (packetId != 0)
+            {
+                logger?.LogError("Packet id != 0 for {ip_address}", IpEndPoint);
+                return string.Empty;
+            }
+
+            response = await McProtocol.ReadStringAsync(memoryStream);
         }
         catch (Exception ex)
         {
@@ -119,7 +142,7 @@ public class McClient : IDisposable
             return string.Empty;
         }
 
-        return response.Length > 5 ? StringPool.Shared.GetOrAdd(response.Remove(0, 5).ToString()) : string.Empty;
+        return StringPool.Shared.GetOrAdd(response);
     }
 
     /// <summary>

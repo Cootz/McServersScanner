@@ -5,6 +5,6 @@
         /// <summary>
         /// <see cref="Stream"/> to write information into
         /// </summary>
-        Stream OutputStream { get; }
+        StreamWriter OutputStream { get; }
     }
 }

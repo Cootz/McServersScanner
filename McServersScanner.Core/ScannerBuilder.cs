@@ -45,7 +45,7 @@ public sealed class ScannerBuilder : IScanner
     /// </summary>
     public Task AddIpAddresses { get; set; } = Task.CompletedTask;
 
-    public Stream OutputStream { get; init; } = null!;
+    public StreamWriter OutputStream { get; init; } = null!;
 
     private readonly IHostBuilder hostBuilder = Host.CreateDefaultBuilder();
 

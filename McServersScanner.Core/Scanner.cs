@@ -44,8 +44,6 @@ public sealed class Scanner :
         get => ips;
     }
 
-    public Stream OutputStream { get; internal init; }
-
     private readonly IServiceProvider services;
 
     /// <summary>
@@ -88,6 +86,8 @@ public sealed class Scanner :
     /// </summary>
     private long scannedIps;
 
+    public StreamWriter OutputStream { get; internal init; } = null!;
+
     private readonly ILogger<Scanner>? logger;
 
     private readonly CancellationTokenSource databaseCancellationTokenSource = new();
@@ -124,15 +124,14 @@ public sealed class Scanner :
 
             currentRatio = calculateRatio(scannedIps, TotalIps);
 
-            //TODO: This shouldn't be bound to Console class. Change to Logger or any type of writable stream 
-            Console.Write("\r{0:0.00}% - {1}/{2}", currentRatio, scannedIps, TotalIps);
+            OutputStream.Write("\r{0:0.00}% - {1}/{2}", currentRatio, scannedIps, TotalIps);
 
             await Task.Delay(100); //TODO: this is pretty weird way to show progress
         }
 
         currentRatio = calculateRatio(scannedIps, TotalIps);
-        Console.WriteLine("{0:0.00}% - {1}/{2}", currentRatio, scannedIps, TotalIps);
-        Console.WriteLine("Waiting for the results...");
+        OutputStream.WriteLine("{0:0.00}% - {1}/{2}", currentRatio, scannedIps, TotalIps);
+        await OutputStream.WriteLineAsync("Waiting for the results...");
 
         await Task.WhenAll(writer, reader, AddIpAddresses); //awaiting for results
 
@@ -315,7 +314,7 @@ public sealed class Scanner :
         exitDatabase();
 
         logger?.LogInformation("\nStopping application...");
-        //TODO: Write the same text to output stream
+        OutputStream.WriteLine("\nStopping application...");
 
         updateDB.Value.Join();
     }

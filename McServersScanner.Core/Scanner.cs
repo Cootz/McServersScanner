@@ -16,7 +16,8 @@ namespace McServersScanner.Core;
 /// <remarks>
 /// Only one instance of this class can exist in application
 /// </remarks>
-public sealed class Scanner : IScanner
+public sealed class Scanner :
+    IScanner
 {
     /// <summary>
     /// Maximum number of connections available at the same time
@@ -42,6 +43,8 @@ public sealed class Scanner : IScanner
     {
         get => ips;
     }
+
+    public Stream OutputStream { get; internal init; }
 
     private readonly IServiceProvider services;
 

@@ -10,7 +10,7 @@ namespace McServersScanner.Core;
 /// <summary>
 /// A builder for <see cref="Scanner"/> class and variables
 /// </summary>
-public sealed class ScannerBuilder : IScannerOptions
+public sealed class ScannerBuilder : IScanner
 {
     public const int DEFAULT_CONNECTION_LIMIT = 1000;
     public const int DEFAULT_BANDWIDTH_LIMIT = 1024 * 1024;
@@ -44,6 +44,8 @@ public sealed class ScannerBuilder : IScannerOptions
     /// Supplies <see cref="Ips"/> with <see cref="IPAddress"/>
     /// </summary>
     public Task AddIpAddresses { get; set; } = Task.CompletedTask;
+
+    public Stream OutputStream { get; init; } = null!;
 
     private readonly IHostBuilder hostBuilder = Host.CreateDefaultBuilder();
 
@@ -107,7 +109,8 @@ public sealed class ScannerBuilder : IScannerOptions
             BandwidthLimit = BandwidthLimit,
             Timeout = Timeout,
             AddIpAddresses = AddIpAddresses,
-            TotalIps = TotalIps
+            TotalIps = TotalIps,
+            OutputStream = OutputStream
         };
 
         return builtScanner;

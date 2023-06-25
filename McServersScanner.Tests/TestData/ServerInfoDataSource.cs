@@ -57,6 +57,20 @@ namespace McServersScanner.Tests.TestData
                     s.JsonInfo.Returns(JSON_SERVER_INFO);
                 });
 
+        public static readonly IServerInfo TestMinimalIServerInfo =
+            Substitute.For<IServerInfo>()
+                .Configure(s =>
+                {
+                    s.Ip.Returns(SERVER_INFO_IP);
+                    s.Version.Returns(new Version
+                    {
+                        Name = "1.14.4",
+                        Protocol = 498
+                    });
+                    s.Online.Returns(1);
+                    s.JsonInfo.Returns(MINIMAL_JSON_SERVER_INFO);
+                });
+
         /// <remarks>
         /// DO NOT add this instance into realm
         /// </remarks>

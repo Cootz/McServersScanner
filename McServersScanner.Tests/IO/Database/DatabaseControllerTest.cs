@@ -14,7 +14,7 @@ public class DatabaseControllerTest
     [Test]
     public void AddServerInfoTest()
     {
-        ServerInfo serverInfo = new(ServerInfoDataSource.JSON_SERVER_INFO, ServerInfoDataSource.SERVER_INFO_IP);
+        ServerInfo serverInfo = new(ServerInfoDataSource.GetJsonServerInfo(), ServerInfoDataSource.SERVER_INFO_IP);
 
         databaseController.Add(serverInfo);
 

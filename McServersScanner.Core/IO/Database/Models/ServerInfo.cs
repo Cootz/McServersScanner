@@ -35,7 +35,12 @@ public class ServerInfo : RealmObject, IServerInfo
 
         Online = serverInfo.RootElement.GetProperty("players").GetProperty("online").GetInt32();
 
-        Description = serverInfo.RootElement.Get("description")?.Get("text")?.GetString() ?? string.Empty;
+        JsonElement? descriptionElement = serverInfo.RootElement.Get("description");
+
+        if (descriptionElement?.ValueKind == JsonValueKind.String)
+            Description = descriptionElement?.GetString() ?? string.Empty;
+        else
+            Description = descriptionElement?.Get("text")?.GetString() ?? string.Empty;
 
         JsonInfo = jsonInfo;
     }

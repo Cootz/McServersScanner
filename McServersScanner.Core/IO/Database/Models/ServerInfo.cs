@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using static McServersScanner.Core.Utils.JsonHelper;
 using Realms;
 
 namespace McServersScanner.Core.IO.Database.Models;
@@ -34,15 +35,7 @@ public class ServerInfo : RealmObject, IServerInfo
 
         Online = serverInfo.RootElement.GetProperty("players").GetProperty("online").GetInt32();
 
-        try
-        {
-            Description = serverInfo.RootElement.GetProperty("description").GetProperty("text").GetString()
-                          ?? string.Empty;
-        }
-        catch (KeyNotFoundException)
-        {
-            Description = string.Empty;
-        }
+        Description = serverInfo.RootElement.Get("description")?.Get("text")?.GetString() ?? string.Empty;
 
         JsonInfo = jsonInfo;
     }

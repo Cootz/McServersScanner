@@ -34,15 +34,14 @@ public static class JsonHelper
     }
 
     public static JsonElement? Get(this JsonElement element, string name) =>
-        element.ValueKind != JsonValueKind.Null
-        && element.ValueKind != JsonValueKind.Undefined
-        && element.TryGetProperty(name, out var value)
+        element.ValueKind is JsonValueKind.Object
+        && element.TryGetProperty(name, out JsonElement value)
             ? value
-            : (JsonElement?)null;
+            : null;
 
     public static JsonElement? Get(this JsonElement element, int index)
     {
-        if (element.ValueKind == JsonValueKind.Null || element.ValueKind == JsonValueKind.Undefined)
+        if (element.ValueKind is JsonValueKind.Null or JsonValueKind.Undefined)
             return null;
         // Throw if index < 0
         return index < element.GetArrayLength() ? element[index] : null;

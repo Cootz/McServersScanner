@@ -8,12 +8,28 @@ namespace McServersScanner.Tests.TestData
     {
         public const string JSON_SERVER_INFO =
             @"{
-                ""address"": ""awesomeserver.example.com"",
-                ""online"": true,
                 ""description"": {
                     ""text"": ""A Minecraft Server""
                 },
                 ""favicon"": ""data:image/png;base64.... big blob of bytes..."",
+                ""version"": {
+                    ""name"": ""1.14.4"",
+                    ""protocol"": 498
+                },
+                ""players"": {
+                    ""online"": 1,
+                    ""max"": 20,
+                    ""sample"": [
+                        {
+                            ""name"": ""thinkofdeath"",
+                            ""id"": ""4566e69f-c907-48ee-8d71-d7ba5aa00d20""
+                        }
+                    ]
+                }
+            }";
+
+        public const string MINIMAL_JSON_SERVER_INFO =
+            @"{
                 ""version"": {
                     ""name"": ""1.14.4"",
                     ""protocol"": 498

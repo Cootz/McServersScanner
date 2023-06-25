@@ -25,7 +25,7 @@ namespace McServersScanner.Tests.IO.Database.Models
 
             ServerInfo serverInfo = new(json, ip);
 
-            Debug.Assert(serverInfo.ToString() == "");
+            Assert.That(serverInfo.Online, Is.EqualTo(0));
         }
 
         [Test]

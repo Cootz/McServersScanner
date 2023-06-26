@@ -10,20 +10,20 @@ public interface IServerInfo : IEquatable<IServerInfo>
     /// <summary>
     /// Version info
     /// </summary>
-    Version Version { get; set; }
+    Version Version { get; }
 
     /// <summary>
     /// Amount of players online
     /// </summary>
-    int? Online { get; set; }
+    int? Online { get; }
 
     /// <summary>
     /// Server description
     /// </summary>
-    string Description { get; set; }
+    string Description { get; }
 
     /// <summary>
     /// Received answer
     /// </summary>
-    string JsonInfo { get; set; }
+    string JsonInfo { get; }
 }

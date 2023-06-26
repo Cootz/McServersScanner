@@ -16,7 +16,16 @@ internal static class Program
     {
         Console.CancelKeyPress += OnExit;
 
-        ScannerBuilder scannerBuilder = new();
+        StreamWriter consoleOutput = new(Console.OpenStandardOutput());
+
+        consoleOutput.AutoFlush = true;
+
+        Console.SetOut(consoleOutput);
+
+        ScannerBuilder scannerBuilder = new()
+        {
+            OutputStream = consoleOutput
+        };
 
         //Parsing cmd params
         ParserResult<Options> result = Parser.Default.ParseArguments<Options>(args);

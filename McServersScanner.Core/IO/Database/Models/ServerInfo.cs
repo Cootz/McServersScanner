@@ -33,7 +33,7 @@ public class ServerInfo : RealmObject, IServerInfo
 
         Version = jVersion.Deserialize<Version>()!;
 
-        Online = serverInfo.RootElement.GetProperty("players").GetProperty("online").GetInt32();
+        Online = serverInfo.RootElement.Get("players")?.Get("online")?.GetInt32();
 
         JsonElement? descriptionElement = serverInfo.RootElement.Get("description");
 

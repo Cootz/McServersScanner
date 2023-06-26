@@ -38,7 +38,6 @@ namespace McServersScanner.Tests.TestData
                     ""protocol"": 498
                 },
                 ""players"": {
-                    ""online"": 1,
                     ""max"": 20
                 }
             }";
@@ -70,7 +69,7 @@ namespace McServersScanner.Tests.TestData
                         Name = "1.14.4",
                         Protocol = 498
                     });
-                    s.Online.Returns(1);
+                    s.Online.Returns((int?)null);
                     s.JsonInfo.Returns(MINIMAL_JSON_SERVER_INFO);
                 });
 

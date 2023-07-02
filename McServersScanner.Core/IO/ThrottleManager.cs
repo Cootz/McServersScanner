@@ -15,6 +15,8 @@ public class ThrottleManager : IThrottleManager
 
     private TaskCompletionSource tcs = new();
 
+    private readonly SemaphoreSlim semaphoreSlim = new(1, 1);
+
     public ThrottleManager(int maxBytesPerSecond)
     {
         MaxBytesPerSecond = maxBytesPerSecond;
@@ -26,7 +28,10 @@ public class ThrottleManager : IThrottleManager
         timer.Elapsed += (_, _) =>
         {
             CurrentQuota = MaxBytesPerSecond;
-            tcs.TrySetResult();
+            while (!tcs.TrySetResult())
+            {
+            }
+
             tcs = new TaskCompletionSource();
         };
 
@@ -36,18 +41,18 @@ public class ThrottleManager : IThrottleManager
     /// <summary>
     /// Handle throttling from multiple threads
     /// </summary>
-    /// <returns>True if throttle was successful, otherwise false</returns>
-    public bool Throttle(int bytes)
+    public async Task Throttle(int bytes)
     {
-        lock (this)
-        {
-            if (CurrentQuota < bytes)
-                return false;
+        await semaphoreSlim.WaitAsync();
 
-            CurrentQuota -= bytes;
+        while (CurrentQuota < bytes)
+        {
+            await tcs.Task;
         }
 
-        return true;
+        CurrentQuota -= bytes;
+
+        semaphoreSlim.Release();
     }
 
     public TaskAwaiter GetAwaiter() => tcs.Task.GetAwaiter();

@@ -12,8 +12,7 @@ public interface IThrottleManager
     /// <summary>
     /// Handle throttling from multiple threads
     /// </summary>
-    /// <returns>True if throttle was successful, otherwise false</returns>
-    bool Throttle(int bytes);
+    Task Throttle(int bytes);
 
     TaskAwaiter GetAwaiter();
 }

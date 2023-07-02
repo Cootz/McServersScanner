@@ -85,7 +85,7 @@ namespace McServersScanner.Tests.IO
 
             sw.Stop();
 
-            Assert.That(sw.Elapsed.TotalSeconds, Is.EqualTo(4d).Within(1.6d));
+            Assert.That(sw.Elapsed.TotalSeconds, Is.EqualTo(3d).Within(0.1d));
         }
     }
 }

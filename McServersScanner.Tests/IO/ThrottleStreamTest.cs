@@ -55,24 +55,37 @@ namespace McServersScanner.Tests.IO
 
             Random rnd = new();
 
+            SemaphoreSlim semaphoreSlim = new(0);
+
+            Task gunShot = semaphoreSlim.WaitAsync();
+
             byte[] buffer = new byte[128];
 
             rnd.NextBytes(buffer);
 
             List<Task> tasks = new();
 
-            Stopwatch sw = Stopwatch.StartNew();
-
             for (int i = 0; i < 2; i++)
             {
-                tasks.AddRange(throttledStreams.Select(throttledStream => throttledStream.WriteAsync(buffer).AsTask()));
+                tasks.AddRange(throttledStreams.Select(
+                    throttledStream => Task.Run(async () =>
+                    {
+                        await gunShot;
+                        await throttledStream.WriteAsync(buffer);
+                    }))
+                );
             }
+
+            Stopwatch sw = Stopwatch.StartNew();
+
+            //Start all streams at the same time
+            semaphoreSlim.Release();
 
             await Task.WhenAll(tasks);
 
             sw.Stop();
 
-            Assert.That(sw.Elapsed.TotalSeconds, Is.EqualTo(4d).Within(1.6d));
+            Assert.That(sw.Elapsed.TotalSeconds, Is.EqualTo(3d).Within(0.1d));
         }
     }
 }

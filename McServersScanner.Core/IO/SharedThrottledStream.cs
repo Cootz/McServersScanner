@@ -14,7 +14,7 @@ public class SharedThrottledStream : Stream
 
     public void Throttle(int bytes)
     {
-        ThrottleAsync(bytes).Wait();
+        ThrottleAsync(bytes).GetAwaiter().GetResult();
     }
 
     public async Task ThrottleAsync(int bytes)
@@ -23,10 +23,7 @@ public class SharedThrottledStream : Stream
             throw new ArgumentOutOfRangeException(nameof(bytes),
                 "Buffer size cannot be larger than bandwidth per second");
 
-        while (!throttleManager.Throttle(bytes))
-        {
-            await throttleManager;
-        }
+        await throttleManager.Throttle(bytes);
     }
 
     public override bool CanRead

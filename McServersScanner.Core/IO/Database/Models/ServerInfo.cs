@@ -17,6 +17,8 @@ public class ServerInfo : RealmObject, IServerInfo
 
     public string Description { get; set; } = null!;
 
+    public ModInfo[] ModList { get; set; } = Array.Empty<ModInfo>();
+
     public string JsonInfo { get; set; } = null!;
 
     private ServerInfo()
@@ -41,6 +43,10 @@ public class ServerInfo : RealmObject, IServerInfo
             Description = descriptionElement?.GetString() ?? string.Empty;
         else
             Description = descriptionElement?.Get("text")?.GetString() ?? string.Empty;
+
+        JsonElement? modList = serverInfo.RootElement.Get("modInfo")?.Get("modList");
+
+        ModList = JsonSerializer.Deserialize<ModInfo[]>(modList.ToString() ?? string.Empty) ?? Array.Empty<ModInfo>();
 
         JsonInfo = jsonInfo;
     }

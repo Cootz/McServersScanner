@@ -26,6 +26,19 @@ namespace McServersScanner.Tests.TestData
                             ""id"": ""4566e69f-c907-48ee-8d71-d7ba5aa00d20""
                         }}
                     ]
+                }},
+                ""modinfo"": {{
+                    ""type"": ""FML"",
+                    ""modList"": [
+                        {{
+                            ""modid"": ""mcp"",
+                            ""version"": ""9.05""
+                        }},
+                        {{
+                            ""modid"": ""FML"",
+                            ""version"": ""7.10.114.1388""
+                        }}
+                    ]
                 }}
             }}";
         }
@@ -57,6 +70,19 @@ namespace McServersScanner.Tests.TestData
                     s.Online.Returns(1);
                     s.Description.Returns("A Minecraft Server");
                     s.JsonInfo.Returns(GetJsonServerInfo());
+                    s.ModList.Returns(new List<ModInfo>
+                    {
+                        new()
+                        {
+                            ModId = "mcp",
+                            Version = "9.05"
+                        },
+                        new()
+                        {
+                            ModId = "FML",
+                            Version = "7.10.114.1388"
+                        }
+                    });
                 });
 
         public static readonly IServerInfo TestMinimalIServerInfo =

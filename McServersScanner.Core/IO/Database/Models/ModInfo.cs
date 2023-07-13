@@ -4,9 +4,9 @@ namespace McServersScanner.Core.IO.Database.Models
 {
     public class ModInfo : EmbeddedObject
     {
-        public string ModId { get; private set; }
+        public string ModId { get; init; }
 
-        public string Version { get; private set; }
+        public string Version { get; init; }
 
         public ModInfo()
         {

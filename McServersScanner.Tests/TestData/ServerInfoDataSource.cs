@@ -99,6 +99,32 @@ namespace McServersScanner.Tests.TestData
                     s.JsonInfo.Returns(MINIMAL_JSON_SERVER_INFO);
                 });
 
+        public static IEnumerable<TestCaseData> PositiveEqualTestCases
+        {
+            get
+            {
+                yield return new TestCaseData(TestServerInfo, TestServerInfo)
+                {
+                    ExpectedResult = true
+                };
+
+                ServerInfo serverInfo = new(GetJsonServerInfo(), SERVER_INFO_IP);
+
+                yield return new TestCaseData(serverInfo, TestServerInfo)
+                {
+                    ExpectedResult = true
+                };
+
+                serverInfo = new ServerInfo(GetJsonServerInfo(), SERVER_INFO_IP);
+                serverInfo.ModList!.Clear();
+
+                yield return new TestCaseData(serverInfo, TestServerInfo)
+                {
+                    ExpectedResult = false
+                };
+            }
+        }
+
         /// <remarks>
         /// DO NOT add this instance into realm
         /// </remarks>

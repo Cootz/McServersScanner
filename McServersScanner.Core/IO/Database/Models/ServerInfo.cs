@@ -64,8 +64,9 @@ public class ServerInfo : RealmObject, IServerInfo
                && Online == other.Online
                && Description == other.Description
                && JsonInfo == other.JsonInfo
-               && (ModList is null && other.ModList is null)
-               || ModList!.All(other.ModList!.Contains);
+               && ((ModList is not null && other.ModList is not null)
+                   && (ModList.Count == other.ModList.Count
+                       && ModList.All(other.ModList.Contains)));
     }
 
     public override bool Equals(object? obj)

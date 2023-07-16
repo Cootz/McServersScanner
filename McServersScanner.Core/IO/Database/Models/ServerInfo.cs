@@ -17,6 +17,8 @@ public class ServerInfo : RealmObject, IServerInfo
 
     public string Description { get; set; } = null!;
 
+    public IList<ModInfo>? ModList { get; }
+
     public string JsonInfo { get; set; } = null!;
 
     private ServerInfo()
@@ -42,6 +44,14 @@ public class ServerInfo : RealmObject, IServerInfo
         else
             Description = descriptionElement?.Get("text")?.GetString() ?? string.Empty;
 
+        JsonElement? modList = serverInfo.RootElement.Get("modinfo")?.Get("modList");
+
+        if (modList.HasValue)
+        {
+            ModList = JsonSerializer.Deserialize<List<ModInfo>>(modList.Value.ToString(),
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = false });
+        }
+
         JsonInfo = jsonInfo;
     }
 
@@ -53,7 +63,10 @@ public class ServerInfo : RealmObject, IServerInfo
                && Version.Equals(other.Version)
                && Online == other.Online
                && Description == other.Description
-               && JsonInfo == other.JsonInfo;
+               && JsonInfo == other.JsonInfo
+               && ((ModList is not null && other.ModList is not null)
+                   && (ModList.Count == other.ModList.Count
+                       && ModList.All(other.ModList.Contains)));
     }
 
     public override bool Equals(object? obj)
@@ -65,5 +78,5 @@ public class ServerInfo : RealmObject, IServerInfo
     }
 
     public override int GetHashCode() =>
-        HashCode.Combine(base.GetHashCode(), Ip, Version, Online, Description, JsonInfo);
+        HashCode.Combine(Ip, Version, Online, Description, JsonInfo);
 }

@@ -23,6 +23,11 @@ public interface IServerInfo : IEquatable<IServerInfo>
     string Description { get; }
 
     /// <summary>
+    /// List of server mods
+    /// </summary>
+    public IList<ModInfo>? ModList { get; }
+
+    /// <summary>
     /// Received answer
     /// </summary>
     string JsonInfo { get; }

@@ -40,14 +40,8 @@ namespace McServersScanner.Tests.IO.Database.Models
             Assert.That(serverInfo.Equals(ServerInfoDataSource.TestMinimalIServerInfo), Is.True);
         }
 
-        [Test]
-        public void EquivalentTest()
-        {
-            ServerInfo serverInfo = new(ServerInfoDataSource.GetJsonServerInfo(), ServerInfoDataSource.SERVER_INFO_IP);
-
-            bool equal = (serverInfo as IServerInfo).Equals(ServerInfoDataSource.TestServerInfo);
-
-            Assert.That(equal, Is.True);
-        }
+        [TestCaseSource(typeof(ServerInfoDataSource), nameof(ServerInfoDataSource.PositiveEqualTestCases))]
+        public bool Equivalent_WithDifferentValues_ReturnsAsExpected(IServerInfo first, IServerInfo second) =>
+            first.Equals(second);
     }
 }

@@ -5,9 +5,9 @@ namespace McServersScanner.Core.IO.Database.Models
 {
     public class ModInfo : EmbeddedObject
     {
-        [JsonPropertyName("modid")] public string ModId { get; init; }
+        [JsonPropertyName("modid")] public string ModId { get; init; } = default!;
 
-        [JsonPropertyName("version")] public string Version { get; init; }
+        [JsonPropertyName("version")] public string Version { get; init; } = default!;
 
         public ModInfo()
         {

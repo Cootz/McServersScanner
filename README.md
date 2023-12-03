@@ -6,7 +6,7 @@ Scan a range of ips for running minecraft servers
 
 Please make sure you have the following prerequisites:
 
-- A desktop platform with the [.NET 6.0 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/6.0) installed.
+- A desktop platform with the [.NET 8.0 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/8.0) installed.
 
 ### Download the source code
 
@@ -32,7 +32,7 @@ If you are not interested in debugging McServerScanner, you can add `-c Release`
 To run McServerScanner go to the build directory and run the executable or run the following commands:
 
 ```shell
-cd McServersScanner\bin\Debug\net6.0 
+cd McServersScanner\bin\Debug\net8.0 
 McServersScanner --help
 ```
 

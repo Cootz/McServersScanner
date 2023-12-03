@@ -29,7 +29,7 @@ namespace McServersScanner.Tests.Network
 
             if (!client.IsConnected)
             {
-                Assert.Warn("Client couldn't connect to {0}", targetIp);
+                Assert.Warn($"Client couldn't connect to {targetIp}");
                 return;
             }
 

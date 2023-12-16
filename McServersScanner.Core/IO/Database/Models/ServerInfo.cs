@@ -1,6 +1,8 @@
 ﻿using System.Text.Json;
 using static McServersScanner.Core.Utils.JsonHelper;
 using Realms;
+using System.Diagnostics.CodeAnalysis;
+using McServersScanner.Core.Json;
 
 namespace McServersScanner.Core.IO.Database.Models;
 
@@ -33,7 +35,7 @@ public class ServerInfo : RealmObject, IServerInfo
 
         JsonElement jVersion = serverInfo.RootElement.GetProperty("version");
 
-        Version = jVersion.Deserialize<Version>()!;
+        Version = jVersion.Deserialize(SourceGenerationContext.Default.Version)!;
 
         Online = serverInfo.RootElement.Get("players")?.Get("online")?.GetInt32();
 
@@ -48,8 +50,7 @@ public class ServerInfo : RealmObject, IServerInfo
 
         if (modList.HasValue)
         {
-            ModList = JsonSerializer.Deserialize<List<ModInfo>>(modList.Value.ToString(),
-                new JsonSerializerOptions { PropertyNameCaseInsensitive = false });
+            ModList = modList.Value.Deserialize(SourceGenerationContext.Default.IListModInfo);
         }
 
         JsonInfo = jsonInfo;

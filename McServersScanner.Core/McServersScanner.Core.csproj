@@ -4,6 +4,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
 	<PublishAot>true</PublishAot>
+	<IsAotCompatible>true</IsAotCompatible>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
@@ -16,6 +17,7 @@
     <PackageReference Include="Serilog.Sinks.Console" Version="5.0.1" />
     <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
     <PackageReference Include="Realm" Version="11.6.1" />
+    <PackageReference Include="System.Net.Security" Version="4.3.2" />
     <PackageReference Include="System.Reactive" Version="6.0.0" />
   </ItemGroup>
 

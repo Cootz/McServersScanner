@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Net;
 using System.Threading.Tasks.Dataflow;
 using CommandLine;
 using CommunityToolkit.HighPerformance.Buffers;
@@ -12,6 +13,8 @@ internal static class Program
 {
     private static Scanner? scanner;
 
+    // AOT workaround for CommandLine lib - https://github.com/commandlineparser/commandline/issues/897
+    [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(Options))]
     public static async Task Main(string[] args)
     {
         Console.CancelKeyPress += OnExit;

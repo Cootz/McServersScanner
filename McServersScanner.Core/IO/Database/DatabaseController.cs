@@ -1,5 +1,6 @@
 ﻿using McServersScanner.Core.IO.Database.Models;
 using Realms;
+using System.Diagnostics.CodeAnalysis;
 
 namespace McServersScanner.Core.IO.Database;
 
@@ -20,6 +21,9 @@ public class DatabaseController : IDatabaseController
     /// </summary>
     private readonly Realm realm;
 
+    [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(ModInfo))]
+    [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(ServerInfo))]
+    [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(Models.Version))]
     public DatabaseController()
     {
         RealmConfiguration config = new(DatabasePath);
